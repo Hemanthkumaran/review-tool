@@ -5,6 +5,7 @@ import VideoPlayerWithSeekbar from "../../components/videoPlayer/VideoPlayerWith
 import CommentBar from "../../components/videoPlayer/CommentBar";
 import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
+import ShareModal from "../../components/modals/ShareModal";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
@@ -257,21 +258,12 @@ const handleCancelAnnotation = () => {
 };
 
 
-  const formatClockTime = (t = 0) => {
-    const sec = Math.floor(t % 60)
-      .toString()
-      .padStart(2, "0");
-    const min = Math.floor(t / 60)
-      .toString()
-      .padStart(2, "0");
-    return `${min}:${sec}`;
-  };
-
   return (
     <div
       style={{ margin: 25 }}
       className="min-h-screen text-gray-200 font-sans"
     >
+      {/* <ShareModal onClose={() => null} /> */}
       <VideoHeader />
       <div className="mx-auto flex">
         {/* Col 1 */}

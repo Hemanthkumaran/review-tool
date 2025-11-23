@@ -222,21 +222,18 @@ export default function VideoPlayerWithSeekbar({
       </div>
     </>
   )}
-
-  {/* scribble canvas (under the buttons, above the video) */}
-  <canvas
-    ref={annotationCanvasRef}
-    className={`absolute inset-0 w-full h-full z-20 ${
-      annotationMode
-        ? "pointer-events-auto cursor-crosshair"
-        : "pointer-events-none"
-    }`}
-    onPointerDown={handleCanvasPointerDown}
-    onPointerMove={handleCanvasPointerMove}
-    onPointerUp={handleCanvasPointerUp}
-  />
-</div>
-
+          <canvas
+            ref={annotationCanvasRef}
+            className={`absolute inset-0 w-full h-full z-20 ${
+              annotationMode
+                ? "pointer-events-auto cursor-crosshair"
+                : "pointer-events-none"
+            }`}
+            onPointerDown={handleCanvasPointerDown}
+            onPointerMove={handleCanvasPointerMove}
+            onPointerUp={handleCanvasPointerUp}
+          />
+        </div>
         </div>
       </div>
 

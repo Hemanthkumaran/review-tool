@@ -33,7 +33,7 @@ export default function CommentCard({ marker, index, onGo }) {
       {/* header row */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 text-[14px]">
-          <span onClick={onGo} className="text-[#F9F046]">
+          <span onClick={onGo} className="text-[#F9F046] cursor-pointer">
             {formatClockTime(time)}
           </span>
           <span className="text-gray-400">•</span>
