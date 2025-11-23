@@ -1,6 +1,8 @@
 // VideoPlayerWithSeekbar.jsx
 import React, { useEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
+import CustomSeekBar from "./CustomSeekbar";
+import PlayerControlsBar from "./PlayerControllerBar";
 
 export default function VideoPlayerWithSeekbar({
   src,
@@ -21,7 +23,8 @@ export default function VideoPlayerWithSeekbar({
   const annotationCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingAnnotation, setDrawingAnnotation] = useState(null); // { strokes: [{ points: [{xPct,yPct}]}] }
-
+  const [isLooping, setIsLooping] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   /* ---------- canvas helpers ---------- */
 
   const addPointToStroke = (xPct, yPct) => {
@@ -73,19 +76,15 @@ export default function VideoPlayerWithSeekbar({
 
   const handleCanvasPointerUp = () => {
     if (!annotationMode) return;
-    // finish current stroke, but stay in drawing mode (user can start another)
     setIsDrawing(false);
   };
 
-  // clear local drawing when annotation mode is turned off
   useEffect(() => {
     if (!annotationMode) {
       setIsDrawing(false);
       setDrawingAnnotation(null);
     }
   }, [annotationMode]);
-
-  /* ---------- draw annotations & in-progress scribble ---------- */
 
   useEffect(() => {
     const canvas = annotationCanvasRef.current;
@@ -122,14 +121,12 @@ export default function VideoPlayerWithSeekbar({
 
     const NEAR_THRESHOLD = 0.5;
 
-    // saved annotations from markers (yellow)
     markers.forEach((m) => {
       if (!m.annotation) return;
       if (Math.abs(m.time - currentTime) > NEAR_THRESHOLD) return;
       drawStrokes(m.annotation, "rgba(254,234,59,0.95)", 3);
     });
 
-    // pending unsent annotation from parent (blue-ish)
     if (
       pendingAnnotation &&
       pendingAnnotation.annotation &&
@@ -167,12 +164,64 @@ export default function VideoPlayerWithSeekbar({
 
   /* ---------- Mux player ---------- */
 
-  const muxPlayerStyle = {
+  // const muxPlayerStyle = {
+  //   width: "100%",
+  //   height: "100%",
+  //   display: "block",
+  //   backgroundColor: "black",
+  // };
+
+
+   const muxPlayerStyle = {
     width: "100%",
     height: "100%",
     display: "block",
     backgroundColor: "black",
+    "--controls": "none",
   };
+
+  const handleTogglePlay = () => {
+    if (!playerRef.current) return;
+    const el = playerRef.current;
+    if (el.paused) {
+      el.play?.();
+    } else {
+      el.pause?.();
+    }
+    onTogglePlay?.();
+  };
+
+  const handleLoopToggle = () => {
+    if (!playerRef.current) return;
+    const el = playerRef.current;
+    const next = !isLooping;
+    el.loop = next;
+    setIsLooping(next);
+  };
+
+  const handleMuteToggle = () => {
+    if (!playerRef.current) return;
+    const el = playerRef.current;
+    const next = !isMuted;
+    el.muted = next;
+    setIsMuted(next);
+  };
+
+  const handleFullscreen = () => {
+    const el =
+      playerRef.current?.media ??
+      playerRef.current?.shadowRoot?.querySelector("video") ??
+      playerRef.current;
+    if (!el) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      el.requestFullscreen?.();
+    }
+  };
+
+
 
   return (
     <div className="bg-[#0b0c0e] rounded-2xl overflow-hidden shadow-lg">
@@ -184,23 +233,20 @@ export default function VideoPlayerWithSeekbar({
             autoPlay={false}
             playsInline
             streamType="on-demand"
+            // controls={false}
             style={muxPlayerStyle}
             onTimeUpdate={onTimeUpdate}
             onLoadedMetadata={onLoadedMetadata}
           />
 
-          {/* One stacking context for overlay + canvas */}
             <div
   className={`absolute inset-0 ${
     annotationMode ? "" : "pointer-events-none"
   }`}
 >
-  {/* light overlay & controls */}
   {annotationMode && (
     <>
-      {/* semi-transparent overlay */}
       <div className="absolute inset-0 bg-black/10 pointer-events-none z-10" />
-      {/* controls – highest z, pointer events ON */}
       <div className="absolute top-3 right-3 flex gap-2 z-30">
         <button
           type="button"
@@ -236,7 +282,22 @@ export default function VideoPlayerWithSeekbar({
         </div>
         </div>
       </div>
-
+      <div className="px-6">
+      <PlayerControlsBar
+        duration={duration}
+        currentTime={currentTime}
+        markers={markers}
+        isPlaying={isPlaying}
+        onTogglePlay={handleTogglePlay}
+        onSeek={onSeek}
+        onToggleLoop={handleLoopToggle}
+        isLooping={isLooping}
+        onToggleMute={handleMuteToggle}
+        isMuted={isMuted}
+        qualityLabel="1080p"
+        onFullscreen={handleFullscreen}
+      />
+      </div>
       <div className="h-4" />
     </div>
   );

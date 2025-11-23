@@ -1,0 +1,14 @@
+.bill-header-main{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.billing-footer{
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}

@@ -1,0 +1,60 @@
+.slider-card {
+  background: #0f0f0f;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 24px 32px;
+  color: white;
+  font-family: "Inter", sans-serif;
+  width: inherit;
+}
+
+.slider-title {
+  font-size: 18px;
+  opacity: 0.85;
+  margin-bottom: 26px;
+}
+
+/* Whole track container */
+.slider-track {
+  height: 10px;
+  border-radius: 6px;
+  background: transparent;
+  position: relative;
+  width: 100%;
+  display: flex;
+}
+
+/* Yellow filled track */
+.slider-track-filled {
+  background: #ffe94a;
+  height: 10px;
+  border-radius: 6px 0 0 6px;
+}
+
+/* Gray unfilled track */
+.slider-track-empty {
+  background: #3a3a3a;
+  height: 10px;
+  flex: 1;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Thumb */
+.slider-thumb {
+  width: 26px;
+  height: 26px;
+  background: white;
+  border-radius: 50%;
+  top: 0px;
+  position: relative;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+}
+
+.slider-labels {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  opacity: 0.85;
+}

@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g opacity="0.6">
+<path d="M19 8H23C23.5523 8 24 8.44772 24 9V13" stroke="white" stroke-linecap="round"/>
+<path d="M13 8H9C8.44772 8 8 8.44772 8 9V13" stroke="white" stroke-linecap="round"/>
+<path d="M13 24L9 24C8.44772 24 8 23.5523 8 23L8 19" stroke="white" stroke-linecap="round"/>
+<path d="M19 24L23 24C23.5523 24 24 23.5523 24 23L24 19" stroke="white" stroke-linecap="round"/>
+</g>
+</svg>

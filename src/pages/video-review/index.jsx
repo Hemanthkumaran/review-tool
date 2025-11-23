@@ -1,11 +1,12 @@
 // VideoReview.jsx
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import VideoPlayerWithSeekbar from "../../components/videoPlayer/VideoPlayerWithSeekbar";
 import CommentBar from "../../components/videoPlayer/CommentBar";
 import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import ShareModal from "../../components/modals/ShareModal";
+import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
@@ -14,6 +15,9 @@ export default function VideoReview() {
   const [duration, setDuration] = useState(120);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(true);
+
+  const [videoSrc, setVideoSrc] = useState(null);   // 🔹 new
+  const [videoFile, setVideoFile] = useState(null); // optional if you want the File
 
   const [markers, setMarkers] = useState([]);
   const [annotationMode, setAnnotationMode] = useState(false);
@@ -34,6 +38,30 @@ export default function VideoReview() {
     avatarUrl: "https://i.pravatar.cc/40?u=john",
   };
 
+   useEffect(() => {
+    return () => {
+      if (videoSrc && videoSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(videoSrc);
+      }
+    };
+  }, [videoSrc]);
+
+  const handleVideoLoaded = (file, url) => {
+    // revoke old one if any
+    if (videoSrc && videoSrc.startsWith("blob:")) {
+      URL.revokeObjectURL(videoSrc);
+    }
+
+    setVideoFile(file);
+    setVideoSrc(url);
+
+    // reset player-related state
+    setCurrentTime(0);
+    setDuration(0);
+    setIsPlaying(false);
+    setMarkers([]);
+    setAnnotationMode(false);
+  };
 
 const handleSendComment = ({ text, images }) => {
   const trimmed = text.trim();
@@ -125,7 +153,7 @@ const handleSendComment = ({ text, images }) => {
   };
 
   const togglePlay = () => {
-    if (!playerRef.current) return;
+    if (!playerRef.current || !videoSrc) return;   // 🔹 guard if no video yet
     const el = playerRef.current;
     if (isPlaying) {
       el.pause?.();
@@ -137,7 +165,7 @@ const handleSendComment = ({ text, images }) => {
   };
 
   const seekTo = (time) => {
-    if (!playerRef.current) return;
+    if (!playerRef.current || !videoSrc) return;   // 🔹 guard
     try {
       playerRef.current.currentTime = time;
       if (typeof playerRef.current.setCurrentTime === "function") {
@@ -149,7 +177,6 @@ const handleSendComment = ({ text, images }) => {
     }
     setCurrentTime(time);
   };
-
   /* text comments now sent via handleSendComment */
 
   /* voice recording */
@@ -272,22 +299,24 @@ const handleCancelAnnotation = () => {
             isCommentsOpen ? "basis-3/4" : "basis-full"
           }`}
         >
-          <VideoPlayerWithSeekbar
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
-            playerRef={playerRef}
-            currentTime={currentTime}
-            duration={duration}
-            isPlaying={isPlaying}
-            markers={markers}
-            annotationMode={annotationMode}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onTogglePlay={togglePlay}
-            pendingAnnotation={pendingAnnotation}
-            onSeek={seekTo}
-            onAddAnnotation={handleAddAnnotation}
-            onCancelAnnotation={handleCancelAnnotation}
-          />
+          {videoSrc ? (
+            <VideoPlayerWithSeekbar
+              src={videoSrc}
+              playerRef={playerRef}
+              currentTime={currentTime}
+              duration={duration}
+              isPlaying={isPlaying}
+              markers={markers}
+              annotationMode={annotationMode}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onTogglePlay={togglePlay}
+              onSeek={seekTo}
+              onAddAnnotation={handleAddAnnotation}
+            />
+          ) : (
+            <VideoUploadPlaceholder onVideoLoaded={handleVideoLoaded} />
+          )}
 
           <CommentBar
             currentTime={currentTime}

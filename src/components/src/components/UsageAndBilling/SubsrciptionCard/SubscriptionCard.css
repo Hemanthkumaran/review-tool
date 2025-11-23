@@ -1,0 +1,175 @@
+.subscription-card {
+  width: inherit;
+  background: #101010;
+  border: 1px solid #222;
+  border-radius: 20px;
+  padding: 26px 32px;
+  color: white;
+  font-family: "Inter", sans-serif;
+}
+
+/* ----- Top Row ----- */
+.sub-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sub-plan-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sub-plan-label {
+  font-size: 18px;
+  opacity: 0.85;
+}
+
+.sub-plan-name {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.sub-status-pill {
+  background: #00382b;
+  color: #21c58b;
+  border: 1px solid #175941;
+  padding: 4px 13px;
+  border-radius: 14px;
+  font-size: 13px;
+}
+
+.sub-end-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sub-end-label {
+  font-size: 16px;
+  opacity: 0.75;
+}
+
+.sub-end-pill {
+  background: #262626;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 15px;
+  color: #f2f2f2;
+}
+
+/* ----- Middle Row (Circle + Text + Price) ----- */
+.sub-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 26px;
+}
+
+.sub-minutes-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.sub-circle {
+  width: 75px;
+  height: 75px;
+}
+
+.sub-minutes-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.sub-minutes-remaining {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.sub-minutes-used {
+  margin-top: 3px;
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+.sub-price {
+  text-align: right;
+}
+
+.sub-price-amount {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.sub-price-caption {
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+/* ----- Dividers ----- */
+.sub-divider {
+  height: 1px;
+  background: #2a2a2a;
+  margin: 22px 0;
+}
+
+/* ----- Add-ons ----- */
+.sub-addons-title {
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.sub-addon-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sub-addon-name {
+  font-size: 18px;
+}
+
+.sub-addon-price {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.addon-cost {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.addon-per {
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+.addon-remove-btn {
+  background: #3a1010;
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+/* ----- FAQ Footer ----- */
+.sub-faq-row {
+  display: flex;
+  font-size: 15px;
+}
+
+.sub-faq-link {
+  background: none;
+  border: none;
+  color: #ffe94a;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0;
+}

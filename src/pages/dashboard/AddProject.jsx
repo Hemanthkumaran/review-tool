@@ -2,12 +2,14 @@ import { useState } from 'react';
 
 import CreateFolderModal from '../../components/modals/CreateFolderModal';
 import cutjamm from '../../assets/svgs/cutjamm.svg';
-import Folder from '../../components/Folder/Folder';
-import { PATHS } from '../../routes/paths';
-import { useNavigate } from 'react-router-dom';
 import ProjectFolder from '../../components/ProjectFolder';
+import Folder from '../../components/Folder/Folder';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { PATHS } from '../../routes/paths';
+import LeftArrow from '../../assets/svgs/arrow-left.svg';
+import AddProjectModal from '../../components/modals/AddProjectModal';
 
-export default function DashboardPage({
+export default function AddProject({
   workspaceName = "A2Z Studios",
   role = "Owner",
   minutesUsed = 89,
@@ -15,13 +17,15 @@ export default function DashboardPage({
   onCreateFolder = () => {},
 }) {
 
-  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+  const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [data, setData] = useState(null);
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
+  const location = useLocation();
 
+    
   function handleCreate(val) {
-    setCreateModalOpen(false);
+    setAddProjectOpen(false);
     setData(val);
   }
 
@@ -86,10 +90,15 @@ export default function DashboardPage({
       <main className="px-6 md:px-8">
         {/* Title row */}
         <div className="mt-8 flex items-center justify-between">
-          <h1 className="text-2xl md:text-[28px] font-semibold">
-            Welcome to {workspaceName}’s workspace
-          </h1>
-
+          <div className="flex items-center">
+                <img style={{ height:20, width:20 }} src={LeftArrow} />
+                <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
+                <div className="flex items-center">
+                <div style={{ fontFamily:"Gilroy-Light", color:"#fff" }}>
+                    <span style={{ color:"#9C9C9C" }}>All Folders {" "}</span> / <span>{location.state}</span>
+                </div>
+                </div>
+            </div>
           <div className="hidden md:flex items-center gap-3">
             <button
               className="inline-flex items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
@@ -98,27 +107,17 @@ export default function DashboardPage({
               <span>Invite</span>
             </button>
             <button
-              onClick={() => setCreateModalOpen(true)}
+              onClick={() => setAddProjectOpen(true)}
               className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
             >
               <PlusThin className="h-4 w-4" />
-              <span>Create folder</span>
+              <span>Add project</span>
             </button>
           </div>
         </div>
 
         {/* Tabs & mobile actions */}
         <div className="mt-6 flex items-center justify-between">
-          {/* Segmented tabs */}
-          <div className="inline-flex items-center rounded-full border border-[#232427] bg-[#111214] p-1 mb-2">
-            <button className="px-5 py-2 rounded-full text-sm bg-[#1A1C1F] text-white">
-              All folders
-            </button>
-            <button className="px-5 py-2 rounded-full text-sm text-[#BFBFBF] hover:text-white">
-              Projects
-            </button>
-          </div>
-
           {/* Mobile actions */}
           <div className="md:hidden flex items-center gap-2">
             <button
@@ -136,13 +135,7 @@ export default function DashboardPage({
             </button>
           </div>
         </div>
-          {/* <div onClick={() => navigate(PATHS.VIDEO_REVIEW)}><ProjectFolder/></div> */}
-        { data ?
-        <div onClick={() => navigate(PATHS.ADD_PROJECT, { state: data})}>
-            <Folder folderName={data}/>
-        </div> :
-        <EmptyState/>
-        }
+
       </main>
 
       {/* Bottom-right watermark */}
@@ -150,27 +143,15 @@ export default function DashboardPage({
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
-      <CreateFolderModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+      <AddProjectModal
+        isOpen={addProjectOpen}
+        onClose={() => setAddProjectOpen(false)}
         handleCreate={handleCreate}
       />
     </div>
   );
 }
 
-function EmptyState() {
-  return <section className="relative mt-16 h-[48vh] md:h-[56vh] rounded-3xl">
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-[#7E7E7E] text-base md:text-lg">There are no folders here</p>
-        <p className="text-[#7E7E7E] text-sm md:text-base mt-1">
-          Please create a new folder to get started
-        </p>
-      </div>
-    </div>
-  </section>
-}
 
 function LogoGlyph({ className = "" }) {
   return (

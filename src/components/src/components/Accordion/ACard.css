@@ -1,0 +1,211 @@
+/* Main card */
+.card {
+  width: 330px;
+  background: #111;
+  padding: 8px;
+  border-radius: 30px;
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  border: 1px solid #222;
+}
+
+/* Thumbnail */
+.card-img {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+.card-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Badges */
+.version-badge,
+.time-badge {
+  position: absolute;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.65);
+  font-weight: 600;
+}
+
+.version-badge {
+  top: 12px;
+  right: 12px;
+}
+
+.time-badge {
+  bottom: 12px;
+  right: 12px;
+}
+
+/* Title */
+.card-title {
+  font-size: 20px;
+  margin: 18px 0 6px 0;
+  font-weight: 600;
+}
+
+/* Meta info */
+.card-meta {
+  display: flex;
+  /*justify-content: space-between;
+  align-items: center; */
+  margin-bottom: 18px;
+}
+
+.meta-date {
+  opacity: 0.65;
+  font-size: 14px;
+}
+
+.meta-comments {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.75;
+}
+
+/* Chat bubble (custom SVG look) */
+/* .comment-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #b7b7b7;
+  position: relative;
+} */
+
+.comment-icon:after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #b7b7b7;
+  border-radius: 50%;
+  bottom: -1px;
+  right: -2px;
+}
+
+/* Avatars */
+.avatar-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #111;
+  margin-left: -8px;
+  object-fit: cover;
+}
+
+.avatar:first-child {
+  margin-left: 0;
+}
+
+/* Add (+) avatar */
+.add-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #ffe96a;
+  color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  font-weight: 600;
+  margin-left: -8px;
+}
+
+/* Client toggle */
+.client-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+/* Switch control */
+.switch {
+  position: relative;
+  width: 42px;
+  height: 22px;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  background: #555;
+  border-radius: 30px;
+  inset: 0;
+  transition: 0.3s;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: black;
+  border-radius: 50%;
+  left: 2px;
+  top: 2px;
+  transition: 0.3s;
+}
+
+input:checked + .slider {
+  background: #ffe96a;
+}
+
+input:checked + .slider:before {
+  transform: translateX(19px);
+}
+
+/* Dropdown */
+.dropdown-wrapper {
+  position: relative;
+  width: 60%;
+}
+
+.select-arrow {
+  position: absolute;
+  right: 18px;
+  top: 40%;
+  transform: translateY(-50%);
+  pointer-events: none;
+
+  width: 0;
+  height: 0;
+
+  /* CSS triangle arrow */
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid #aaa; /* arrow color */
+}
+
+.card-select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #000;
+  border: 1px solid #444;
+  border-radius: 22px;
+  font-size: 15px;
+  color: white;
+  appearance: none;
+  outline: none;
+}

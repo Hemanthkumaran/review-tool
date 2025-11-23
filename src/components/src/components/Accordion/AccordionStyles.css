@@ -1,0 +1,94 @@
+.accordion-root {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Accordion item container */
+.acc-item {
+  background: #111;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid #222;
+}
+
+/* Header */
+.acc-header {
+  margin: 0;
+}
+
+.acc-trigger {
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: white;
+}
+
+.acc-trigger:hover {
+  opacity: 0.9;
+}
+
+.left-sec {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Chevron */
+.chevron {
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid #999;
+  border-bottom: 2px solid #999;
+  transform: rotate(-45deg);
+  transition: transform 0.25s ease;
+}
+
+.acc-trigger[data-state="open"] .chevron {
+  transform: rotate(45deg);
+}
+
+/* Title */
+.acc-title {
+  font-size: 17px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* Count badge */
+.count-badge {
+  background: #2a2a2a;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #d6d6d6;
+}
+
+/* Content wrapper */
+.acc-content {
+  overflow: hidden;
+  animation: acc-slide 0.3s ease;
+}
+
+@keyframes acc-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card row layout */
+.card-row {
+  display: flex;
+  gap: 18px;
+  padding: 22px;
+}
