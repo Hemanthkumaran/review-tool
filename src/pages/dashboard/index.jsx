@@ -136,7 +136,7 @@ export default function DashboardPage({
             </button>
           </div>
         </div>
-          {/* <div onClick={() => navigate(PATHS.VIDEO_REVIEW)}><ProjectFolder/></div> */}
+          <div onClick={() => navigate(PATHS.VIDEO_REVIEW)}><ProjectFolder/></div>
         { data ?
         <div onClick={() => navigate(PATHS.ADD_PROJECT, { state: data})}>
             <Folder folderName={data}/>

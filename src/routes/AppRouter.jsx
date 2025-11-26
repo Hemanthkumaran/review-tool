@@ -21,8 +21,8 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Dashboard />
-        {/* <SettingsLayout/> */}
-        {/* <ProjectAccordion/> */}
+        <SettingsLayout/>
+        <ProjectAccordion/>
       </ProtectedRoute>
     ),
   },
