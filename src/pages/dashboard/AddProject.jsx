@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import CreateFolderModal from '../../components/modals/CreateFolderModal';
 import cutjamm from '../../assets/svgs/cutjamm.svg';
@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PATHS } from '../../routes/paths';
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import AddProjectModal from '../../components/modals/AddProjectModal';
+import { allProjectsApi, createProjectApi } from '../../services/api';
 
 export default function AddProject({
   workspaceName = "A2Z Studios",
@@ -18,15 +19,121 @@ export default function AddProject({
 }) {
 
   const [addProjectOpen, setAddProjectOpen] = useState(false);
-  const [data, setData] = useState(null);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [allProjects, setAllProjects] = useState([]);
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
   const location = useLocation();
+  
+  useEffect(() => {
+    getAllProjects();
+  }, []);
 
-    
-  function handleCreate(val) {
-    setAddProjectOpen(false);
-    setData(val);
+function handleCreate(name, selectedFile) {
+  setCreateLoading(true);
+
+  const data = {
+    folderID: location.state._id,
+    name,
+  };
+
+  if (selectedFile) {
+    data.hasFile = true; // tells backend to create Mux direct upload
+  }
+
+  createProjectApi(data)
+    .then(async (res) => {
+      console.log(res, "res");
+
+      const { muxUploadURL, projectId } = res.data || {};
+
+      // if backend created a mux direct upload AND we actually have a file
+      if (muxUploadURL && selectedFile) {
+        try {
+          // 1) upload video file from browser directly to Mux
+          await uploadToMux(muxUploadURL, selectedFile, (pct) => {
+            // optional: setUploadProgress(pct);
+            console.log("Mux upload progress:", pct);
+          });
+
+          // 2) after upload, you might want to inform backend or just refetch
+          //    (usually backend listens to Mux webhooks and attaches playbackId
+          //     to this project, so just re-fetch projects)
+          await getAllProjects();
+        } catch (err) {
+          console.error("Mux upload error", err);
+          // show toast / message if you have one
+        } finally {
+          setCreateLoading(false);
+          setAddProjectOpen(false);
+        }
+      } else {
+        // no file OR backend chose not to create mux upload
+        await getAllProjects();
+        setCreateLoading(false);
+        setAddProjectOpen(false);
+      }
+    })
+    .catch((err) => {
+      console.log(err?.response?.data || err);
+      setCreateLoading(false);
+    });
+}
+
+
+  // uploads a File to the direct upload URL from Mux
+function uploadToMux(muxUploadURL, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", muxUploadURL, true); // or "POST" – Mux supports both
+
+    xhr.setRequestHeader(
+      "Content-Type",
+      file.type || "application/octet-stream"
+    );
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && typeof onProgress === "function") {
+        const pct = Math.round((event.loaded / event.total) * 100);
+        onProgress(pct);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(
+          new Error(`Mux upload failed: ${xhr.status} ${xhr.responseText}`)
+        );
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error("Network error while uploading to Mux"));
+    };
+
+    xhr.send(file);
+  });
+}
+
+
+  function getAllProjects() {
+
+    const params = {
+      sortField: 'createdAt',
+      sortOrder: 'desc',
+      folderID: location.state._id
+    };
+
+    allProjectsApi(params)
+    .then(res => {
+      console.log(res, 'all projects');
+      setAllProjects(res.data.projectArray);
+    })
+    .catch(err => {
+      console.log(err);
+    })
   }
 
   return (
@@ -91,14 +198,14 @@ export default function AddProject({
         {/* Title row */}
         <div className="mt-8 flex items-center justify-between">
           <div className="flex items-center">
-                <img style={{ height:20, width:20 }} src={LeftArrow} />
-                <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
-                <div className="flex items-center">
-                <div style={{ fontFamily:"Gilroy-Light", color:"#fff" }}>
-                    <span style={{ color:"#9C9C9C" }}>All Folders {" "}</span> / <span>{location.state}</span>
-                </div>
-                </div>
+            <img onClick={() => navigate(-1)} style={{ height:20, width:20, cursor:'pointer' }} src={LeftArrow} />
+            <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
+            <div className="flex items-center">
+            <div style={{ fontFamily:"Gilroy-Light", color:"#fff" }}>
+              <span onClick={() => navigate(-1)} style={{ color:"#9C9C9C", cursor:'pointer' }}>All Folders {" "}</span> / <span>{location.state.name}</span>
             </div>
+            </div>
+          </div>
           <div className="hidden md:flex items-center gap-3">
             <button
               className="inline-flex items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
@@ -135,7 +242,17 @@ export default function AddProject({
             </button>
           </div>
         </div>
-
+        <div className="grid grid-cols-3 gap-6">
+          {allProjects.map((item) => (
+            <ProjectFolder
+              key={item._id}
+              project={item}
+              onClick={() => navigate(PATHS.VIDEO_REVIEW, { state: { projectId: item._id } })}
+              onStatusChange={(id, status) => {
+              }}
+            />
+          ))}
+        </div>
       </main>
 
       {/* Bottom-right watermark */}
@@ -147,6 +264,7 @@ export default function AddProject({
         isOpen={addProjectOpen}
         onClose={() => setAddProjectOpen(false)}
         handleCreate={handleCreate}
+        createLoading={createLoading}
       />
     </div>
   );

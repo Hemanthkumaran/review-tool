@@ -32,6 +32,33 @@ export const createWorkspaceApi = (data) => {
   return axiosClient.post(`/user/addWorkspace`, data);
 };
 
+// Folder api
+export const createFolderApi = (data) => {
+  return axiosClient.post(`/folder/createFolder`, data);
+};
+
+export const allFoldersApi = (sortBy = 'createdAt', sortOrder = 'desc') => {
+  return axiosClient.get(`/folder/getAllFolders?sortField=${sortBy}&sortOrder=${sortOrder}`);
+};
+
+export const getOneFolderApi = (folderId) => {
+  return axiosClient.get(`/folder/getOneFolder?folderID=${folderId}`);
+};
+
+// Project api
+export const createProjectApi = (data) => {
+  return axiosClient.post(`/project/createProject`, data);
+};
+
+export const allProjectsApi = (params) => {
+  return axiosClient.get('/project/getAllProjects', { params });
+};
+
+export const getOneProjectApi = (projId) => {
+  return axiosClient.get(`/project/getOneProject?projectID=${projId}`);
+};
+
+
 export async function saveComment(payload) {
   // payload: { videoId, time, text, annotations, audioUrl }
   const res = await axiosClient.post("/comments", payload);

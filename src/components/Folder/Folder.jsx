@@ -1,13 +1,12 @@
-import React from "react";
-import "./Folder.css";
 import folderImg from "../../assets/svgs/folder.svg";
 import videoIcon from "../../assets/svgs/video.svg";
 import timerIcon from "../../assets/svgs/timer.svg";
 import dot from "../../assets/svgs/dot.svg";
+import "./Folder.css";
 
-const Folder = ({ folderName }) => {
+const Folder = ({ folderName, onClick }) => {
   return (
-    <div className="main-box">
+    <div onClick={onClick} className="main-box">
       <img className="full-box" src={folderImg} alt="" />
       <div className="small-box"></div>
       <div className="text-box">

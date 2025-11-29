@@ -3,6 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import CustomSeekBar from "./CustomSeekbar";
 import PlayerControlsBar from "./PlayerControllerBar";
+import MuxUploader from "./MuxUploader";
+import { useLocation } from "react-router-dom";
+import { getOneProjectApi } from "../../services/api";
 
 export default function VideoPlayerWithSeekbar({
   src,
@@ -25,7 +28,26 @@ export default function VideoPlayerWithSeekbar({
   const [drawingAnnotation, setDrawingAnnotation] = useState(null); // { strokes: [{ points: [{xPct,yPct}]}] }
   const [isLooping, setIsLooping] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  /* ---------- canvas helpers ---------- */
+  const [projectDetail, setProjectDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  
+  const [muxUploadURL, setMuxUploadURL] = useState(null);
+  const [isReadyToPlay, setIsReadyToPlay] = useState(false);
+  const [playbackId, setPlaybackId] = useState(null); 
+
+  
+  useEffect(() => {
+    getOneProjectApi(location.state.projectId)
+    .then(res => {
+      console.log(res, 'ririe');
+      setProjectDetail(res.data.project);
+      setLoading(false);
+    })
+    .catch(err => {
+      setLoading(false);
+    })
+  }, []);
 
   const addPointToStroke = (xPct, yPct) => {
     setDrawingAnnotation((prev) => {
@@ -221,6 +243,9 @@ export default function VideoPlayerWithSeekbar({
     }
   };
 
+  if (loading) {
+    return <div>loading...</div>
+  }
 
 
   return (
@@ -233,17 +258,44 @@ export default function VideoPlayerWithSeekbar({
             autoPlay={false}
             playsInline
             streamType="on-demand"
+            playbackId={"97EiHRggujwIMW3QrDgWtlVlSUC00FdXVCghWV6SshSQ"}
             // controls={false}
             style={muxPlayerStyle}
             onTimeUpdate={onTimeUpdate}
             onLoadedMetadata={onLoadedMetadata}
           />
-
+          {/* {!isReadyToPlay ? (
+              <MuxUploader
+                muxUploadURL={muxUploadURL}
+                onUploaded={async () => {
+                  // after upload, you may need to poll your backend for playbackId
+                  // (backend listens to Mux webhooks and stores the asset/playback IDs)
+                  const res = await fetch("/api/mux/playback-id?projectId=...");
+                  const data = await res.json();
+                  setPlaybackId(data.playbackId);
+                  setIsReadyToPlay(true);
+                }}
+              />
+            ) : (
+              <MuxPlayer
+                ref={playerRef}
+                src={src}
+                autoPlay={false}
+                playsInline
+                streamType="on-demand"
+                playbackId={"97EiHRggujwIMW3QrDgWtlVlSUC00FdXVCghWV6SshSQ"}
+                // controls={false}
+                style={muxPlayerStyle}
+                onTimeUpdate={onTimeUpdate}
+                onLoadedMetadata={onLoadedMetadata}
+              />
+            )} */}
+            
             <div
-  className={`absolute inset-0 ${
-    annotationMode ? "" : "pointer-events-none"
-  }`}
->
+            className={`absolute inset-0 ${
+              annotationMode ? "" : "pointer-events-none"
+            }`}
+          >
   {annotationMode && (
     <>
       <div className="absolute inset-0 bg-black/10 pointer-events-none z-10" />

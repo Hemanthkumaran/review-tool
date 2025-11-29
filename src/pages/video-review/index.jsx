@@ -7,14 +7,19 @@ import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import ShareModal from "../../components/modals/ShareModal";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getOneProjectApi } from "../../services/api";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
+  const location = useLocation();
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(120);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [projectDetail, setProjectDetail] = useState(null);
 
   const [videoSrc, setVideoSrc] = useState(null);   // 🔹 new
   const [videoFile, setVideoFile] = useState(null); // optional if you want the File
@@ -38,13 +43,26 @@ export default function VideoReview() {
     avatarUrl: "https://i.pravatar.cc/40?u=john",
   };
 
+  console.log(location.state.projectId, 'location');
+  
+
    useEffect(() => {
+    fetchProject();
     return () => {
       if (videoSrc && videoSrc.startsWith("blob:")) {
         URL.revokeObjectURL(videoSrc);
       }
     };
   }, [videoSrc]);
+
+  function fetchProject(params) {
+    getOneProjectApi(location.state.projectId)
+    .then(res => {
+      console.log(res, 'res');
+      setProjectDetail(res.data.project);
+      setLoading(false);
+    })
+  }
 
   const handleVideoLoaded = (file, url) => {
     // revoke old one if any
@@ -271,19 +289,25 @@ const handleStartAnnotation = () => {
 
 
   // store scribble as pending; don't create a marker yet
-const handleAddAnnotation = ({ time, annotation }) => {
-  setPendingAnnotation({
-    time: time ?? annotationStartTimeRef.current,
-    annotation,
-  });
-  setAnnotationMode(false);
-};
+  const handleAddAnnotation = ({ time, annotation }) => {
+    setPendingAnnotation({
+      time: time ?? annotationStartTimeRef.current,
+      annotation,
+    });
+    setAnnotationMode(false);
+  };
 
-const handleCancelAnnotation = () => {
-  setPendingAnnotation(null);
-  setAnnotationMode(false);
-};
+  const handleCancelAnnotation = () => {
+    setPendingAnnotation(null);
+    setAnnotationMode(false);
+  };
 
+  console.log(projectDetail, 'pro');
+  
+
+  if (loading) {
+    return <div>loading...</div>
+  }
 
   return (
     <div
@@ -291,7 +315,7 @@ const handleCancelAnnotation = () => {
       className="min-h-screen text-gray-200 font-sans"
     >
       {/* <ShareModal onClose={() => null} /> */}
-      <VideoHeader />
+      <VideoHeader projectDetail={projectDetail}/>
       <div className="mx-auto flex">
         {/* Col 1 */}
         <div
@@ -299,7 +323,7 @@ const handleCancelAnnotation = () => {
             isCommentsOpen ? "basis-3/4" : "basis-full"
           }`}
         >
-          {videoSrc ? (
+          {!videoSrc ? (
             <VideoPlayerWithSeekbar
               src={videoSrc}
               playerRef={playerRef}
@@ -317,7 +341,6 @@ const handleCancelAnnotation = () => {
           ) : (
             <VideoUploadPlaceholder onVideoLoaded={handleVideoLoaded} />
           )}
-
           <CommentBar
             currentTime={currentTime}
             isRecording={isRecording}
@@ -331,9 +354,7 @@ const handleCancelAnnotation = () => {
             onStartAnnotation={handleStartAnnotation}
             onCancelAnnotation={handleCancelAnnotation}
           />
-
         </div>
-
         {/* Col 2 */}
         <div
           className={`relative transition-all duration-300 ${

@@ -58,7 +58,7 @@ export default function CustomSeekBar({
                 className="absolute -translate-x-1/2 flex flex-col items-center"
                 style={{ left }}
               >
-                <div className="w-[18px] h-[18px] rounded-full overflow-hidden border-[1.5px] border-[#0b0c0e] shadow">
+                <div onClick={() => onSeek(m.time)} className="cursor-pointer w-[18px] h-[18px] rounded-full overflow-hidden border-[1.5px] border-[#0b0c0e] shadow">
                   <img
                     src={m.user?.avatarUrl}
                     alt={m.user?.name || "marker"}

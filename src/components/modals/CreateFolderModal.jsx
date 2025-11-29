@@ -4,6 +4,7 @@ import Modal from "react-modal";
 import Button from "../UI/Button";
 import cancelIcon from "../../assets/svgs/cancel.svg";
 import OutlineInput from "../textInputs/OutlineInput";
+import { createFolderApi } from "../../services/api";
 
 
 const modalStyles = {
@@ -21,9 +22,10 @@ const modalStyles = {
   },
 };
 
-export default function CreateFolderModal({ isOpen, onClose, handleCreate }) {
+export default function CreateFolderModal({ isOpen, onClose, handleCreate, loading }) {
 
   const [folderName, setFolderName] = useState("");
+
 
   return (
     <Modal
@@ -57,7 +59,7 @@ export default function CreateFolderModal({ isOpen, onClose, handleCreate }) {
               onChange={(e) => setFolderName(e.target.value)}
             />
         </div>
-        <div className="mt-6">
+        <div className="mt-6 flex">
           <Button
             onClick={onClose}
             content="Cancel"
@@ -73,6 +75,7 @@ export default function CreateFolderModal({ isOpen, onClose, handleCreate }) {
             textColor="black"
             bgColor="yellow"
             onClick={() => handleCreate(folderName)}
+            loading={loading}
           />
         </div>
       </div>

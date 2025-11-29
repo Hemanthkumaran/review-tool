@@ -9,8 +9,8 @@ const SignIn = () => <div className="p-8">Sign In (placeholder)</div>;
 import Dashboard from '../pages/dashboard';
 import AddProject from '../pages/dashboard/AddProject';
 import VideoReview from '../pages/video-review';
-import SettingsLayout from '../components/src/Layout/Settings/SettingsLayout';
-import ProjectAccordion from '../components/src/components/Accordion/Accordion';
+// import SettingsLayout from '../components/src/Layout/Settings/SettingsLayout';
+// import ProjectAccordion from '../components/src/components/Accordion/Accordion';
 const NotFound = () => <div className="p-8">404 - Not Found</div>;
 
 const router = createBrowserRouter([
@@ -21,8 +21,6 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Dashboard />
-        <SettingsLayout/>
-        <ProjectAccordion/>
       </ProtectedRoute>
     ),
   },

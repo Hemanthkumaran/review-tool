@@ -7,7 +7,7 @@ export default function SegmentedTabs({ options, value, onChange, className = ""
     <LayoutGroup>
       <div
         className={
-          "inline-flex w-full bg-black/40 rounded-full border border-[#202020] p-[3px] " +
+          "inline-flex w-full bg-black/40 rounded-full border border-[#202020] p-[3px]" +
           "text-[13px] " +
           className
         }
@@ -21,7 +21,7 @@ export default function SegmentedTabs({ options, value, onChange, className = ""
               type="button"
               onClick={() => onChange(opt.id)}
               className={
-                "relative flex-1 px-4 py-[6px] rounded-full text-center " +
+                "relative cursor-pointer flex-1 px-4 py-[6px] rounded-full text-center " +
                 "transition-colors duration-150 select-none " +
                 (isActive
                   ? "text-white"

@@ -6,6 +6,9 @@ import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
 import { useNavigate } from 'react-router-dom';
 import ProjectFolder from '../../components/ProjectFolder';
+import { allFoldersApi, createFolderApi } from '../../services/api';
+import { useEffect } from 'react';
+import SegmentedTabs from '../../components/SegmentedTabs';
 
 export default function DashboardPage({
   workspaceName = "A2Z Studios",
@@ -16,13 +19,38 @@ export default function DashboardPage({
 }) {
 
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
-  const [data, setData] = useState(null);
+  const [allFolders, setAllFolders] = useState([]);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("allFolders");
+
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
 
-  function handleCreate(val) {
-    setCreateModalOpen(false);
-    setData(val);
+  useEffect(() => {
+    getAllFolders();
+  }, []);
+
+  function handleCreate(name) {
+    setCreateLoading(true);
+    createFolderApi({ name })
+    .then(res => {
+      setCreateLoading(false);
+      setCreateModalOpen(false);
+      getAllFolders();
+    })
+    .catch(err => {
+      setCreateLoading(false);
+    })
+  }
+
+  function getAllFolders() {
+    allFoldersApi()
+    .then(res => {
+      setAllFolders(res.data.folderArray);
+    })
+    .catch(err => {
+      console.log(err);
+    })
   }
 
   return (
@@ -32,7 +60,7 @@ export default function DashboardPage({
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3 rounded-full bg-[#151618] border border-[#232427] px-3 py-2">
             <LogoGlyph className="h-7 w-7" />
-            <span className="text-sm md:text-base font-medium">{workspaceName}</span>
+            <span className="text-sm md:text-base font-medium">{JSON.parse(localStorage.getItem('workspace')).name}</span>
             <span className="rounded-full bg-[#1E1F22] text-[11px] px-2 py-0.5 border border-[#2A2B2F] text-[#BFBFBF]">
               {role}
             </span>
@@ -86,9 +114,9 @@ export default function DashboardPage({
       <main className="px-6 md:px-8">
         {/* Title row */}
         <div className="mt-8 flex items-center justify-between">
-          <h1 className="text-2xl md:text-[28px] font-semibold">
-            Welcome to {workspaceName}’s workspace
-          </h1>
+          <div style={{ fontFamily:"Gilroy-SemiBold", fontSize:24 }}>
+            Welcome to {JSON.parse(localStorage.getItem('workspace')).name}’s workspace
+          </div>
 
           <div className="hidden md:flex items-center gap-3">
             <button
@@ -110,15 +138,16 @@ export default function DashboardPage({
         {/* Tabs & mobile actions */}
         <div className="mt-6 flex items-center justify-between">
           {/* Segmented tabs */}
-          <div className="inline-flex items-center rounded-full border border-[#232427] bg-[#111214] p-1 mb-2">
-            <button className="px-5 py-2 rounded-full text-sm bg-[#1A1C1F] text-white">
-              All folders
-            </button>
-            <button className="px-5 py-2 rounded-full text-sm text-[#BFBFBF] hover:text-white">
-              Projects
-            </button>
-          </div>
-
+            <div style={{ width:250 }} className="mt-2">
+              <SegmentedTabs
+                options={[
+                  { id: "allFolders", label: "All folders" },
+                  { id: "projects", label: "Projects" },
+                ]}
+                value={activeTab}
+                onChange={setActiveTab}
+              />
+            </div>
           {/* Mobile actions */}
           <div className="md:hidden flex items-center gap-2">
             <button
@@ -136,13 +165,17 @@ export default function DashboardPage({
             </button>
           </div>
         </div>
-          <div onClick={() => navigate(PATHS.VIDEO_REVIEW)}><ProjectFolder/></div>
-        { data ?
-        <div onClick={() => navigate(PATHS.ADD_PROJECT, { state: data})}>
-            <Folder folderName={data}/>
-        </div> :
-        <EmptyState/>
-        }
+        { allFolders.length ?
+            <div className='flex gap-6 mt-3'>
+              {allFolders.map(item => {
+                return <Folder 
+                  key={item._id}
+                  onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })} 
+                  folderName={item.name}
+                />
+              })}
+            </div> :
+          <EmptyState/> }
       </main>
 
       {/* Bottom-right watermark */}
@@ -154,6 +187,7 @@ export default function DashboardPage({
         isOpen={isCreateModalOpen}
         onClose={() => setCreateModalOpen(false)}
         handleCreate={handleCreate}
+        loading={createLoading}
       />
     </div>
   );

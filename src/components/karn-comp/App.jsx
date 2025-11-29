@@ -14,15 +14,6 @@ function App() {
 
   return (
     <div >
-      {/* <Folder />
-      <CreateFolder />
-      <div style={{ margin: "20px 0" }}>hello</div>
-      <AddProject />
-      <div style={{ margin: "20px 0" }}>hello</div>
-      <ProjectFolder />
-      <ACard />*/ }
-      <Accordion/> 
-      {/* <SubscriptionCard/> */}
       <SettingsLayout/>
     </div>
   );

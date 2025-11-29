@@ -3,7 +3,7 @@ import VersionPill from './VersionPill'
 import DownloadMenuButton from '../Buttons/DownloadMenuBtn'
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 
-function VideoHeader() {
+function VideoHeader({ projectDetail }) {
   return (
     <div style={{ marginLeft:40}} className="flex items-center justify-between mb-6">
         <div className="flex items-center">
@@ -11,7 +11,7 @@ function VideoHeader() {
             <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
             <div className="flex items-center">
             <div style={{ fontFamily:"Gilroy-Light" }}>
-                Logo introduction video{" "}
+                {projectDetail.name}{" "}
             </div>
             <div style={{ marginLeft:10 }}><VersionPill onClick={() => console.log("version pill clicked")} /></div>
             </div>
