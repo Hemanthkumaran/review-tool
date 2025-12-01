@@ -43,6 +43,7 @@ export default function CommentBar({
   onCancelVoice,
   onStartAnnotation,
   onCancelAnnotation,
+  pauseVideo,
 }) {
   const [text, setText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -50,7 +51,6 @@ export default function CommentBar({
   const [attachments, setAttachments] = useState([]); // [{ url, name }]
   const fileInputRef = useRef(null);
 
-  // recording timer
   useEffect(() => {
     if (!isRecording) {
       setRecordSeconds(0);
@@ -68,7 +68,12 @@ export default function CommentBar({
     const trimmed = text.trim();
     const images = attachments.map((a) => a.url);
 
-    if (!trimmed && !hasPendingVoice && images.length === 0 && !hasPendingAnnotation)
+    if (
+      !trimmed &&
+      !hasPendingVoice &&
+      images.length === 0 &&
+      !hasPendingAnnotation
+    )
       return;
 
     onSend?.({ text: trimmed, images });
@@ -117,6 +122,7 @@ export default function CommentBar({
         className="bg-[#101213] rounded-2xl border border-[#1F1F21] px-4 py-3 w-full outline-none placeholder-[#58595A] text-sm"
         placeholder="Enter your comments here..."
         value={text}
+        onFocus={pauseVideo}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
@@ -175,9 +181,7 @@ export default function CommentBar({
               isAnnotating || hasPendingAnnotation ? "bg-white/10" : ""
             }`}
             title={
-              hasPendingAnnotation
-                ? "Drawing ready"
-                : "Add annotation"
+              hasPendingAnnotation ? "Drawing ready" : "Add annotation"
             }
             onClick={onStartAnnotation}
           >

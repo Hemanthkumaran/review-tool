@@ -7,7 +7,7 @@ import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import ShareModal from "../../components/modals/ShareModal";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from "react-router-dom";
 import { getOneProjectApi } from "../../services/api";
 
 export default function VideoReview() {
@@ -21,8 +21,8 @@ export default function VideoReview() {
   const [loading, setLoading] = useState(true);
   const [projectDetail, setProjectDetail] = useState(null);
 
-  const [videoSrc, setVideoSrc] = useState(null);   // 🔹 new
-  const [videoFile, setVideoFile] = useState(null); // optional if you want the File
+  const [videoSrc, setVideoSrc] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
 
   const [markers, setMarkers] = useState([]);
   const [annotationMode, setAnnotationMode] = useState(false);
@@ -34,8 +34,11 @@ export default function VideoReview() {
   const chunksRef = useRef([]);
   const voiceStartTimeRef = useRef(0);
   const cancelledRef = useRef(false);
-  const [pendingAnnotation, setPendingAnnotation] = useState(null);
+
+  // annotation draft (from canvas)
+  const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
   const annotationStartTimeRef = useRef(0);
+
   const currentUser = {
     id: "me",
     name: "John",
@@ -43,10 +46,7 @@ export default function VideoReview() {
     avatarUrl: "https://i.pravatar.cc/40?u=john",
   };
 
-  console.log(location.state.projectId, 'location');
-  
-
-   useEffect(() => {
+  useEffect(() => {
     fetchProject();
     return () => {
       if (videoSrc && videoSrc.startsWith("blob:")) {
@@ -55,17 +55,15 @@ export default function VideoReview() {
     };
   }, [videoSrc]);
 
-  function fetchProject(params) {
-    getOneProjectApi(location.state.projectId)
-    .then(res => {
-      console.log(res, 'res');
+  function fetchProject() {
+    getOneProjectApi(location.state.projectId).then((res) => {
+      console.log(res, "res");
       setProjectDetail(res.data.project);
       setLoading(false);
-    })
+    });
   }
 
   const handleVideoLoaded = (file, url) => {
-    // revoke old one if any
     if (videoSrc && videoSrc.startsWith("blob:")) {
       URL.revokeObjectURL(videoSrc);
     }
@@ -73,7 +71,6 @@ export default function VideoReview() {
     setVideoFile(file);
     setVideoSrc(url);
 
-    // reset player-related state
     setCurrentTime(0);
     setDuration(0);
     setIsPlaying(false);
@@ -81,71 +78,18 @@ export default function VideoReview() {
     setAnnotationMode(false);
   };
 
-const handleSendComment = ({ text, images }) => {
-  const trimmed = text.trim();
-  const imageUrls = images || [];
-
-  // 1) annotation + voice + optional text/images
-  if (pendingAnnotation && pendingVoice) {
-    addMarker({
-      time: pendingAnnotation.time ?? pendingVoice.startTime,
-      type: "annotation",
-      annotation: pendingAnnotation.annotation,
-      audioUrl: pendingVoice.url,
-      text: trimmed || "",
-      images: imageUrls,
-    });
-
-    setPendingAnnotation(null);
-    setPendingVoice(null);
-    return;
-  }
-
-  // 2) annotation + optional text/images
-  if (pendingAnnotation) {
-    addMarker({
-      time: pendingAnnotation.time,
-      type: "annotation",
-      annotation: pendingAnnotation.annotation,
-      text: trimmed || "",
-      images: imageUrls,
-    });
-
-    setPendingAnnotation(null);
-    return;
-  }
-
-  // 3) voice + optional text/images
-  if (pendingVoice) {
-    addMarker({
-      time: pendingVoice.startTime,
-      type: "voice",
-      audioUrl: pendingVoice.url,
-      text: trimmed || "",
-      images: imageUrls,
-    });
-
-    setPendingVoice(null);
-    return;
-  }
-
-  // 4) text/images only
-  if (trimmed || imageUrls.length) {
-    addMarker({
-      type: "text",
-      text: trimmed,
-      images: imageUrls,
-    });
-  }
-};
-
-
-
-
+  const pauseVideo = () => {
+    if (playerRef.current) {
+      playerRef.current.pause?.();
+    }
+    setIsPlaying(false);
+  };
 
   const addMarker = (partial) => {
+    pauseVideo();
     const marker = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+      id:
+        Date.now().toString(36) + Math.random().toString(36).slice(2),
       time: partial.time ?? currentTime,
       type: "text",
       text: "",
@@ -158,7 +102,9 @@ const handleSendComment = ({ text, images }) => {
     setMarkers((arr) => [...arr, marker].sort((a, b) => a.time - b.time));
   };
 
-  /* player callbacks ... (same as you have) */
+  const handleTogglePlay = () => {
+    setIsPlaying((prev) => !prev);
+  };
 
   const handleTimeUpdate = (e) => {
     const t = e?.target?.currentTime ?? playerRef.current?.currentTime ?? 0;
@@ -170,36 +116,23 @@ const handleSendComment = ({ text, images }) => {
     if (dur && !Number.isNaN(dur)) setDuration(dur);
   };
 
-  const togglePlay = () => {
-    if (!playerRef.current || !videoSrc) return;   // 🔹 guard if no video yet
-    const el = playerRef.current;
-    if (isPlaying) {
-      el.pause?.();
-      setIsPlaying(false);
-    } else {
-      el.play?.();
-      setIsPlaying(true);
+  const handleSeek = (newTime) => {
+    if (playerRef.current) {
+      playerRef.current.currentTime = newTime;
     }
+    setCurrentTime(newTime);
   };
 
-  const seekTo = (time) => {
-    if (!playerRef.current || !videoSrc) return;   // 🔹 guard
-    try {
+  const goToTimeAndPause = (time) => {
+    pauseVideo();
+    if (playerRef.current) {
       playerRef.current.currentTime = time;
-      if (typeof playerRef.current.setCurrentTime === "function") {
-        playerRef.current.setCurrentTime(time);
-      }
-    } catch {
-      const vid = playerRef.current?.querySelector?.("video");
-      if (vid) vid.currentTime = time;
     }
     setCurrentTime(time);
   };
-  /* text comments now sent via handleSendComment */
-
-  /* voice recording */
 
   const startVoiceRecording = async () => {
+    pauseVideo();
     if (!navigator.mediaDevices?.getUserMedia) {
       alert("Recording not supported in this browser");
       return;
@@ -211,7 +144,7 @@ const handleSendComment = ({ text, images }) => {
       chunksRef.current = [];
       cancelledRef.current = false;
       voiceStartTimeRef.current = currentTime;
-      setPendingVoice(null); // clear any previous pending note
+      setPendingVoice(null);
 
       mr.ondataavailable = (ev) => {
         if (ev.data && ev.data.size > 0) {
@@ -222,7 +155,6 @@ const handleSendComment = ({ text, images }) => {
       mr.onstop = () => {
         setIsRecording(false);
 
-        // stop tracks
         mr.stream?.getTracks?.().forEach((t) => t.stop());
 
         if (cancelledRef.current) {
@@ -237,7 +169,6 @@ const handleSendComment = ({ text, images }) => {
         const url = URL.createObjectURL(blob);
         chunksRef.current = [];
 
-        // Do NOT add marker yet – store as pending
         setPendingVoice({
           url,
           startTime: voiceStartTimeRef.current,
@@ -253,21 +184,21 @@ const handleSendComment = ({ text, images }) => {
   };
 
   const stopVoiceRecording = () => {
+    pauseVideo();
     if (!mediaRecorderRef.current) return;
     if (mediaRecorderRef.current.state === "inactive") return;
     mediaRecorderRef.current.stop();
   };
 
-  // replaces: onStartAnnotation={() => setAnnotationMode(true)}
-const handleStartAnnotation = () => {
-  annotationStartTimeRef.current = currentTime;
-  setPendingAnnotation(null);      // clear old scribble
-  setAnnotationMode(true);
-};
-
+  const handleStartAnnotation = () => {
+    pauseVideo();
+    annotationStartTimeRef.current = currentTime;
+    setPendingAnnotation(null);
+    setAnnotationMode(true);
+  };
 
   const handleCancelVoice = () => {
-    // cancel in-progress recording
+    pauseVideo();
     if (isRecording && mediaRecorderRef.current) {
       cancelledRef.current = true;
       try {
@@ -280,16 +211,15 @@ const handleStartAnnotation = () => {
     }
     setIsRecording(false);
 
-    // clear pending voice note
     if (pendingVoice) {
       URL.revokeObjectURL(pendingVoice.url);
       setPendingVoice(null);
     }
   };
 
-
-  // store scribble as pending; don't create a marker yet
+  // legacy hook-in if ever needed (not used by overlay now, but safe)
   const handleAddAnnotation = ({ time, annotation }) => {
+    pauseVideo();
     setPendingAnnotation({
       time: time ?? annotationStartTimeRef.current,
       annotation,
@@ -302,11 +232,102 @@ const handleStartAnnotation = () => {
     setAnnotationMode(false);
   };
 
-  console.log(projectDetail, 'pro');
-  
+  const handleAnnotationDraftChange = (draft) => {
+    // draft: null OR { time, annotation }
+    setPendingAnnotation(draft);
+  };
+
+  const handleSendComment = ({ text, images }) => {
+    pauseVideo();
+
+    const trimmed = (text || "").trim();
+    const imageUrls = images || [];
+
+    const hasAnnotation =
+      !!pendingAnnotation &&
+      !!pendingAnnotation.annotation &&
+      pendingAnnotation.annotation.strokes?.length > 0;
+
+    const hasVoice = !!pendingVoice && !!pendingVoice.url;
+    const hasTextOrImages = !!trimmed || imageUrls.length > 0;
+
+    if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
+      return;
+    }
+
+    const baseTime =
+      (hasAnnotation && pendingAnnotation.time) ||
+      (hasVoice && pendingVoice.startTime) ||
+      currentTime ||
+      0;
+
+    // 1) annotation + voice + optional text/images
+    if (hasAnnotation && hasVoice) {
+      addMarker({
+        time: baseTime,
+        type: "annotation",
+        annotation: pendingAnnotation.annotation,
+        audioUrl: pendingVoice.url,
+        text: trimmed || "",
+        images: imageUrls,
+      });
+
+      setPendingAnnotation(null);
+      setPendingVoice(null);
+      setAnnotationMode(false);
+      return;
+    }
+
+    // 2) annotation + optional text/images
+    if (hasAnnotation) {
+      addMarker({
+        time: baseTime,
+        type: "annotation",
+        annotation: pendingAnnotation.annotation,
+        text: trimmed || "",
+        images: imageUrls,
+      });
+
+      setPendingAnnotation(null);
+      setAnnotationMode(false);
+      return;
+    }
+
+    // 3) voice + optional text/images
+    if (hasVoice) {
+      addMarker({
+        time: baseTime,
+        type: "voice",
+        audioUrl: pendingVoice.url,
+        text: trimmed || "",
+        images: imageUrls,
+      });
+
+      setPendingVoice(null);
+      return;
+    }
+
+    // 4) text/images only (still anchored to baseTime)
+    if (hasTextOrImages) {
+      addMarker({
+        time: baseTime,
+        type: "text",
+        text: trimmed,
+        images: imageUrls,
+      });
+    }
+  };
+
+  const hasPendingAnnotation =
+    !!pendingAnnotation &&
+    !!pendingAnnotation.annotation &&
+    pendingAnnotation.annotation.strokes?.length > 0;
+
+  const hasPendingVoice =
+    !!pendingVoice && !!pendingVoice.url;
 
   if (loading) {
-    return <div>loading...</div>
+    return <div>loading...</div>;
   }
 
   return (
@@ -315,7 +336,7 @@ const handleStartAnnotation = () => {
       className="min-h-screen text-gray-200 font-sans"
     >
       {/* <ShareModal onClose={() => null} /> */}
-      <VideoHeader projectDetail={projectDetail}/>
+      <VideoHeader projectDetail={projectDetail} />
       <div className="mx-auto flex">
         {/* Col 1 */}
         <div
@@ -331,30 +352,36 @@ const handleStartAnnotation = () => {
               duration={duration}
               isPlaying={isPlaying}
               markers={markers}
+              pendingAnnotation={pendingAnnotation}
               annotationMode={annotationMode}
               onTimeUpdate={handleTimeUpdate}
               onLoadedMetadata={handleLoadedMetadata}
-              onTogglePlay={togglePlay}
-              onSeek={seekTo}
+              onTogglePlay={handleTogglePlay}
+              onSeek={handleSeek}
               onAddAnnotation={handleAddAnnotation}
+              onCancelAnnotation={handleCancelAnnotation}
+              onAnnotationDraftChange={handleAnnotationDraftChange}
             />
           ) : (
             <VideoUploadPlaceholder onVideoLoaded={handleVideoLoaded} />
           )}
+
           <CommentBar
             currentTime={currentTime}
             isRecording={isRecording}
-            hasPendingVoice={!!pendingVoice}
-            isAnnotating={annotationMode}              
-            hasPendingAnnotation={!!pendingAnnotation} 
+            hasPendingVoice={hasPendingVoice}
+            isAnnotating={annotationMode}
+            hasPendingAnnotation={hasPendingAnnotation}
             onSend={handleSendComment}
             onStartVoice={startVoiceRecording}
             onStopVoice={stopVoiceRecording}
             onCancelVoice={handleCancelVoice}
             onStartAnnotation={handleStartAnnotation}
             onCancelAnnotation={handleCancelAnnotation}
+            pauseVideo={pauseVideo}
           />
         </div>
+
         {/* Col 2 */}
         <div
           className={`relative transition-all duration-300 ${
@@ -368,7 +395,8 @@ const handleStartAnnotation = () => {
             onToggle={() => setIsCommentsOpen((v) => !v)}
             markers={markers}
             currentTime={currentTime}
-            onSeek={seekTo}
+            onSeek={handleSeek}
+            pauseVideo={pauseVideo}
           />
         </div>
       </div>

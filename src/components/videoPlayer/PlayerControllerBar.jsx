@@ -1,6 +1,12 @@
 // src/components/videoPlayer/PlayerControlsBar.jsx
-import React from "react";
+import React, { useState } from "react";
+
 import CustomSeekBar from "./CustomSeekBar";
+import playIcon from "../../assets/svgs/play.svg";
+import pauseIcon from "../../assets/svgs/pause.svg";
+import speakerIcon from "../../assets/svgs/speaker.svg";
+import fullscreenIcon from "../../assets/svgs/fullscreen.svg";
+import { LoopIcon } from "../../assets/svgs/SvgComponents";
 
 function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
@@ -17,7 +23,7 @@ const IconButton = ({ onClick, title, children, active }) => (
     type="button"
     onClick={onClick}
     title={title}
-    className={`w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 ${
+    className={`w-8 h-8 rounded-full cursor-pointer flex items-center justify-center hover:bg-white/10 ${
       active ? "text-[#FEEA3B]" : "text-gray-200"
     }`}
   >
@@ -26,82 +32,10 @@ const IconButton = ({ onClick, title, children, active }) => (
 );
 
 const PlayIcon = ({ playing }) =>
-  playing ? (
-    <svg viewBox="0 0 16 16" className="w-[13px] h-[13px]" fill="currentColor">
-      <rect x="3" y="3" width="3" height="10" rx="1" />
-      <rect x="10" y="3" width="3" height="10" rx="1" />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 16 16" className="w-[13px] h-[13px]" fill="currentColor">
-      <path d="M4 3.5v9l8-4.5-8-4.5z" />
-    </svg>
-  );
-
-const LoopIcon = () => (
-  <svg viewBox="0 0 20 20" className="w-[16px] h-[16px]" fill="none">
-    <path
-      d="M5 5h8.5a3.5 3.5 0 0 1 0 7H5"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M7 3.5 5 5l2 1.5M13 16.5 15 15l-2-1.5"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+  playing ? <img src={pauseIcon} /> : <img src={playIcon} />;
 
 const VolumeIcon = ({ muted }) =>
-  muted ? (
-    <svg viewBox="0 0 20 20" className="w-[16px] h-[16px]" fill="none">
-      <path
-        d="M4 8h3l4-3v10l-4-3H4z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M14 8l3 3m0-3-3 3"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  ) : (
-    <svg viewBox="0 0 20 20" className="w-[16px] h-[16px]" fill="none">
-      <path
-        d="M4 8h3l4-3v10l-4-3H4z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M14 8.5a2 2 0 0 1 0 3M15.5 7a4 4 0 0 1 0 6"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-
-const FullscreenIcon = () => (
-  <svg viewBox="0 0 20 20" className="w-[16px] h-[16px]" fill="none">
-    <path
-      d="M4 9V4h5M16 11v5h-5M11 4h5v5M9 16H4v-5"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+  muted ? <img src={speakerIcon} /> : <img src={speakerIcon} />;
 
 export default function PlayerControlsBar({
   duration,
@@ -116,7 +50,22 @@ export default function PlayerControlsBar({
   isMuted,
   qualityLabel = "1080p",
   onFullscreen,
+  onQualityChange,
 }) {
+  const [qualityMenuOpen, setQualityMenuOpen] = useState(false);
+
+  const QUALITY_OPTIONS = [
+    { value: "auto", label: "Auto" },
+    { value: "480p", label: "480p" },
+    { value: "720p", label: "720p" },
+    { value: "1080p", label: "1080p" },
+  ];
+
+  const handleSelectQuality = (value) => {
+    onQualityChange?.(value);
+    setQualityMenuOpen(false);
+  };
+
   return (
     <div className="px-6 pb-4 pt-3">
       {/* seek bar with markers */}
@@ -143,7 +92,7 @@ export default function PlayerControlsBar({
             title="Loop"
             active={isLooping}
           >
-            <LoopIcon />
+            <LoopIcon color={isLooping ? "#FEEA3B" : "#fff"} />
           </IconButton>
 
           <IconButton
@@ -164,15 +113,40 @@ export default function PlayerControlsBar({
         </div>
 
         {/* right cluster */}
-        <div className="flex items-center gap-4">
-          <div className="text-[12px]">
-            {qualityLabel}
-            <span className="text-[10px] align-top ml-[2px] text-gray-400">
-              HD
-            </span>
-          </div>
+        <div className="flex items-center gap-4 relative">
+          {/* Quality selector */}
+          <button
+            type="button"
+            onClick={() => setQualityMenuOpen((o) => !o)}
+            className="px-3 py-[4px] cursor-pointer rounded-full bg-[#101114] text-[12px] text-gray-100 flex items-center gap-1 border border-white/5 hover:border-white/30"
+          >
+            <span>{qualityLabel}</span>
+            <span className="text-[10px] text-gray-400">HD</span>
+            <span className="ml-1 text-[9px] text-gray-400">▾</span>
+          </button>
+
+          {qualityMenuOpen && (
+            <div className="absolute right-0 bottom-9 w-28 rounded-xl bg-[#050507]/95 border border-white/10 shadow-lg py-1 z-40">
+              {QUALITY_OPTIONS.map((q) => (
+                <button
+                  key={q.value}
+                  type="button"
+                  onClick={() => handleSelectQuality(q.value)}
+                  className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-white/10 ${
+                    (qualityLabel === "Auto" && q.value === "auto") ||
+                    qualityLabel === q.label
+                      ? "text-[#FEEA3B]"
+                      : "text-gray-200"
+                  }`}
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <IconButton onClick={onFullscreen} title="Fullscreen">
-            <FullscreenIcon />
+            <img src={fullscreenIcon} />
           </IconButton>
         </div>
       </div>

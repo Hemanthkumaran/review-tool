@@ -1,5 +1,6 @@
 // CommentCard.jsx
 import React from "react";
+import VoiceNotePlayer from "./VoiceNotePlayer";
 
 function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
@@ -67,7 +68,7 @@ export default function CommentCard({ marker, index, onGo }) {
             <span className="block mb-1 text-[11px] text-gray-400">
               Voice note
             </span>
-            <audio controls src={audioUrl} className="w-full" />
+            <VoiceNotePlayer src={audioUrl} />
           </div>
         )}
 

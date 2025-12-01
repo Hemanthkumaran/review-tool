@@ -1,7 +1,6 @@
 // VideoPlayerWithSeekbar.jsx
 import React, { useEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
-import CustomSeekBar from "./CustomSeekbar";
 import PlayerControlsBar from "./PlayerControllerBar";
 import MuxUploader from "./MuxUploader";
 import { useLocation } from "react-router-dom";
@@ -15,13 +14,14 @@ export default function VideoPlayerWithSeekbar({
   isPlaying,
   markers,
   annotationMode,
-  pendingAnnotation,  // from parent
+  pendingAnnotation, // from parent
   onTimeUpdate,
   onLoadedMetadata,
   onTogglePlay,
   onSeek,
-  onAddAnnotation,    // ({ time, annotation }) => void  → when user presses Save
-  onCancelAnnotation, // () => void                      → when user presses Cancel
+  onAddAnnotation, // still accepted (legacy)
+  onCancelAnnotation,
+  onAnnotationDraftChange,
 }) {
   const annotationCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -31,23 +31,43 @@ export default function VideoPlayerWithSeekbar({
   const [projectDetail, setProjectDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-  
+
   const [muxUploadURL, setMuxUploadURL] = useState(null);
   const [isReadyToPlay, setIsReadyToPlay] = useState(false);
-  const [playbackId, setPlaybackId] = useState(null); 
+  const [playbackId, setPlaybackId] = useState(null);
+  const [quality, setQuality] = useState("auto"); // "auto" | "480p" | "720p" | "1080p"
 
-  
   useEffect(() => {
     getOneProjectApi(location.state.projectId)
-    .then(res => {
-      console.log(res, 'ririe');
-      setProjectDetail(res.data.project);
-      setLoading(false);
-    })
-    .catch(err => {
-      setLoading(false);
-    })
+      .then((res) => {
+        console.log(res, "ririe");
+        setProjectDetail(res.data.project);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
   }, []);
+
+  // notify parent when there is / isn't a drawing draft
+  useEffect(() => {
+    if (!annotationMode) {
+      onAnnotationDraftChange?.(null);
+      return;
+    }
+
+    const hasStrokes =
+      drawingAnnotation && drawingAnnotation.strokes?.length > 0;
+
+    if (hasStrokes) {
+      onAnnotationDraftChange?.({
+        time: currentTime,
+        annotation: drawingAnnotation,
+      });
+    } else {
+      onAnnotationDraftChange?.(null);
+    }
+  }, [drawingAnnotation, annotationMode, currentTime, onAnnotationDraftChange]);
 
   const addPointToStroke = (xPct, yPct) => {
     setDrawingAnnotation((prev) => {
@@ -78,7 +98,6 @@ export default function VideoPlayerWithSeekbar({
     const xPct = x / rect.width;
     const yPct = y / rect.height;
 
-    // start a new stroke
     setDrawingAnnotation((prev) => {
       const strokes = prev?.strokes ? [...prev.strokes] : [];
       strokes.push({ points: [{ xPct, yPct }] });
@@ -161,40 +180,25 @@ export default function VideoPlayerWithSeekbar({
       );
     }
 
-    // in-progress strokes while drawing (lighter blue)
     if (annotationMode && drawingAnnotation) {
       drawStrokes(drawingAnnotation, "rgba(180,180,255,0.95)", 3);
     }
-  }, [markers, currentTime, annotationMode, drawingAnnotation, pendingAnnotation]);
-
-  /* ---------- overlay Save/Cancel handlers ---------- */
-
-  const handleSaveAnnotation = () => {
-    if (!drawingAnnotation || !drawingAnnotation.strokes?.length) return;
-    onAddAnnotation?.({
-      time: currentTime,
-      annotation: drawingAnnotation,
-    });
-    // parent will set annotationMode = false; local state will clear via effect
-  };
+  }, [
+    markers,
+    currentTime,
+    annotationMode,
+    drawingAnnotation,
+    pendingAnnotation,
+  ]);
 
   const handleCancelOverlay = () => {
     onCancelAnnotation?.();
+    onAnnotationDraftChange?.(null);
     setIsDrawing(false);
     setDrawingAnnotation(null);
   };
 
-  /* ---------- Mux player ---------- */
-
-  // const muxPlayerStyle = {
-  //   width: "100%",
-  //   height: "100%",
-  //   display: "block",
-  //   backgroundColor: "black",
-  // };
-
-
-   const muxPlayerStyle = {
+  const muxPlayerStyle = {
     width: "100%",
     height: "100%",
     display: "block",
@@ -244,9 +248,8 @@ export default function VideoPlayerWithSeekbar({
   };
 
   if (loading) {
-    return <div>loading...</div>
+    return <div>loading...</div>;
   }
-
 
   return (
     <div className="bg-[#0b0c0e] rounded-2xl overflow-hidden shadow-lg">
@@ -259,96 +262,65 @@ export default function VideoPlayerWithSeekbar({
             playsInline
             streamType="on-demand"
             playbackId={"97EiHRggujwIMW3QrDgWtlVlSUC00FdXVCghWV6SshSQ"}
-            // controls={false}
+            controls={false}
             style={muxPlayerStyle}
             onTimeUpdate={onTimeUpdate}
             onLoadedMetadata={onLoadedMetadata}
+            maxResolution={quality === "auto" ? undefined : quality}
           />
-          {/* {!isReadyToPlay ? (
-              <MuxUploader
-                muxUploadURL={muxUploadURL}
-                onUploaded={async () => {
-                  // after upload, you may need to poll your backend for playbackId
-                  // (backend listens to Mux webhooks and stores the asset/playback IDs)
-                  const res = await fetch("/api/mux/playback-id?projectId=...");
-                  const data = await res.json();
-                  setPlaybackId(data.playbackId);
-                  setIsReadyToPlay(true);
-                }}
-              />
-            ) : (
-              <MuxPlayer
-                ref={playerRef}
-                src={src}
-                autoPlay={false}
-                playsInline
-                streamType="on-demand"
-                playbackId={"97EiHRggujwIMW3QrDgWtlVlSUC00FdXVCghWV6SshSQ"}
-                // controls={false}
-                style={muxPlayerStyle}
-                onTimeUpdate={onTimeUpdate}
-                onLoadedMetadata={onLoadedMetadata}
-              />
-            )} */}
-            
-            <div
+
+          <div
             className={`absolute inset-0 ${
               annotationMode ? "" : "pointer-events-none"
             }`}
           >
-  {annotationMode && (
-    <>
-      <div className="absolute inset-0 bg-black/10 pointer-events-none z-10" />
-      <div className="absolute top-3 right-3 flex gap-2 z-30">
-        <button
-          type="button"
-          onClick={handleCancelOverlay}
-          className="px-3 py-1 text-[11px] rounded-full bg-black/70 text-gray-200 hover:bg-black/90 border border-white/10"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveAnnotation}
-          disabled={
-            !drawingAnnotation || !drawingAnnotation.strokes?.length
-          }
-          className="px-3 py-1 text-[11px] rounded-full bg-[#FEEA3B] text-black font-medium disabled:opacity-40 disabled:cursor-default"
-        >
-          Save
-        </button>
-      </div>
-    </>
-  )}
-          <canvas
-            ref={annotationCanvasRef}
-            className={`absolute inset-0 w-full h-full z-20 ${
-              annotationMode
-                ? "pointer-events-auto cursor-crosshair"
-                : "pointer-events-none"
-            }`}
-            onPointerDown={handleCanvasPointerDown}
-            onPointerMove={handleCanvasPointerMove}
-            onPointerUp={handleCanvasPointerUp}
-          />
-        </div>
+            {annotationMode && (
+              <>
+                <div className="absolute inset-0 bg-black/10 pointer-events-none z-10" />
+
+                <div className="absolute top-3 right-3 flex gap-2 z-30">
+                  <button
+                    type="button"
+                    onClick={handleCancelOverlay}
+                    className="px-3 py-1 text-[11px] rounded-full bg-black/70 text-gray-200 hover:bg-black/90 border border-white/10"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+
+            <canvas
+              ref={annotationCanvasRef}
+              className={`absolute inset-0 w-full h-full z-20 ${
+                annotationMode
+                  ? "pointer-events-auto cursor-crosshair"
+                  : "pointer-events-none"
+              }`}
+              onPointerDown={handleCanvasPointerDown}
+              onPointerMove={handleCanvasPointerMove}
+              onPointerUp={handleCanvasPointerUp}
+            />
+          </div>
         </div>
       </div>
+
       <div className="px-6">
-      <PlayerControlsBar
-        duration={duration}
-        currentTime={currentTime}
-        markers={markers}
-        isPlaying={isPlaying}
-        onTogglePlay={handleTogglePlay}
-        onSeek={onSeek}
-        onToggleLoop={handleLoopToggle}
-        isLooping={isLooping}
-        onToggleMute={handleMuteToggle}
-        isMuted={isMuted}
-        qualityLabel="1080p"
-        onFullscreen={handleFullscreen}
-      />
+        <PlayerControlsBar
+          duration={duration}
+          currentTime={currentTime}
+          markers={markers}
+          isPlaying={isPlaying}
+          onTogglePlay={handleTogglePlay}
+          onSeek={onSeek}
+          onToggleLoop={handleLoopToggle}
+          isLooping={isLooping}
+          onToggleMute={handleMuteToggle}
+          isMuted={isMuted}
+          qualityLabel={quality === "auto" ? "Auto" : quality}
+          onQualityChange={setQuality}
+          onFullscreen={handleFullscreen}
+        />
       </div>
       <div className="h-4" />
     </div>
