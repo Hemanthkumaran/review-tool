@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Switch from "react-switch";
 
 import SegmentedTabs from "../SegmentedTabs";
 import CommentCard from "./CommentCard";
@@ -6,27 +7,18 @@ import downloadIcon from "../../assets/svgs/download.svg";
 import filterIcon from "../../assets/svgs/filter.svg";
 import NotesEditor from "../notes/NotesEditor";
 
-function formatClockTime(t = 0) {
-  const sec = Math.floor(t % 60)
-    .toString()
-    .padStart(2, "0");
-  const min = Math.floor(t / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${min}:${sec}`;
-}
 
 export default function CommentsColumn({
   isOpen,
   onToggle,
   markers,
-  currentTime,
   onSeek,
 }) {
   const [activeTab, setActiveTab] = useState("comments");
-const [notesHtml, setNotesHtml] = useState(
-  "<p>Transcript (Draft Voiceover):</p><ul><li>Managing workspaces shouldn't be chaos.</li>...</ul>"
-);
+  const [checked, setChecked] = useState(false);
+  const [notesHtml, setNotesHtml] = useState(
+    "<p>Transcript (Draft Voiceover):</p><ul><li>Managing workspaces shouldn't be chaos.</li>...</ul>"
+  );
 const [notesUpdatedAt, setNotesUpdatedAt] = useState(new Date());
 
 const handleSaveNotes = (html) => {
@@ -102,6 +94,7 @@ const handleSaveNotes = (html) => {
               </div>
               <div className="flex items-center gap-3 text-xs text-gray-400">
                   <span>Unresolved</span>
+                  {/* <Switch onColor="#F9F046" width={50} height={25} handleDiameter={1} onHandleColor="#101213" offHandleColor="#101213" checkedIcon={false} uncheckedIcon={false} onChange={(v) => setChecked(v)} checked={checked} /> */}
                   <button className="w-8 h-4 rounded-full bg-[#222] flex items-center px-[2px]">
                       <span className="w-3 h-3 rounded-full bg-[#FEEA3B]" />
                   </button>

@@ -8,11 +8,14 @@ import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import ShareModal from "../../components/modals/ShareModal";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getOneProjectApi } from "../../services/api";
+import { addCommentApi, getOneProjectApi } from "../../services/api";
+import AppLoader from "../../components/common/AppLoader";
+import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(120);
@@ -22,7 +25,7 @@ export default function VideoReview() {
   const [projectDetail, setProjectDetail] = useState(null);
 
   const [videoSrc, setVideoSrc] = useState(null);
-  const [videoFile, setVideoFile] = useState(null);
+  // const [videoFile, setVideoFile] = useState(null);
 
   const [markers, setMarkers] = useState([]);
   const [annotationMode, setAnnotationMode] = useState(false);
@@ -55,28 +58,61 @@ export default function VideoReview() {
     };
   }, [videoSrc]);
 
+  
+useEffect(() => {
+  if (!projectDetail) {
+    setMarkers([]);
+    return;
+  }
+
+  const version =
+    // projectDetail.versions?.find((v) => v._id === versionId) ||
+    projectDetail.versions?.[0];
+
+  const backendComments = version?.comments || [];
+  const mapped = mapCommentsToMarkers(backendComments);
+
+  setMarkers(mapped);
+}, [projectDetail]);
+
   function fetchProject() {
     getOneProjectApi(location.state.projectId).then((res) => {
       console.log(res, "res");
       setProjectDetail(res.data.project);
+      if (res.data.project.versions[0]?.muxPlaybackID) {
+        setVideoSrc(res.data.project.versions[0].muxPlaybackID);
+      }
       setLoading(false);
     });
   }
 
-  const handleVideoLoaded = (file, url) => {
-    if (videoSrc && videoSrc.startsWith("blob:")) {
-      URL.revokeObjectURL(videoSrc);
-    }
-
-    setVideoFile(file);
-    setVideoSrc(url);
-
-    setCurrentTime(0);
-    setDuration(0);
-    setIsPlaying(false);
-    setMarkers([]);
-    setAnnotationMode(false);
+  // called AFTER upload finishes in VideoUploadPlaceholder
+  const handleVideoUploaded = () => {
+    console.log('called');
+    // playbackUrl – e.g. https://stream.mux.com/<playbackId>.m3u8
+    // playbackId   – in case you need to store/use it elsewhere
+    fetchProject()
+    // setVideoSrc(playbackUrl);
+    // setIsPlaying(false);
+    // setCurrentTime(0);
   };
+
+
+  // const handleVideoLoaded = (file, url) => {
+  //   setLoading(true);
+  //   if (videoSrc && videoSrc.startsWith("blob:")) {
+  //     URL.revokeObjectURL(videoSrc);
+  //   }
+
+  //   setVideoFile(file);
+  //   setVideoSrc(url);
+
+  //   setCurrentTime(0);
+  //   setDuration(0);
+  //   setIsPlaying(false);
+  //   setMarkers([]);
+  //   setAnnotationMode(false);
+  // };
 
   const pauseVideo = () => {
     if (playerRef.current) {
@@ -123,13 +159,13 @@ export default function VideoReview() {
     setCurrentTime(newTime);
   };
 
-  const goToTimeAndPause = (time) => {
-    pauseVideo();
-    if (playerRef.current) {
-      playerRef.current.currentTime = time;
-    }
-    setCurrentTime(time);
-  };
+  // const goToTimeAndPause = (time) => {
+  //   pauseVideo();
+  //   if (playerRef.current) {
+  //     playerRef.current.currentTime = time;
+  //   }
+  //   setCurrentTime(time);
+  // };
 
   const startVoiceRecording = async () => {
     pauseVideo();
@@ -237,86 +273,229 @@ export default function VideoReview() {
     setPendingAnnotation(draft);
   };
 
-  const handleSendComment = ({ text, images }) => {
-    pauseVideo();
+  // const handleSendComment = ({ text, images }) => {
+  //   pauseVideo();
 
-    const trimmed = (text || "").trim();
-    const imageUrls = images || [];
+  //   const trimmed = (text || "").trim();
+  //   const imageUrls = images || [];
 
-    const hasAnnotation =
-      !!pendingAnnotation &&
-      !!pendingAnnotation.annotation &&
-      pendingAnnotation.annotation.strokes?.length > 0;
+  //   const hasAnnotation =
+  //     !!pendingAnnotation &&
+  //     !!pendingAnnotation.annotation &&
+  //     pendingAnnotation.annotation.strokes?.length > 0;
 
-    const hasVoice = !!pendingVoice && !!pendingVoice.url;
-    const hasTextOrImages = !!trimmed || imageUrls.length > 0;
+  //   const hasVoice = !!pendingVoice && !!pendingVoice.url;
+  //   const hasTextOrImages = !!trimmed || imageUrls.length > 0;
 
-    if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
-      return;
-    }
+  //   if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
+  //     return;
+  //   }
 
-    const baseTime =
-      (hasAnnotation && pendingAnnotation.time) ||
-      (hasVoice && pendingVoice.startTime) ||
-      currentTime ||
-      0;
+  //   const baseTime =
+  //     (hasAnnotation && pendingAnnotation.time) ||
+  //     (hasVoice && pendingVoice.startTime) ||
+  //     currentTime ||
+  //     0;
 
-    // 1) annotation + voice + optional text/images
-    if (hasAnnotation && hasVoice) {
-      addMarker({
-        time: baseTime,
-        type: "annotation",
-        annotation: pendingAnnotation.annotation,
-        audioUrl: pendingVoice.url,
-        text: trimmed || "",
-        images: imageUrls,
-      });
+  //   // 1) annotation + voice + optional text/images
+  //   if (hasAnnotation && hasVoice) {
+  //     addMarker({
+  //       time: baseTime,
+  //       type: "annotation",
+  //       annotation: pendingAnnotation.annotation,
+  //       audioUrl: pendingVoice.url,
+  //       text: trimmed || "",
+  //       images: imageUrls,
+  //     });
 
-      setPendingAnnotation(null);
-      setPendingVoice(null);
-      setAnnotationMode(false);
-      return;
-    }
+  //     setPendingAnnotation(null);
+  //     setPendingVoice(null);
+  //     setAnnotationMode(false);
+  //     return;
+  //   }
 
-    // 2) annotation + optional text/images
-    if (hasAnnotation) {
-      addMarker({
-        time: baseTime,
-        type: "annotation",
-        annotation: pendingAnnotation.annotation,
-        text: trimmed || "",
-        images: imageUrls,
-      });
+  //   // 2) annotation + optional text/images
+  //   if (hasAnnotation) {
+  //     addMarker({
+  //       time: baseTime,
+  //       type: "annotation",
+  //       annotation: pendingAnnotation.annotation,
+  //       text: trimmed || "",
+  //       images: imageUrls,
+  //     });
 
-      setPendingAnnotation(null);
-      setAnnotationMode(false);
-      return;
-    }
+  //     setPendingAnnotation(null);
+  //     setAnnotationMode(false);
+  //     return;
+  //   }
 
-    // 3) voice + optional text/images
-    if (hasVoice) {
-      addMarker({
-        time: baseTime,
-        type: "voice",
-        audioUrl: pendingVoice.url,
-        text: trimmed || "",
-        images: imageUrls,
-      });
+  //   // 3) voice + optional text/images
+  //   if (hasVoice) {
+  //     addMarker({
+  //       time: baseTime,
+  //       type: "voice",
+  //       audioUrl: pendingVoice.url,
+  //       text: trimmed || "",
+  //       images: imageUrls,
+  //     });
 
-      setPendingVoice(null);
-      return;
-    }
+  //     setPendingVoice(null);
+  //     return;
+  //   }
 
-    // 4) text/images only (still anchored to baseTime)
-    if (hasTextOrImages) {
-      addMarker({
-        time: baseTime,
-        type: "text",
-        text: trimmed,
-        images: imageUrls,
-      });
-    }
+  //   // 4) text/images only (still anchored to baseTime)
+  //   if (hasTextOrImages) {
+  //     addMarker({
+  //       time: baseTime,
+  //       type: "text",
+  //       text: trimmed,
+  //       images: imageUrls,
+  //     });
+  //   }
+  // };
+
+  const handleSendComment = async ({ text, images }) => {
+  pauseVideo();
+
+  const trimmed = (text || "").trim();
+  const imageUrls = images || [];
+
+  const hasAnnotation =
+    !!pendingAnnotation &&
+    !!pendingAnnotation.annotation &&
+    pendingAnnotation.annotation.strokes?.length > 0;
+
+  const hasVoice = !!pendingVoice && !!pendingVoice.url;
+  const hasTextOrImages = !!trimmed || imageUrls.length > 0;
+
+  // nothing to send
+  if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
+    return;
+  }
+
+  const baseTime =
+    (hasAnnotation && pendingAnnotation.time) ||
+    (hasVoice && pendingVoice.startTime) ||
+    currentTime ||
+    0;
+
+  /* ---------- 1) Update local UI immediately (add marker) ---------- */
+
+  // decide marker type for your local timeline
+  let markerType = "text";
+  if (hasAnnotation && hasVoice) markerType = "annotation";
+  else if (hasAnnotation) markerType = "annotation";
+  else if (hasVoice) markerType = "voice";
+
+  const localMarkerPayload = {
+    time: baseTime,
+    type: markerType,
+    text: trimmed || "",
+    images: imageUrls,
   };
+
+  if (hasAnnotation) {
+    localMarkerPayload.annotation = pendingAnnotation.annotation;
+  }
+  if (hasVoice) {
+    localMarkerPayload.audioUrl = pendingVoice.url;
+  }
+
+  // this is your existing helper that updates state
+  addMarker(localMarkerPayload);
+
+  /* ---------- 2) Build FormData for backend ---------- */
+
+  const formData = new FormData();
+
+  // timeline in seconds (backend expects string)
+  formData.append("timeline", Math.round(baseTime).toString());
+
+  if (trimmed) {
+    formData.append("text", trimmed);
+  }
+
+  if (hasAnnotation) {
+    // send your strokes structure as JSON
+    formData.append(
+      "annotation",
+      JSON.stringify(pendingAnnotation.annotation)
+    );
+  }
+
+    // voiceNote: convert object URL -> Blob -> File, force WAV mimetype
+    if (hasVoice && pendingVoice.url) {
+      try {
+        const voiceBlob = await fetch(pendingVoice.url).then((r) => r.blob());
+
+        // Backend only allows wav / x-wav / wave, so we wrap bytes as audio/wav
+        const voiceFile = new File([voiceBlob], "voice-note.wav", {
+          type: "audio/wav",
+        });
+
+        formData.append("voiceNote", voiceFile);
+      } catch (err) {
+        console.error("Failed to attach voice note file", err);
+      }
+    }
+
+
+
+  // images: each URL -> Blob -> File, appended as "images"
+  if (imageUrls.length) {
+    try {
+      const blobs = await Promise.all(
+        imageUrls.map((url) =>
+          fetch(url)
+            .then((r) => r.blob())
+            .catch((err) => {
+              console.error("Failed to fetch image blob for", url, err);
+              return null;
+            })
+        )
+      );
+
+      blobs.forEach((blob, idx) => {
+        if (!blob) return;
+        const imgFile = new File(
+          [blob],
+          `comment-image-${idx + 1}.jpg`,
+          { type: blob.type || "image/jpeg" }
+        );
+        formData.append("images", imgFile);
+      });
+    } catch (err) {
+      console.error("Failed to attach images", err);
+    }
+  }
+
+  /* ---------- 3) Send to backend ---------- */
+
+  try {
+    const projectID = projectDetail._id
+    // pick versionID from location or projectDetail – adjust as needed
+    const versionID = projectDetail.versions[0]._id
+
+    if (!projectID || !versionID) {
+      console.warn("Missing projectID or versionID for addComment");
+    } else {
+      await addCommentApi(projectID, versionID, formData);
+    }
+  } catch (err) {
+    console.error("addComment API failed", err?.response?.data || err);
+    // TODO: optionally show a toast or mark the local marker as "failed"
+  } finally {
+    /* ---------- 4) Clear pending states ---------- */
+    if (hasAnnotation) {
+      setPendingAnnotation(null);
+      setAnnotationMode(false);
+    }
+    if (hasVoice) {
+      setPendingVoice(null);
+    }
+  }
+};
+
 
   const hasPendingAnnotation =
     !!pendingAnnotation &&
@@ -326,9 +505,7 @@ export default function VideoReview() {
   const hasPendingVoice =
     !!pendingVoice && !!pendingVoice.url;
 
-  if (loading) {
-    return <div>loading...</div>;
-  }
+  if (loading) return <AppLoader visible={loading} message="Loading folders…" />
 
   return (
     <div
@@ -336,7 +513,7 @@ export default function VideoReview() {
       className="min-h-screen text-gray-200 font-sans"
     >
       {/* <ShareModal onClose={() => null} /> */}
-      <VideoHeader projectDetail={projectDetail} />
+      <VideoHeader goBack={() => navigate(-1)} projectDetail={projectDetail} />
       <div className="mx-auto flex">
         {/* Col 1 */}
         <div
@@ -344,7 +521,7 @@ export default function VideoReview() {
             isCommentsOpen ? "basis-3/4" : "basis-full"
           }`}
         >
-          {!videoSrc ? (
+          {videoSrc ? (
             <VideoPlayerWithSeekbar
               src={videoSrc}
               playerRef={playerRef}
@@ -363,9 +540,13 @@ export default function VideoReview() {
               onAnnotationDraftChange={handleAnnotationDraftChange}
             />
           ) : (
-            <VideoUploadPlaceholder onVideoLoaded={handleVideoLoaded} />
+            <div style={{ marginRight:10, marginBottom:10 }}>
+            <VideoUploadPlaceholder
+              projectId={location.state.projectId}
+              onVideoUploaded={handleVideoUploaded}
+            />
+            </div>
           )}
-
           <CommentBar
             currentTime={currentTime}
             isRecording={isRecording}
@@ -381,7 +562,6 @@ export default function VideoReview() {
             pauseVideo={pauseVideo}
           />
         </div>
-
         {/* Col 2 */}
         <div
           className={`relative transition-all duration-300 ${

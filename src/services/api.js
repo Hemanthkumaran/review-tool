@@ -58,12 +58,27 @@ export const getOneProjectApi = (projId) => {
   return axiosClient.get(`/project/getOneProject?projectID=${projId}`);
 };
 
+export const getVideoUploadUrl = (projId) => {
+  return axiosClient.get(`/project/getUploadVideoLink?projectID=${projId}`);
+};
 
 export async function saveComment(payload) {
   // payload: { videoId, time, text, annotations, audioUrl }
   const res = await axiosClient.post("/comments", payload);
   return res.data;
 }
+
+export const addCommentApi = (projectID, versionID, formData) => {
+  return axiosClient.post(
+    `/project/addComment?projectID=${projectID}&versionID=${versionID}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
 
 // Upload audio blob; backend should return a public URL after upload
 export async function uploadVoiceNote(blob, { filename = "voice.webm" } = {}) {

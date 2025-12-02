@@ -1,93 +1,109 @@
-import React, { useCallback, useRef, useState } from "react";
+// src/components/videoPlayer/CustomSeekBar.jsx
+import React, { useCallback } from "react";
 
-/**
- * markers: [
- *   { id, time, user: { avatarUrl } }
- * ]
- */
 export default function CustomSeekBar({
-  duration,
-  currentTime,
-  markers = [],
+  currentTime = 0,
+  duration = 0,
   onSeek,
+  markers = [],
 }) {
-  const trackRef = useRef(null);
-  const [isScrubbing, setIsScrubbing] = useState(false);
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const pct = safeDuration ? Math.min(currentTime / safeDuration, 1) : 0;
 
-  const pct = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  const seekFromEvent = useCallback(
-    (clientX) => {
-      if (!trackRef.current || !duration) return;
-      const rect = trackRef.current.getBoundingClientRect();
-      const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
-      const ratio = x / rect.width;
-      const t = ratio * duration;
-      onSeek?.(t);
+  const handleClickTrack = useCallback(
+    (e) => {
+      if (!safeDuration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const ratio = Math.min(Math.max(x / rect.width, 0), 1);
+      const newTime = ratio * safeDuration;
+      onSeek?.(newTime);
     },
-    [duration, onSeek]
+    [onSeek, safeDuration]
   );
 
-  const handlePointerDown = (e) => {
-    e.preventDefault();
-    setIsScrubbing(true);
-    seekFromEvent(e.clientX);
+  const handleDragThumb = useCallback(
+    (e) => {
+      if (!safeDuration) return;
 
-    const move = (ev) => seekFromEvent(ev.clientX);
-    const up = (ev) => {
-      seekFromEvent(ev.clientX);
-      setIsScrubbing(false);
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
+      const track = e.currentTarget.parentElement;
+      if (!track) return;
+      const rect = track.getBoundingClientRect();
 
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-  };
+      const updateFromEvent = (ev) => {
+        const x = ev.clientX - rect.left;
+        const ratio = Math.min(Math.max(x / rect.width, 0), 1);
+        const newTime = ratio * safeDuration;
+        onSeek?.(newTime);
+      };
+
+      const move = (ev) => {
+        ev.preventDefault();
+        updateFromEvent(ev);
+      };
+
+      const up = () => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+      };
+
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+
+      updateFromEvent(e);
+    },
+    [onSeek, safeDuration]
+  );
 
   return (
-    <div className="w-full">
-      {/* avatars + tick markers */}
-      <div className="relative mb-1 h-6">
-        {duration > 0 &&
-          markers.map((m) => {
-            const left = `${(m.time / duration) * 100}%`;
-            return (
-              <div
-                key={m.id}
-                className="absolute -translate-x-1/2 flex flex-col items-center"
-                style={{ left }}
-              >
-                <div onClick={() => onSeek(m.time)} className="cursor-pointer w-[18px] h-[18px] rounded-full overflow-hidden border-[1.5px] border-[#0b0c0e] shadow">
-                  <img
-                    src={m.user?.avatarUrl}
-                    alt={m.user?.name || "marker"}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="mt-[2px] w-[2px] h-2 bg-[#37D37D]" />
-              </div>
-            );
-          })}
+    <div className="relative w-full h-14">
+      {/* track + progress + thumb (bottom-aligned) */}
+      <div
+        className="absolute left-0 right-0 bottom-0 h-2 rounded-full bg-[#252525] cursor-pointer"
+        onClick={handleClickTrack}
+      >
+        {/* filled yellow portion */}
+        <div
+          className="absolute left-0 top-0 h-2 rounded-full bg-[#FEEA3B]"
+          style={{ width: `${pct * 100}%` }}
+        />
+
+        {/* thumb */}
+        <div
+          className="absolute top-1/2 -translate-y-1/14 w-4 h-4 rounded-full bg-white shadow pointer-events-auto"
+          style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)", zIndex:1000000 }}
+          onPointerDown={handleDragThumb}
+        />
       </div>
 
-      {/* track */}
-      <div
-        ref={trackRef}
-        className="relative h-[8px] rounded-full bg-[#2b2b2f] cursor-pointer"
-        onPointerDown={handlePointerDown}
-      >
-        {/* played portion */}
-        <div
-          className="absolute left-0 top-0 h-full rounded-full bg-[#FEEA3B]"
-          style={{ width: `${pct}%` }}
-        />
-
-        {/* knob */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 w-[14px] h-[14px] rounded-full bg-white shadow-md"
-          style={{ left: `calc(${pct}% - 7px)` }}
-        />
+      {/* marker avatars + green ticks */}
+      <div className="absolute inset-x-0 top-6.5 h-10 pointer-events-none">
+        {markers.map((m) => {
+          const leftPct = safeDuration ? (m.time / safeDuration) * 100 : 0;
+          const avatar =
+            m.user?.avatarUrl ||
+            "https://i.pravatar.cc/40?u=default-marker";
+          return (
+            <button
+              key={m.id}
+              type="button"
+              className="pointer-events-auto absolute flex flex-col items-center -translate-x-1/2"
+              style={{ left: `${leftPct}%` }}
+              onClick={() => onSeek?.(m.time)}
+            >
+              {/* avatar above */}
+              <div className="w-4 h-4 cursor-pointer rounded-full border border-[#FEEA3B] overflow-hidden bg-black mb-[3px]">
+                <img
+                  src={avatar}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              {/* green tick touching the track */}
+              <div className="w-[2px] h-2 bg-[#27C46A] mt-0.5" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );

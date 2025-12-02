@@ -3,11 +3,11 @@ import VersionPill from './VersionPill'
 import DownloadMenuButton from '../Buttons/DownloadMenuBtn'
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 
-function VideoHeader({ projectDetail }) {
+function VideoHeader({ projectDetail, goBack }) {
   return (
     <div style={{ marginLeft:40}} className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-            <img style={{ height:20, width:20 }} src={LeftArrow} />
+            <img onClick={goBack} style={{ height:20, width:20, cursor:'pointer' }} src={LeftArrow} />
             <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
             <div className="flex items-center">
             <div style={{ fontFamily:"Gilroy-Light" }}>

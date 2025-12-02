@@ -6,6 +6,11 @@ export default function SegmentedTabs({ options, value, onChange, className = ""
   return (
     <LayoutGroup>
       <div
+        style={{
+          border: "1px solid #202020",
+          borderRadius: 25,
+          padding: 4
+        }}  
         className={
           "inline-flex w-full bg-black/40 rounded-full border border-[#202020] p-[3px]" +
           "text-[13px] " +

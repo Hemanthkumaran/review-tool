@@ -17,7 +17,7 @@ export default function StatusPill({
         px-3 py-2.5
         rounded-full
         bg-[#0E0E0E]
-        border border-[#2A2A2A]
+        border border-[#181A1C]
         shadow-[0_2px_4px_rgba(0,0,0,0.45)]
         text-sm text-white
         ${className}

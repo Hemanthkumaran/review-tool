@@ -6,13 +6,13 @@ import MuxUploader from "./MuxUploader";
 import { useLocation } from "react-router-dom";
 import { getOneProjectApi } from "../../services/api";
 
+
 export default function VideoPlayerWithSeekbar({
   src,
   playerRef,
   currentTime,
   duration,
   isPlaying,
-  markers,
   annotationMode,
   pendingAnnotation, // from parent
   onTimeUpdate,
@@ -22,6 +22,7 @@ export default function VideoPlayerWithSeekbar({
   onAddAnnotation, // still accepted (legacy)
   onCancelAnnotation,
   onAnnotationDraftChange,
+  markers = [],  
 }) {
   const annotationCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -128,68 +129,78 @@ export default function VideoPlayerWithSeekbar({
   }, [annotationMode]);
 
   useEffect(() => {
-    const canvas = annotationCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const w = (canvas.width = canvas.clientWidth);
-    const h = (canvas.height = canvas.clientHeight);
-    ctx.clearRect(0, 0, w, h);
+  const canvas = annotationCanvasRef.current;
+  if (!canvas) return;
 
-    const drawStrokes = (
-      annotation,
-      color = "rgba(254,234,59,0.95)",
-      lineWidth = 3
-    ) => {
-      if (!annotation?.strokes) return;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.lineWidth = lineWidth;
-      ctx.strokeStyle = color;
+  const ctx = canvas.getContext("2d");
+  const w = (canvas.width = canvas.clientWidth);
+  const h = (canvas.height = canvas.clientHeight);
 
-      annotation.strokes.forEach((stroke) => {
-        const pts = stroke.points || [];
-        if (pts.length < 2) return;
-        ctx.beginPath();
-        pts.forEach((p, idx) => {
-          const x = p.xPct * w;
-          const y = p.yPct * h;
-          if (idx === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.stroke();
+  ctx.clearRect(0, 0, w, h);
+
+  const drawStrokes = (
+    annotation,
+    color = "rgba(254,234,59,0.95)",
+    lineWidth = 3
+  ) => {
+    if (!annotation || !annotation.strokes || !annotation.strokes.forEach) {
+      return;
+    }
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color;
+
+    annotation.strokes.forEach((stroke) => {
+      const pts = stroke.points || [];
+      if (pts.length < 2) return;
+
+      ctx.beginPath();
+      pts.forEach((p, idx) => {
+        const x = p.xPct * w;
+        const y = p.yPct * h;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
       });
-    };
-
-    const NEAR_THRESHOLD = 0.5;
-
-    markers.forEach((m) => {
-      if (!m.annotation) return;
-      if (Math.abs(m.time - currentTime) > NEAR_THRESHOLD) return;
-      drawStrokes(m.annotation, "rgba(254,234,59,0.95)", 3);
+      ctx.stroke();
     });
+  };
 
-    if (
-      pendingAnnotation &&
-      pendingAnnotation.annotation &&
-      Math.abs(pendingAnnotation.time - currentTime) <= NEAR_THRESHOLD
-    ) {
-      drawStrokes(
-        pendingAnnotation.annotation,
-        "rgba(129,140,248,0.95)",
-        3
-      );
-    }
+  const NEAR_THRESHOLD = 0.5;
 
-    if (annotationMode && drawingAnnotation) {
-      drawStrokes(drawingAnnotation, "rgba(180,180,255,0.95)", 3);
-    }
-  }, [
-    markers,
-    currentTime,
-    annotationMode,
-    drawingAnnotation,
-    pendingAnnotation,
-  ]);
+  // existing saved annotations (from markers)
+  (markers || []).forEach((m) => {
+    if (!m.annotation) return;
+    if (Math.abs(m.time - currentTime) > NEAR_THRESHOLD) return;
+    drawStrokes(m.annotation, "rgba(254,234,59,0.95)", 3);
+  });
+
+  // pending annotation (already saved draft in parent)
+  if (
+    pendingAnnotation &&
+    pendingAnnotation.annotation &&
+    Math.abs(pendingAnnotation.time - currentTime) <= NEAR_THRESHOLD
+  ) {
+    drawStrokes(
+      pendingAnnotation.annotation,
+      "rgba(129,140,248,0.95)",
+      3
+    );
+  }
+
+  // in-progress strokes while drawing (local draft)
+  if (annotationMode && drawingAnnotation) {
+    drawStrokes(drawingAnnotation, "rgba(180,180,255,0.95)", 3);
+  }
+}, [
+  markers,
+  currentTime,
+  annotationMode,
+  drawingAnnotation,
+  pendingAnnotation,
+]);
+
 
   const handleCancelOverlay = () => {
     onCancelAnnotation?.();
@@ -257,11 +268,11 @@ export default function VideoPlayerWithSeekbar({
         <div className="w-full rounded-xl overflow-hidden border border-[#1b1b1b] relative bg-black">
           <MuxPlayer
             ref={playerRef}
-            src={src}
+            // src={src}
             autoPlay={false}
             playsInline
             streamType="on-demand"
-            playbackId={"97EiHRggujwIMW3QrDgWtlVlSUC00FdXVCghWV6SshSQ"}
+            playbackId={src}
             controls={false}
             style={muxPlayerStyle}
             onTimeUpdate={onTimeUpdate}
@@ -277,7 +288,6 @@ export default function VideoPlayerWithSeekbar({
             {annotationMode && (
               <>
                 <div className="absolute inset-0 bg-black/10 pointer-events-none z-10" />
-
                 <div className="absolute top-3 right-3 flex gap-2 z-30">
                   <button
                     type="button"

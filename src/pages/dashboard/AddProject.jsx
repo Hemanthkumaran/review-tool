@@ -9,9 +9,10 @@ import { PATHS } from '../../routes/paths';
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import AddProjectModal from '../../components/modals/AddProjectModal';
 import { allProjectsApi, createProjectApi } from '../../services/api';
+import DashboardHeader from '../../components/DashboardHeader';
+import AppLoader from '../../components/common/AppLoader';
 
 export default function AddProject({
-  workspaceName = "A2Z Studios",
   role = "Owner",
   minutesUsed = 89,
   minutesCap = 500,
@@ -21,6 +22,7 @@ export default function AddProject({
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [allProjects, setAllProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
   const location = useLocation();
@@ -130,69 +132,24 @@ function uploadToMux(muxUploadURL, file, onProgress) {
     .then(res => {
       console.log(res, 'all projects');
       setAllProjects(res.data.projectArray);
+      setLoading(false);
     })
     .catch(err => {
+      setLoading(false);
       console.log(err);
     })
   }
 
+  if (loading) return <AppLoader visible={loading} message="Loading folders…" />
+
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
-      <header className="flex items-center justify-between px-2 md:px-2">
-        {/* Left: workspace pill */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 rounded-full bg-[#151618] border border-[#232427] px-3 py-2">
-            <LogoGlyph className="h-7 w-7" />
-            <span className="text-sm md:text-base font-medium">{workspaceName}</span>
-            <span className="rounded-full bg-[#1E1F22] text-[11px] px-2 py-0.5 border border-[#2A2B2F] text-[#BFBFBF]">
-              {role}
-            </span>
-            <ChevronDown className="h-4 w-4 opacity-70" />
-          </div>
-        </div>
-
-        {/* Right cluster */}
-        <div className="flex items-center gap-3 md:gap-4">
-          {/* Usage pill */}
-          <div className="hidden sm:flex items-center gap-3 rounded-full bg-[#151618] border border-[#232427] px-3 py-2">
-            <div className="text-xs text-[#BFBFBF] min-w-[84px]">
-              {minutesUsed} / {minutesCap} mins
-            </div>
-            <div className="h-2 w-28 rounded-full bg-[#1E1F22] overflow-hidden">
-              <div
-                className="h-full bg-[#B33434] rounded-full"
-                style={{ width: `${usagePct}%` }}
-              />
-            </div>
-            <button
-              className="ml-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#1E1F22] hover:bg-[#24262A]"
-              aria-label="Buy more minutes"
-              title="Buy more minutes"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          {/* Bell */}
-          <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#151618] border border-[#232427] hover:bg-[#1A1B1E]"
-            aria-label="Notifications"
-          >
-            <Bell className="h-4.5 w-4.5" />
-          </button>
-
-          {/* Avatar */}
-          <button className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#151618] border border-[#232427] overflow-hidden">
-            {/* Replace with your img */}
-            <img
-              src="https://i.pravatar.cc/80?img=32"
-              alt="User"
-              className="h-10 w-10 object-cover"
-            />
-          </button>
-        </div>
-      </header>
-
+      <DashboardHeader
+        role={role}
+        minutesUsed={minutesUsed}
+        minutesCap={minutesCap}
+        usagePct={usagePct}
+      />
       {/* Page content */}
       <main className="px-6 md:px-8">
         {/* Title row */}
@@ -202,8 +159,11 @@ function uploadToMux(muxUploadURL, file, onProgress) {
             <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
             <div className="flex items-center">
             <div style={{ fontFamily:"Gilroy-Light", color:"#fff" }}>
-              <span onClick={() => navigate(-1)} style={{ color:"#9C9C9C", cursor:'pointer' }}>All Folders {" "}</span> / <span>{location.state.name}</span>
+              <span onClick={() => navigate(-1)} style={{ color:"#9C9C9C", cursor:'pointer' }}>
+                All Folders {" "}</span> / {" "}
+                <span>{location.state.name}</span>
             </div>
+            <div style={{ backgroundColor:"#1F1E0C", padding:"2px 13px", borderRadius:14, fontSize:14, marginLeft:5 }}>{allProjects.length}</div>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
@@ -242,19 +202,19 @@ function uploadToMux(muxUploadURL, file, onProgress) {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-4 gap-6">
           {allProjects.map((item) => (
             <ProjectFolder
               key={item._id}
               project={item}
               onClick={() => navigate(PATHS.VIDEO_REVIEW, { state: { projectId: item._id } })}
               onStatusChange={(id, status) => {
+                console.log(id, status);
               }}
             />
           ))}
         </div>
       </main>
-
       {/* Bottom-right watermark */}
       <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
         <img src={cutjamm}/>
