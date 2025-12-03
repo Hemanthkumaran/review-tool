@@ -1,93 +1,54 @@
-// helpers/mapCommentsToMarkers.js
-
-/**
- * Safely extract a usable URL from backend file objects.
- * Supports:
- *  - string (already a URL)
- *  - { url }, { location }, { signedUrl }
- *  - { key } when key itself is a full http(s) URL
- */
-function buildFileUrl(fileLike) {
-  if (!fileLike) return undefined;
-
-  // already a URL string
-  if (typeof fileLike === "string") return fileLike;
-
-  // typical shapes from backend
-  const maybe =
-    fileLike.signedUrl ||
-    fileLike.url ||
-    fileLike.location;
-
-  if (maybe && typeof maybe === "string" && maybe.startsWith("http")) {
-    return maybe;
+function safeParseAnnotation(raw) {
+  if (!raw) return null;
+  try {
+    return typeof raw === "string" ? JSON.parse(raw) : raw;
+  } catch (e) {
+    console.warn("Failed to parse annotation JSON", e);
+    return null;
   }
-
-  // if key itself is a full URL (future-proof)
-  if (
-    fileLike.key &&
-    typeof fileLike.key === "string" &&
-    fileLike.key.startsWith("http")
-  ) {
-    return fileLike.key;
-  }
-
-  // otherwise we *don't* try to build URLs from keys
-  // (backend will give us proper signed URLs)
-  return undefined;
 }
 
 /**
- * Map backend comments → UI markers used by:
- *  - CustomSeekBar (for markers on the track)
- *  - CommentsColumn / CommentCard
- *  - VideoPlayerWithSeekbar (annotation overlay)
+ * comments: array from backend (version.comments)
+ * userLookup: optional map { userId: { name, role, avatarUrl } }
  */
-export function mapCommentsToMarkers(comments = []) {
-  return comments.map((comment, index) => {
-    const time = Number(comment.timeline) || 0;
+export function mapCommentsToMarkers(comments = [], userLookup = {}) {
+  return (comments || []).map((c) => {
+    const user = userLookup?.[c.userID] || null;
 
-    // annotation
-    let annotationObj = undefined;
-    if (comment.annotation) {
-      try {
-        annotationObj = JSON.parse(comment.annotation);
-      } catch (e) {
-        console.warn("Failed to parse annotation JSON", e, comment.annotation);
-      }
-    }
+    // images already come as signed URLs from backend.
+    const images = (c.images || []).map((img) => img.url || img.signedUrl || "");
 
-    // voice note
-    const audioUrl = buildFileUrl(comment.voiceNote);
+    // voice note as signed URL
+    const audioUrl = c.voiceNote?.url || null;
 
-    // images
-    const imageUrls = (comment.images || [])
-      .map((img) => buildFileUrl(img))
-      .filter(Boolean);
+    const annotation = safeParseAnnotation(c.annotation);
+    const baseType = annotation
+      ? "annotation"
+      : audioUrl
+      ? "voice"
+      : "text";
 
-    // pick type for UI
-    let type = "text";
-    if (annotationObj && audioUrl) type = "annotation";
-    else if (annotationObj) type = "annotation";
-    else if (audioUrl) type = "voice";
+    const replies = (c.replies || []).map((r) => ({
+      id: r._id,
+      text: r.text || "",
+      createdAt: r.createdAt ? new Date(r.createdAt) : null,
+      user: userLookup?.[r.userID] || null,
+    }));
 
     return {
-      id: comment._id || `c-${index}`,
-      time,
-      type, // "text" | "voice" | "annotation"
-      text: comment.text || "",
+      id: c._id,
+      time: typeof c.timeline === "number" ? c.timeline : 0,
+      type: baseType,
+      text: c.text || "",
       audioUrl,
-      annotation: annotationObj,
-      images: imageUrls,
-      createdAt: comment.createdAt ? new Date(comment.createdAt) : new Date(),
-      isResolved: !!comment.isResolved,
-      // basic user info (can be replaced when backend sends user object)
-      user: {
-        id: comment.userID,
-        name: "Reviewer",
-        role: "Owner",
-        avatarUrl: `https://i.pravatar.cc/40?u=${comment.userID || "default"}`,
-      },
+      images,
+      annotation,
+      createdAt: c.createdAt ? new Date(c.createdAt) : null,
+      user,
+      replies,
+      // keep raw comment if you ever need more fields
+      _raw: c,
     };
   });
 }

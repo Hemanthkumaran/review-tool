@@ -8,7 +8,7 @@ import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import ShareModal from "../../components/modals/ShareModal";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
 import { useLocation, useNavigate } from "react-router-dom";
-import { addCommentApi, getOneProjectApi } from "../../services/api";
+import { addCommentApi, addReplyApi, getOneProjectApi } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 
@@ -273,86 +273,28 @@ useEffect(() => {
     setPendingAnnotation(draft);
   };
 
-  // const handleSendComment = ({ text, images }) => {
-  //   pauseVideo();
+  // assuming you already have these from earlier work:
+    const projectId = projectDetail?._id;
+    const activeVersion = projectDetail?.versions?.[0]; // or however you pick version
+    const versionId = activeVersion?._id;
 
-  //   const trimmed = (text || "").trim();
-  //   const imageUrls = images || [];
+    // reuse your existing function that refetches project + remaps markers
+    // e.g. fetchProjectDetail();
 
-  //   const hasAnnotation =
-  //     !!pendingAnnotation &&
-  //     !!pendingAnnotation.annotation &&
-  //     pendingAnnotation.annotation.strokes?.length > 0;
+    const handleAddReply = async (commentId, text) => {
+      const trimmed = text.trim();
+      if (!trimmed || !projectId || !versionId) return;
 
-  //   const hasVoice = !!pendingVoice && !!pendingVoice.url;
-  //   const hasTextOrImages = !!trimmed || imageUrls.length > 0;
+      try {
+        await addReplyApi(projectId, versionId, commentId, { text: trimmed });
+        // refresh project data so replies show up
+        fetchProject();
+      } catch (err) {
+        console.error("Failed to add reply", err);
+        // optional: show toast
+      }
+    };
 
-  //   if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
-  //     return;
-  //   }
-
-  //   const baseTime =
-  //     (hasAnnotation && pendingAnnotation.time) ||
-  //     (hasVoice && pendingVoice.startTime) ||
-  //     currentTime ||
-  //     0;
-
-  //   // 1) annotation + voice + optional text/images
-  //   if (hasAnnotation && hasVoice) {
-  //     addMarker({
-  //       time: baseTime,
-  //       type: "annotation",
-  //       annotation: pendingAnnotation.annotation,
-  //       audioUrl: pendingVoice.url,
-  //       text: trimmed || "",
-  //       images: imageUrls,
-  //     });
-
-  //     setPendingAnnotation(null);
-  //     setPendingVoice(null);
-  //     setAnnotationMode(false);
-  //     return;
-  //   }
-
-  //   // 2) annotation + optional text/images
-  //   if (hasAnnotation) {
-  //     addMarker({
-  //       time: baseTime,
-  //       type: "annotation",
-  //       annotation: pendingAnnotation.annotation,
-  //       text: trimmed || "",
-  //       images: imageUrls,
-  //     });
-
-  //     setPendingAnnotation(null);
-  //     setAnnotationMode(false);
-  //     return;
-  //   }
-
-  //   // 3) voice + optional text/images
-  //   if (hasVoice) {
-  //     addMarker({
-  //       time: baseTime,
-  //       type: "voice",
-  //       audioUrl: pendingVoice.url,
-  //       text: trimmed || "",
-  //       images: imageUrls,
-  //     });
-
-  //     setPendingVoice(null);
-  //     return;
-  //   }
-
-  //   // 4) text/images only (still anchored to baseTime)
-  //   if (hasTextOrImages) {
-  //     addMarker({
-  //       time: baseTime,
-  //       type: "text",
-  //       text: trimmed,
-  //       images: imageUrls,
-  //     });
-  //   }
-  // };
 
   const handleSendComment = async ({ text, images }) => {
   pauseVideo();
@@ -577,6 +519,9 @@ useEffect(() => {
             currentTime={currentTime}
             onSeek={handleSeek}
             pauseVideo={pauseVideo}
+            projectId={location.state.projectId}
+            projectDetail={projectDetail}
+            onAddReply={handleAddReply}
           />
         </div>
       </div>

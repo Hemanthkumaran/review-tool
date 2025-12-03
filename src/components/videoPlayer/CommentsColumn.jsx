@@ -6,6 +6,7 @@ import CommentCard from "./CommentCard";
 import downloadIcon from "../../assets/svgs/download.svg";
 import filterIcon from "../../assets/svgs/filter.svg";
 import NotesEditor from "../notes/NotesEditor";
+import { updateNotesApi } from "../../services/api";
 
 
 export default function CommentsColumn({
@@ -13,18 +14,50 @@ export default function CommentsColumn({
   onToggle,
   markers,
   onSeek,
+  projectId,
+  projectDetail,
+  onAddReply
 }) {
   const [activeTab, setActiveTab] = useState("comments");
-  const [checked, setChecked] = useState(false);
-  const [notesHtml, setNotesHtml] = useState(
-    "<p>Transcript (Draft Voiceover):</p><ul><li>Managing workspaces shouldn't be chaos.</li>...</ul>"
-  );
-const [notesUpdatedAt, setNotesUpdatedAt] = useState(new Date());
+  const NOTES_SECTIONS = [
+    { id: "brief", label: "Brief" },
+    { id: "script", label: "Script" },
+    { id: "references", label: "References" },
+    { id: "raw", label: "Raw file" },
+  ];
+  const [notesBySection, setNotesBySection] = useState(() => ({
+    brief: projectDetail?.notes || "",
+    script: "",
+    references: "",
+    raw: "",
+  }));
+  const [notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
+  const [savingSectionId, setSavingSectionId] = useState(null);
 
-const handleSaveNotes = (html) => {
-  setNotesHtml(html);
-  setNotesUpdatedAt(new Date());
-  // TODO: also send to API if needed
+const handleSaveNotesSection = async (sectionId, html) => {
+  if (!projectId) return;
+
+  setSavingSectionId(sectionId);
+  try {
+    setNotesBySection((prev) => ({
+      ...prev,
+      [sectionId]: html,
+    }));
+    console.log(projectId, html);
+    
+    // backend: still using same API you had before
+    // if you later support per-section, you can add &section=sectionId
+    await updateNotesApi(projectId, html);
+
+    setNotesUpdatedBySection((prev) => ({
+      ...prev,
+      [sectionId]: new Date(),
+    }));
+  } catch (err) {
+    console.error("Failed to update notes", err);
+  } finally {
+    setSavingSectionId(null);
+  }
 };
 
   return (
@@ -85,10 +118,11 @@ const handleSaveNotes = (html) => {
 
           {/* body */}
           <div className="mt-3 px-2 pb-4 pt-2 flex-1 overflow-auto bg-[#101213] rounded-2xl">
+            { activeTab === "comments" ?
             <div className="flex items-center px-2 justify-between gap-2 mb-4">
               <div className="flex items-center">
                   <span>
-                      {activeTab === "comments" ? "All Comments" : "All Notes"}
+                    All Comments
                   </span>
                   <img style={{ marginLeft:10 }} src={downloadIcon}/>
               </div>
@@ -100,7 +134,7 @@ const handleSaveNotes = (html) => {
                   </button>
                   <img style={{ marginLeft:10 }} src={filterIcon}/>
               </div>
-            </div>
+            </div> : null }
             {activeTab === "comments" ? (
               <>
                 {markers.length === 0 && (
@@ -109,23 +143,27 @@ const handleSaveNotes = (html) => {
                     video.
                   </div>
                 )}
-
                 {markers.map((m, idx) => (
                   <CommentCard
                     key={m.id}
                     marker={m}
                     index={idx}
                     onGo={() => onSeek(m.time)}
+                    onReplySubmit={(text) =>
+                      onAddReply ? onAddReply(m.id, text) : null
+                    }
                   />
                 ))}
               </>
             ) : (
-              <div className="text-[13px] text-gray-500 mt-6">
+              <div className="text-[13px] text-gray-500 mt-2">
                 <NotesEditor
-                  initialHtml={notesHtml}
-                  lastUpdated={notesUpdatedAt}
-                  onSave={handleSaveNotes}
+                  sections={NOTES_SECTIONS}
+                  initialBySection={notesBySection}
+                  lastUpdatedBySection={notesUpdatedBySection}
+                  onSave={handleSaveNotesSection}
                   onCancel={() => {}}
+                  savingSectionId={savingSectionId}
                 />
               </div>
             )}

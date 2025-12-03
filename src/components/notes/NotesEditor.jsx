@@ -1,76 +1,118 @@
-import React, { useEffect, useState } from "react";
+// src/components/notes/NotesEditor.jsx
+import React, { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-
-function formatRelative(date) {
-  if (!date) return "";
-  const d = typeof date === "string" ? new Date(date) : date;
-  const diffSec = (Date.now() - d.getTime()) / 1000;
-  if (diffSec < 60) return "Just now";
-  const mins = Math.floor(diffSec / 60);
-  if (mins < 60) return `${mins} min${mins === 1 ? "" : "s"} ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days} day${days === 1 ? "" : "s"} ago`;
-}
 
 /**
  * Props:
- *  - initialHtml?: string
- *  - lastUpdated?: Date | string
- *  - onSave?(html: string): void
+ *  - sections?: [{ id: string; label: string }]
+ *  - initialBySection?: Record<sectionId, html>
+ *  - lastUpdatedBySection?: Record<sectionId, Date|string>
+ *  - onSave?(sectionId: string, html: string): Promise<void> | void
  *  - onCancel?(): void
+ *  - savingSectionId?: string
  */
 export default function NotesEditor({
-  initialHtml = "",
-  lastUpdated,
+  sections = [
+    { id: "brief", label: "Brief" },
+    { id: "script", label: "Script" },
+    { id: "references", label: "References" },
+    { id: "raw", label: "Raw file" },
+  ],
+  initialBySection = {},
   onSave,
   onCancel,
+  savingSectionId,
 }) {
-  const [dirty, setDirty] = useState(false);
-  const [content, setContent] = useState(initialHtml);
+  const defaultSectionId = sections[0]?.id;
+  const [activeSection, setActiveSection] = useState(defaultSectionId);
+
+  // state: content + dirty per section
+  const [contents, setContents] = useState(() => {
+    const obj = {};
+    sections.forEach((s) => {
+      obj[s.id] = initialBySection[s.id] || "";
+    });
+    return obj;
+  });
+  const [dirtyMap, setDirtyMap] = useState(() => {
+    const obj = {};
+    sections.forEach((s) => {
+      obj[s.id] = false;
+    });
+    return obj;
+  });
+
+  const activeSectionRef = useRef(activeSection);
+  useEffect(() => {
+    activeSectionRef.current = activeSection;
+  }, [activeSection]);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [3, 4], // we’ll use h4-ish visually
+          levels: [3, 4],
         },
       }),
       Link.configure({
         openOnClick: true,
         linkOnPaste: true,
       }),
-      TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
     ],
-    content: initialHtml,
+    content: contents[activeSection] || "",
     autofocus: false,
+    editorProps: {
+      attributes: {
+        class: "notes-editor font-[Gilroy] text-[13px]",
+      },
+    },
     onUpdate({ editor }) {
+      const current = activeSectionRef.current;
       const html = editor.getHTML();
-      setContent(html);
-      setDirty(true);
+
+      setContents((prev) => ({
+        ...prev,
+        [current]: html,
+      }));
+      setDirtyMap((prev) => ({
+        ...prev,
+        [current]: true,
+      }));
     },
   });
 
-  // keep editor in sync if initialHtml prop changes
+  // sync with initialBySection (e.g. after fetch)
   useEffect(() => {
-    if (!editor) return;
-    editor.commands.setContent(initialHtml || "", false);
-    setContent(initialHtml || "");
-    setDirty(false);
-  }, [initialHtml, editor]);
+    const next = {};
+    sections.forEach((s) => {
+      next[s.id] = initialBySection[s.id] || "";
+    });
+    setContents(next);
 
-  const lastUpdatedLabel = lastUpdated ? formatRelative(lastUpdated) : "—";
+    const clean = {};
+    sections.forEach((s) => {
+      clean[s.id] = false;
+    });
+    setDirtyMap(clean);
+
+    if (editor) {
+      editor.commands.setContent(next[activeSection] || "", false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialBySection, sections, editor]);
+
+  // ⬇️ FIX 1: no auto-focus on tab switch (prevents weird blinking)
+  const handleChangeSection = (id) => {
+    setActiveSection(id);
+    if (editor) {
+      editor.commands.setContent(contents[id] || "", false);
+      // no editor.commands.focus() here
+    }
+  };
 
   if (!editor) {
-    // TipTap editor not mounted yet
     return (
       <div className="bg-[#050506] rounded-2xl border border-[#202124] h-[460px] flex items-center justify-center text-xs text-gray-400">
         Loading editor…
@@ -78,14 +120,27 @@ export default function NotesEditor({
     );
   }
 
-  // toolbar actions
-  const setHeading = () => {
-    // toggle between paragraph and heading
-    if (editor.isActive("heading", { level: 3 })) {
-      editor.chain().focus().setParagraph().run();
-    } else {
-      editor.chain().focus().setHeading({ level: 3 }).run();
-    }
+  const dirty = !!dirtyMap[activeSection];
+  const isSaving = savingSectionId === activeSection;
+
+  // Aa – toggle upper / lower case
+  const toggleCase = () => {
+    const { state } = editor;
+    const { from, to } = state.selection;
+    if (from === to) return;
+    const selectedText = state.doc.textBetween(from, to, "\n");
+    if (!selectedText) return;
+
+    const isAllUpper = selectedText === selectedText.toUpperCase();
+    const nextText = isAllUpper
+      ? selectedText.toLowerCase()
+      : selectedText.toUpperCase();
+
+    editor
+      .chain()
+      .focus()
+      .insertContentAt({ from, to }, nextText)
+      .run();
   };
 
   const toggleItalic = () => {
@@ -96,8 +151,8 @@ export default function NotesEditor({
     editor.chain().focus().toggleBold().run();
   };
 
-  const toggleChecklist = () => {
-    editor.chain().focus().toggleTaskList().run();
+  const toggleBulletList = () => {
+    editor.chain().focus().toggleBulletList().run();
   };
 
   const addLink = () => {
@@ -118,37 +173,67 @@ export default function NotesEditor({
       .run();
   };
 
-  const handleSave = () => {
-    if (onSave) onSave(content);
-    setDirty(false);
+  const handleSave = async () => {
+    if (!onSave) return;
+    const html = contents[activeSection] || "";
+    await onSave(activeSection, html);
+
+    setDirtyMap((prev) => ({
+      ...prev,
+      [activeSection]: false,
+    }));
   };
 
   const handleCancel = () => {
-    // reset editor to last saved content
-    if (editor) {
-      editor.commands.setContent(initialHtml || "", false);
-    }
-    setContent(initialHtml || "");
-    setDirty(false);
+    const original = initialBySection[activeSection] || "";
+    editor.commands.setContent(original, false);
+
+    setContents((prev) => ({
+      ...prev,
+      [activeSection]: original,
+    }));
+    setDirtyMap((prev) => ({
+      ...prev,
+      [activeSection]: false,
+    }));
     onCancel?.();
   };
 
   return (
-    <div className="bg-[#050506] rounded-2xl border border-[#202124] flex flex-col h-[460px] text-[13px] text-gray-100">
-      {/* header */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-white/5">
-        <div className="font-medium text-[13px]">Internal notes</div>
-        <div className="text-[11px] text-gray-400">
-          Last updated: {lastUpdatedLabel}
+    <div className=" rounded-2xl flex flex-col h-[460px] text-[13px] text-gray-100">
+      {/* top tabs row */}
+        <div className="relative flex items-center justify-between gap-6 text-[14px] px-2">
+          {/* base line across all tabs */}
+          <div className="absolute left-0 right-0 bottom-0 h-[2px] bg-[#222222]" />
+          {sections.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              style={{ fontFamily:'Gilroy-Light', cursor:'pointer' }}
+              onClick={() => handleChangeSection(s.id)}
+              className={`relative pb-1 border-b-[2px] z-[1] ${
+                activeSection === s.id
+                  ? "border-[#FEEA3B] text-white"
+                  : "border-transparent text-gray-400"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
-      </div>
 
-      {/* editor area */}
-      <div className="flex-1 px-4 py-3 overflow-auto">
-        <EditorContent
-          editor={editor}
-          className="notes-editor text-[13px] leading-relaxed"
-        />
+      {/* editor area – wrapper clickable, but won't interrupt selections */}
+      <div
+        className="flex-1 px-4 py-3 overflow-auto cursor-text"
+        onClick={(e) => {
+          if (!editor) return;
+          // ⬇️ FIX 2: don't steal clicks/selections that happen inside ProseMirror
+          const inProseMirror = e.target.closest(".ProseMirror");
+          if (inProseMirror) return;
+          editor.chain().focus("end").run();
+        }}
+      >
+        <EditorContent editor={editor} />
       </div>
 
       {/* toolbar footer */}
@@ -156,10 +241,8 @@ export default function NotesEditor({
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={setHeading}
-            className={`px-2 py-1 rounded-full hover:bg-white/5 ${
-              editor.isActive("heading", { level: 3 }) ? "bg-white/10" : ""
-            }`}
+            onClick={toggleCase}
+            className="px-2 py-1 rounded-full hover:bg-white/5"
           >
             Aa
           </button>
@@ -183,9 +266,9 @@ export default function NotesEditor({
           </button>
           <button
             type="button"
-            onClick={toggleChecklist}
+            onClick={toggleBulletList}
             className={`px-2 py-1 rounded-full hover:bg-white/5 ${
-              editor.isActive("taskList") ? "bg-white/10" : ""
+              editor.isActive("bulletList") ? "bg-white/10" : ""
             }`}
           >
             ✓
@@ -199,23 +282,25 @@ export default function NotesEditor({
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="px-3 py-[6px] rounded-full border border-[#2a2b2e] bg-[#111216] text-gray-200 hover:bg-[#18191d]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!dirty}
-            className="px-4 py-[6px] rounded-full bg-[#FEEA3B] text-black font-medium disabled:opacity-40 disabled:cursor-default"
-          >
-            Save
-          </button>
-        </div>
+        {dirty && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-3 py-[6px] rounded-full border border-[#2a2b2e] bg-[#111216] text-gray-200 hover:bg-[#18191d]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-4 py-[6px] rounded-full bg-[#FEEA3B] text-black font-medium disabled:opacity-40 disabled:cursor-default"
+            >
+              {isSaving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -62,12 +62,6 @@ export const getVideoUploadUrl = (projId) => {
   return axiosClient.get(`/project/getUploadVideoLink?projectID=${projId}`);
 };
 
-export async function saveComment(payload) {
-  // payload: { videoId, time, text, annotations, audioUrl }
-  const res = await axiosClient.post("/comments", payload);
-  return res.data;
-}
-
 export const addCommentApi = (projectID, versionID, formData) => {
   return axiosClient.post(
     `/project/addComment?projectID=${projectID}&versionID=${versionID}`,
@@ -80,24 +74,20 @@ export const addCommentApi = (projectID, versionID, formData) => {
   );
 };
 
-// Upload audio blob; backend should return a public URL after upload
-export async function uploadVoiceNote(blob, { filename = "voice.webm" } = {}) {
-  // Recommended: your backend should return a presigned URL to upload the file,
-  // or accept multipart/form-data to receive and store it.
-  // Example here: send form-data directly to /upload-audio
-  const fd = new FormData();
-  fd.append("file", blob, filename);
-
-  const res = await axiosClient.post("/upload-audio", fd, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  // expect { url: 'https://...' }
+export async function updateNotesApi(projectID, data) {
+  const res = await axiosClient.patch(`/project/updateNotes?projectID=${projectID}`, data);
   return res.data;
 }
 
-// Fetch existing comments for a video
-export async function fetchComments(videoId) {
-  const res = await axiosClient.get(`/comments?videoId=${encodeURIComponent(videoId)}`);
-  return res.data;
-}
-
+export const addReplyApi = (projectId, versionId, commentId, payload) => {
+  // payload: { text: string }  (extend later if replies get attachments)
+  return axiosClient.patch(
+    `/project/addReply?projectID=${projectId}&versionID=${versionId}&commentID=${commentId}`,
+    payload,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
