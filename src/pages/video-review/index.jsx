@@ -114,6 +114,36 @@ useEffect(() => {
   //   setAnnotationMode(false);
   // };
 
+    // VideoReview.jsx (or wherever you render <VideoHeader />)
+
+  const rawVersions = projectDetail?.versions || [];
+
+  const versionsForSwitcher = rawVersions.map((v, index) => ({
+    _id: v._id,
+    name: v.name || projectDetail.name || `Version ${index + 1}`,
+    // if you later store per-version createdAt / duration, plug them in here
+    createdAt: v.createdAt || projectDetail.createdAt,
+    durationSeconds: v.durationSeconds || projectDetail.durationSeconds,
+    // thumbnail from mux if you have it, otherwise leave undefined
+    thumbnailUrl: v.thumbnailUrl,
+    label: `v${index + 1}`,          // v1, v2, v3…
+    // keep original data in case you need it later
+    _raw: v,
+  }));
+
+  // optional: keep which version is active in local state
+  const [activeVersionId, setActiveVersionId] = useState(
+    versionsForSwitcher[0]?._id
+  );
+
+  // when user selects a version from the dropdown
+  const handleChangeVersion = (ver) => {
+    setActiveVersionId(ver._id);
+    // if you need the full original version object:
+    const original = rawVersions.find((rv) => rv._id === ver._id);
+    // update the rest of your UI / player using `original`
+  };
+
   const pauseVideo = () => {
     if (playerRef.current) {
       playerRef.current.pause?.();
@@ -282,7 +312,7 @@ useEffect(() => {
     // e.g. fetchProjectDetail();
 
     const handleAddReply = async (commentId, text) => {
-      const trimmed = text.trim();
+      const trimmed = text?.trim();
       if (!trimmed || !projectId || !versionId) return;
 
       try {
@@ -299,7 +329,7 @@ useEffect(() => {
   const handleSendComment = async ({ text, images }) => {
   pauseVideo();
 
-  const trimmed = (text || "").trim();
+  const trimmed = (text || "")?.trim();
   const imageUrls = images || [];
 
   const hasAnnotation =
@@ -449,13 +479,22 @@ useEffect(() => {
 
   if (loading) return <AppLoader visible={loading} message="Loading folders…" />
 
+
+
+
   return (
     <div
       style={{ margin: 25 }}
       className="min-h-screen text-gray-200 font-sans"
     >
       {/* <ShareModal onClose={() => null} /> */}
-      <VideoHeader goBack={() => navigate(-1)} projectDetail={projectDetail} />
+      <VideoHeader 
+        goBack={() => navigate(-1)}
+        projectDetail={projectDetail} 
+        versions={versionsForSwitcher}
+        project={{ activeVersionId }}
+        onChangeVersion={handleChangeVersion}
+      />
       <div className="mx-auto flex">
         {/* Col 1 */}
         <div

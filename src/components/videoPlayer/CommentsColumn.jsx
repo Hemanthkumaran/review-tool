@@ -25,29 +25,48 @@ export default function CommentsColumn({
     { id: "references", label: "References" },
     { id: "raw", label: "Raw file" },
   ];
-  const [notesBySection, setNotesBySection] = useState(() => ({
-    brief: projectDetail?.notes || "",
-    script: "",
-    references: "",
-    raw: "",
-  }));
+  const [notesBySection, setNotesBySection] = useState({
+    brief: projectDetail?.notes?.brief || "",
+    script: projectDetail?.notes?.script || "",
+    references: projectDetail?.notes?.references || "",
+    raw: projectDetail?.notes?.rawFile || "",
+  });
   const [notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
   const [savingSectionId, setSavingSectionId] = useState(null);
 
+  // somewhere near the top of the file
+const SECTION_FIELD_MAP = {
+  brief: "brief",
+  script: "script",
+  references: "references",
+  raw: "rawFile",
+};
+
+// keep this name the same – just replace the body
 const handleSaveNotesSection = async (sectionId, html) => {
   if (!projectId) return;
 
+  const field = SECTION_FIELD_MAP[sectionId];
+  if (!field) {
+    console.warn("Unknown notes section:", sectionId);
+    return;
+  }
+
   setSavingSectionId(sectionId);
+
   try {
+    // update local state immediately
     setNotesBySection((prev) => ({
       ...prev,
       [sectionId]: html,
     }));
-    console.log(projectId, html);
-    
-    // backend: still using same API you had before
-    // if you later support per-section, you can add &section=sectionId
-    await updateNotesApi(projectId, html);
+
+    // build backend payload: { brief: "...html..." } / { rawFile: "...html..." } etc.
+    const payload = {
+      [field]: html,
+    };
+
+    await updateNotesApi(projectId, payload);
 
     setNotesUpdatedBySection((prev) => ({
       ...prev,
@@ -59,6 +78,33 @@ const handleSaveNotesSection = async (sectionId, html) => {
     setSavingSectionId(null);
   }
 };
+
+
+  // const handleSaveNotesSection = async (sectionId, html) => {
+  //   if (!projectId) return;
+
+  //   setSavingSectionId(sectionId);
+  //   try {
+  //     setNotesBySection((prev) => ({
+  //       ...prev,
+  //       [sectionId]: html,
+  //     }));
+  //     console.log(projectId, html);
+      
+  //     // backend: still using same API you had before
+  //     // if you later support per-section, you can add &section=sectionId
+  //     await updateNotesApi(projectId, html);
+
+  //     setNotesUpdatedBySection((prev) => ({
+  //       ...prev,
+  //       [sectionId]: new Date(),
+  //     }));
+  //   } catch (err) {
+  //     console.error("Failed to update notes", err);
+  //   } finally {
+  //     setSavingSectionId(null);
+  //   }
+  // };
 
   return (
     <>
@@ -160,10 +206,11 @@ const handleSaveNotesSection = async (sectionId, html) => {
                 <NotesEditor
                   sections={NOTES_SECTIONS}
                   initialBySection={notesBySection}
-                  lastUpdatedBySection={notesUpdatedBySection}
+                  // lastUpdatedBySection={notesUpdatedBySection}
                   onSave={handleSaveNotesSection}
                   onCancel={() => {}}
                   savingSectionId={savingSectionId}
+                  lastUpdatedBySection={{}}
                 />
               </div>
             )}

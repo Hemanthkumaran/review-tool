@@ -2,8 +2,9 @@ import StatusPill from '../buttons/StatusPill'
 import VersionPill from './VersionPill'
 import DownloadMenuButton from '../Buttons/DownloadMenuBtn'
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
+import VersionSwitcher from '../VersionSwitcher';
 
-function VideoHeader({ projectDetail, goBack }) {
+function VideoHeader({ projectDetail, goBack, versions, onChangeVersion }) {
   return (
     <div style={{ marginLeft:40}} className="flex items-center justify-between mb-6">
         <div className="flex items-center">
@@ -13,7 +14,24 @@ function VideoHeader({ projectDetail, goBack }) {
             <div style={{ fontFamily:"Gilroy-Light" }}>
                 {projectDetail.name}{" "}
             </div>
-            <div style={{ marginLeft:10 }}><VersionPill onClick={() => console.log("version pill clicked")} /></div>
+            <VersionSwitcher
+                versions={versions}
+                currentVersionId={projectDetail?.activeVersionId}
+                onSelectVersion={(v) => onChangeVersion(v)}
+                onAddNewVersion={() => {
+                // open your "upload new version" flow here
+                }}
+                onUploadNewVersion={() => {
+                // same upload flow from inside the modal
+                }}
+                onDownloadVersion={(v) => {
+                // call download API
+                }}
+                onDeleteVersion={(v) => {
+                // call delete API
+                }}
+            />
+            {/* <div style={{ marginLeft:10 }}><VersionPill onClick={() => console.log("version pill clicked")} /></div> */}
             </div>
         </div>
         <div className="flex items-center justify-between">

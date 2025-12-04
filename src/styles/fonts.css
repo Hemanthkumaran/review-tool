@@ -11,6 +11,12 @@
 }
 
 @font-face {
+  font-family: 'Gilroy-Medium';
+  src: url('../assets/fonts/Gilroy-Medium.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'Gilroy-SemiBold';
   src: url('../assets/fonts/Gilroy-SemiBold.ttf') format('truetype');
   font-display: swap;
