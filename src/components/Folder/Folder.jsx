@@ -1,42 +1,198 @@
+import { useEffect, useRef, useState } from "react";
 import folderImg from "../../assets/svgs/folder.svg";
 import videoIcon from "../../assets/svgs/video.svg";
 import timerIcon from "../../assets/svgs/timer.svg";
 import dot from "../../assets/svgs/dot.svg";
+import moreCircle from "../../assets/svgs/more-circle.svg";
+
+import ActionPopover from "../ActionPopover";
+import { updateFolderApi, deleteFolderApi } from "../../services/api";
+import DeleteConfirmModal from "../modals/DeleteConfirmationModal";
+
 import "./Folder.css";
 
-const Folder = ({ folderName, onClick }) => {
+const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
+  const [hovered, setHovered] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // ✅ NEW
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [name, setName] = useState(folder.name);
+  const [saving, setSaving] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isRenaming) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [isRenaming]);
+
+  const commitRename = async () => {
+    const trimmed = name.trim();
+    if (!trimmed || trimmed === folder.name) {
+      setName(folder.name);
+      setIsRenaming(false);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updateFolderApi(folder._id, { name: trimmed });
+      onRenamed?.(folder._id, trimmed);
+    } catch (e) {
+      console.error("Rename failed", e);
+      setName(folder.name);
+    } finally {
+      setSaving(false);
+      setIsRenaming(false);
+    }
+  };
+
+  const cancelRename = () => {
+    setName(folder.name);
+    setIsRenaming(false);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteFolderApi(folder._id);
+      onDeleted?.(folder._id);
+    } catch (e) {
+      console.error("Delete failed", e);
+    }
+  };
+
   return (
-    <div onClick={onClick} className="main-box">
-      <img className="full-box" src={folderImg} alt="" />
-      <div className="small-box"></div>
-      <div className="text-box">
-        <div className="text-box-title">{folderName}</div>
-        <div className="text-box-content">
-          <div style={{ display: "flex", alignItems: "center" , marginRight:"4px"}} >
+    <div
+      className="relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => {
+        if (!menuOpen) setHovered(false); // ✅ IMPORTANT
+      }}
+    >
+      {/* MORE MENU */}
+      <div className="absolute top-[45px] right-[10px] z-10">
+        <ActionPopover
+          open={menuOpen}
+          onOpenChange={setMenuOpen} // ✅ CONTROLLED
+          trigger={
             <img
-              style={{ paddingRight: "6px" }}
-              height="16px"
-              width="16px"
-              src={videoIcon}
+              src={moreCircle}
               alt=""
+              onClick={(e) => e.stopPropagation()}
+              className={`
+                cursor-pointer
+                transition-opacity
+                ${(hovered || menuOpen)
+                  ? "opacity-100"
+                  : "opacity-0 pointer-events-none"}
+              `}
             />
-            <div style={{ color:"#999999" }}>6 Projects</div>
-          </div>
-          <img style={{margin: "0px 6px", color:"#999999" }} src={dot} alt="" />
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <div>
-              <img
-                style={{ paddingRight: "6px" }}
-                height="16px"
-                width="16px"
-                src={timerIcon}
-                alt=""
-              />
+          }
+          items={[
+            {
+              id: "rename",
+              label: "Rename",
+              icon: (
+                <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none">
+                  <path
+                    d="M4 13.5L4.5 11l7-7 2.5 2.5-7 7"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              ),
+              onClick: () => {
+                setIsRenaming(true);
+                setMenuOpen(false); // ✅ CLOSE AFTER CLICK
+              },
+            },
+            {
+              id: "delete",
+              label: "Delete",
+              danger: true,
+              icon: (
+                <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none">
+                  <path
+                    d="M5 5h10l-1 11H6L5 5z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              ),
+              onClick: () => {
+                setShowDelete(true);
+                setMenuOpen(false); // ✅ CLOSE AFTER CLICK
+              },
+            },
+          ]}
+        />
+      </div>
+
+      {/* FOLDER CARD */}
+      <div
+        className="main-box"
+        onClick={!isRenaming ? onClick : undefined}
+      >
+        <img className="full-box" src={folderImg} alt="" />
+        <div className="small-box" />
+
+        <div className="text-box">
+          {!isRenaming ? (
+            <div className="text-lg text-white font-medium truncate mb-3">
+              {folder.name}
             </div>
-            <div style={{ color:"#999999" }}>5 mins</div>
+          ) : (
+            <input
+              ref={inputRef}
+              value={name}
+              disabled={saving}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitRename();
+                if (e.key === "Escape") cancelRename();
+              }}
+              className="
+                w-full
+                bg-[#0F1012]
+                border border-[#2A2B2F]
+                rounded-lg
+                px-2 py-1
+                text-white
+                outline-none
+                mb-3
+              "
+            />
+          )}
+
+          <div className="text-box-content mt-[-10px]">
+            <div className="flex items-center mr-1">
+              <img src={videoIcon} width={16} height={16} className="mr-1" />
+              <span className="text-[#999]">6 Projects</span>
+            </div>
+
+            <img src={dot} className="mx-2" />
+
+            <div className="flex items-center">
+              <img src={timerIcon} width={16} height={16} className="mr-1" />
+              <span className="text-[#999]">5 mins</span>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* DELETE MODAL */}
+      <DeleteConfirmModal
+        open={showDelete}
+        onOpenChange={setShowDelete}
+        title="Delete this folder and all its projects?"
+        description="Everything inside this folder will be removed permanently."
+        confirmText="DELETE"
+        confirmLabel="Delete permanently"
+        onConfirm={handleDelete}
+      />
     </div>
   );
 };

@@ -9,7 +9,8 @@ export default function SegmentedTabs({ options, value, onChange, className = ""
         style={{
           border: "1px solid #202020",
           borderRadius: 25,
-          padding: 4
+          padding: 3,
+          fontFamily:'Gilroy-Light'
         }}  
         className={
           "inline-flex w-full bg-black/40 rounded-full border border-[#202020] p-[3px]" +

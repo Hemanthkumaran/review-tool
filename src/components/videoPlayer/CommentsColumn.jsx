@@ -7,6 +7,7 @@ import downloadIcon from "../../assets/svgs/download.svg";
 import filterIcon from "../../assets/svgs/filter.svg";
 import NotesEditor from "../notes/NotesEditor";
 import { updateNotesApi } from "../../services/api";
+import ToggleButton from "../buttons/ToggleButton";
 
 
 export default function CommentsColumn({
@@ -16,7 +17,8 @@ export default function CommentsColumn({
   onSeek,
   projectId,
   projectDetail,
-  onAddReply
+  onAddReply,
+  activeVersionId
 }) {
   const [activeTab, setActiveTab] = useState("comments");
   const NOTES_SECTIONS = [
@@ -33,6 +35,13 @@ export default function CommentsColumn({
   });
   const [notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
   const [savingSectionId, setSavingSectionId] = useState(null);
+  const [checked, setChecked] = useState(false);
+  const [showResolved, setShowResolved] = useState(false);
+
+
+  const filteredComments = markers.filter(c =>
+    showResolved ? c.isResolved : !c.isResolved
+  );
 
   // somewhere near the top of the file
 const SECTION_FIELD_MAP = {
@@ -174,27 +183,29 @@ const handleSaveNotesSection = async (sectionId, html) => {
               </div>
               <div className="flex items-center gap-3 text-xs text-gray-400">
                   <span>Unresolved</span>
-                  {/* <Switch onColor="#F9F046" width={50} height={25} handleDiameter={1} onHandleColor="#101213" offHandleColor="#101213" checkedIcon={false} uncheckedIcon={false} onChange={(v) => setChecked(v)} checked={checked} /> */}
-                  <button className="w-8 h-4 rounded-full bg-[#222] flex items-center px-[2px]">
-                      <span className="w-3 h-3 rounded-full bg-[#FEEA3B]" />
-                  </button>
+                  <ToggleButton
+                    checked={showResolved}
+                    onChange={setShowResolved}
+                  />
                   <img style={{ marginLeft:10 }} src={filterIcon}/>
               </div>
             </div> : null }
             {activeTab === "comments" ? (
               <>
-                {markers.length === 0 && (
+                {filteredComments.length === 0 && (
                   <div className="text-[13px] text-gray-500 mt-6">
                     No comments yet — add one from the comment bar below the
                     video.
                   </div>
                 )}
-                {markers.map((m, idx) => (
+                {filteredComments.map((m, idx) => (
                   <CommentCard
                     key={m.id}
                     marker={m}
+                    projectId={projectId}
                     index={idx}
                     onGo={() => onSeek(m.time)}
+                    activeVersionId={activeVersionId}
                     onReplySubmit={(text) =>
                       onAddReply ? onAddReply(m.id, text) : null
                     }

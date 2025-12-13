@@ -11,6 +11,7 @@ import AddProjectModal from '../../components/modals/AddProjectModal';
 import { allProjectsApi, createProjectApi } from '../../services/api';
 import DashboardHeader from '../../components/DashboardHeader';
 import AppLoader from '../../components/common/AppLoader';
+import ShareModal from '../../components/modals/ShareModal';
 
 export default function AddProject({
   role = "Owner",
@@ -20,6 +21,7 @@ export default function AddProject({
 }) {
 
   const [addProjectOpen, setAddProjectOpen] = useState(false);
+  const [inviteModal, setInviteModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [allProjects, setAllProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -166,9 +168,9 @@ function uploadToMux(muxUploadURL, file, onProgress) {
             <div style={{ backgroundColor:"#1F1E0C", padding:"2px 13px", borderRadius:14, fontSize:14, marginLeft:5 }}>{allProjects.length}</div>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-3">
+          <div onClick={() => setInviteModal(true)} className="hidden md:flex items-center gap-3">
             <button
-              className="inline-flex items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
             >
               <InviteIcon className="h-4 w-4" />
               <span>Invite</span>
@@ -220,41 +222,17 @@ function uploadToMux(muxUploadURL, file, onProgress) {
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
-      <AddProjectModal
+      {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null}
+      {addProjectOpen && <AddProjectModal
         isOpen={addProjectOpen}
         onClose={() => setAddProjectOpen(false)}
         handleCreate={handleCreate}
         createLoading={createLoading}
-      />
+      />}
     </div>
   );
 }
 
-
-function LogoGlyph({ className = "" }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} fill="none">
-      <circle cx="16" cy="16" r="15" stroke="#2F3136" strokeWidth="2" />
-      <path d="M16 5l5 8h-10l5-8zm0 22l-5-8h10l-5 8z" fill="#F9EF38" />
-    </svg>
-  );
-}
-
-function ChevronDown({ className = "" }) {
-  return (
-    <svg viewBox="0 0 20 20" className={className} fill="none">
-      <path d="M5 7l5 6 5-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function Plus({ className = "" }) {
-  return (
-    <svg viewBox="0 0 20 20" className={className} fill="none">
-      <path d="M10 4v12M4 10h12" stroke="#BFBFBF" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function PlusThin({ className = "" }) {
   return (
@@ -264,14 +242,6 @@ function PlusThin({ className = "" }) {
   );
 }
 
-function Bell({ className = "" }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path d="M12 3a6 6 0 00-6 6v3.3l-1.3 2.6A1 1 0 005.6 17h12.8a1 1 0 00.9-1.5L18 12.3V9a6 6 0 00-6-6z" stroke="#BFBFBF" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M9.5 19a2.5 2.5 0 005 0" stroke="#BFBFBF" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function InviteIcon({ className = "" }) {
   return (

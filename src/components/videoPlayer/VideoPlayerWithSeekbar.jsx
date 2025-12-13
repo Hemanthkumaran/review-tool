@@ -33,10 +33,44 @@ export default function VideoPlayerWithSeekbar({
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  const [muxUploadURL, setMuxUploadURL] = useState(null);
-  const [isReadyToPlay, setIsReadyToPlay] = useState(false);
-  const [playbackId, setPlaybackId] = useState(null);
   const [quality, setQuality] = useState("auto"); // "auto" | "480p" | "720p" | "1080p"
+  const lastVolumeRef = useRef(1);
+
+  const [volume, setVolume] = useState(1);
+
+    useEffect(() => {
+    if (!playerRef.current) return;
+    playerRef.current.volume = volume;
+    playerRef.current.muted = isMuted;
+  }, [volume, isMuted]);
+
+  const handleVolumeChange = (v) => {
+  setVolume(v);
+
+  if (v === 0) {
+    setIsMuted(true);
+  } else {
+    lastVolumeRef.current = v;
+    setIsMuted(false);
+  }
+};
+
+const handleToggleMute = () => {
+  setIsMuted((prev) => {
+    if (prev) {
+      // unmute → restore volume
+      const restore = lastVolumeRef.current || 0.5;
+      setVolume(restore);
+      return false;
+    } else {
+      // mute → remember volume
+      lastVolumeRef.current = volume;
+      setVolume(0);
+      return true;
+    }
+  });
+};
+
 
   useEffect(() => {
     getOneProjectApi(location.state.projectId)
@@ -236,13 +270,6 @@ export default function VideoPlayerWithSeekbar({
     setIsLooping(next);
   };
 
-  const handleMuteToggle = () => {
-    if (!playerRef.current) return;
-    const el = playerRef.current;
-    const next = !isMuted;
-    el.muted = next;
-    setIsMuted(next);
-  };
 
   const handleFullscreen = () => {
     const el =
@@ -268,7 +295,6 @@ export default function VideoPlayerWithSeekbar({
         <div className="w-full rounded-xl overflow-hidden border border-[#1b1b1b] relative bg-black">
           <MuxPlayer
             ref={playerRef}
-            // src={src}
             autoPlay={false}
             playsInline
             streamType="on-demand"
@@ -325,11 +351,13 @@ export default function VideoPlayerWithSeekbar({
           onSeek={onSeek}
           onToggleLoop={handleLoopToggle}
           isLooping={isLooping}
-          onToggleMute={handleMuteToggle}
           isMuted={isMuted}
           qualityLabel={quality === "auto" ? "Auto" : quality}
           onQualityChange={setQuality}
           onFullscreen={handleFullscreen}
+          volume={volume}
+          onVolumeChange={handleVolumeChange}
+          onToggleMute={handleToggleMute}
         />
       </div>
       <div className="h-4" />

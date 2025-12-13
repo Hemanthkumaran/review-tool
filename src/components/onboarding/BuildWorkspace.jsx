@@ -5,8 +5,9 @@ import OutlineInput from '../textInputs/OutlineInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { PATHS } from '../../routes/paths';
 import { createWorkspaceApi } from '../../services/api';
+import confettiImg from '../../assets/svgs/confetti2.svg'
 
-function BuildWorkspace({ setCurrentScreen }) {
+function BuildWorkspace() {
   const [workspaceName, setWorkspaceName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -47,14 +48,15 @@ function BuildWorkspace({ setCurrentScreen }) {
         alt="logo"
         className="fixed top-10 left-10 z-50 pointer-events-none h-12 w-auto"
       />
-      <div style={{ fontFamily: 'Gilroy-SemiBold', fontSize: 24 }} className="mt-20">
-        Build your Workspace
+      <div style={{ display:'flex', justifyContent:'center', alignItems:'center', flexDirection:'column'}}>
+        <img src={confettiImg} />
+        <div style={{ fontFamily: 'Gilroy-SemiBold', fontSize: 24 }} className="mt-5">
+          Set up your workspace
+        </div>
+        <div style={{ fontSize:14 }} className="mt-1 mb-8 text-[#BFBFBF]">
+          Give it a name that feels right for your team.
+        </div>
       </div>
-
-      <div className="mt-2 mb-8 text-[#BFBFBF]">
-        Lorem ipsum dolor sit amet consectetur. Sed non at imperdiet non ornare sollicitudin vel.
-      </div>
-
       <form className="space-y-4" onSubmit={handleSubmit}>
         <OutlineInput
           label="Workspace Name (You can change this later)"

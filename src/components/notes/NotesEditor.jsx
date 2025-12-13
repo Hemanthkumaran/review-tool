@@ -27,6 +27,7 @@ export default function NotesEditor({
 }) {
   const defaultSectionId = sections[0]?.id;
   const [activeSection, setActiveSection] = useState(defaultSectionId);
+  const isSwitchingRef = useRef(false);
 
   // state: content + dirty per section
   const [contents, setContents] = useState(() => {
@@ -69,6 +70,8 @@ export default function NotesEditor({
       },
     },
     onUpdate({ editor }) {
+      if (isSwitchingRef.current) return;
+
       const current = activeSectionRef.current;
       const html = editor.getHTML();
 
@@ -103,14 +106,22 @@ export default function NotesEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialBySection, sections, editor]);
 
-  // ⬇️ FIX 1: no auto-focus on tab switch (prevents weird blinking)
   const handleChangeSection = (id) => {
+    if (id === activeSection) return;
+
+    isSwitchingRef.current = true;
     setActiveSection(id);
+
     if (editor) {
       editor.commands.setContent(contents[id] || "", false);
-      // no editor.commands.focus() here
     }
+
+    // allow updates again after content is set
+    requestAnimationFrame(() => {
+      isSwitchingRef.current = false;
+    });
   };
+
 
   if (!editor) {
     return (
@@ -200,7 +211,7 @@ export default function NotesEditor({
   };
 
   return (
-    <div className=" rounded-2xl flex flex-col h-[460px] text-[13px] text-gray-100">
+    <div className="rounded-2xl flex flex-col h-[460px] text-[13px] text-gray-100">
       {/* top tabs row */}
         <div className="relative flex items-center justify-between gap-6 text-[14px] px-2">
           {/* base line across all tabs */}
@@ -237,7 +248,7 @@ export default function NotesEditor({
       </div>
 
       {/* toolbar footer */}
-      <div className="px-4 py-2 border-t border-white/5 flex items-center justify-between text-[11px]">
+      <div className="mt-auto px-4 py-2 border-top border-white/5 flex items-center justify-between text-[11px]">
         <div className="flex items-center gap-1">
           <button
             type="button"

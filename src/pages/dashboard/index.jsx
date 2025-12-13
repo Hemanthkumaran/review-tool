@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
 import DashboardHeader from '../../components/DashboardHeader';
 import AppLoader from '../../components/common/AppLoader';
+import ShareModal from '../../components/modals/ShareModal';
 
 export default function DashboardPage({
   role = "Owner",
@@ -20,6 +21,7 @@ export default function DashboardPage({
 
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [allFolders, setAllFolders] = useState([]);
+  const [inviteModal, setInviteModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,21 @@ export default function DashboardPage({
     })
   }
 
+    function handleFolderUpdated(folderId, newName) {
+    setAllFolders((prev) =>
+      prev.map((f) =>
+        f._id === folderId ? { ...f, name: newName } : f
+      )
+    );
+  }
+
+  function handleFolderDeleted(folderId) {
+    setAllFolders((prev) =>
+      prev.filter((f) => f._id !== folderId)
+    );
+  }
+
+
   if (loading) return <AppLoader visible={loading} message="Loading folders…" />
 
   return (
@@ -77,7 +94,8 @@ export default function DashboardPage({
 
           <div className="hidden md:flex items-center gap-3">
             <button
-              className="inline-flex items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
+              onClick={() => setInviteModal(true)}
+              className="inline-flex items-center cursor-pointer gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
             >
               <InviteIcon className="h-4 w-4" />
               <span>Invite</span>
@@ -122,17 +140,21 @@ export default function DashboardPage({
             </button>
           </div>
         </div>
-        { allFolders.length ?
-            <div className='flex gap-6 mt-3'>
-              {allFolders.map(item => {
-                return <Folder 
+        {allFolders.length ? (
+            <div className="flex gap-4 mt-3 flex-wrap">
+              {allFolders.map((item) => (
+                <Folder
                   key={item._id}
-                  onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })} 
-                  folderName={item.name}
+                  folder={item}
+                  onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })}
+                  onRenamed={handleFolderUpdated}
+                  onDeleted={handleFolderDeleted}
                 />
-              })}
-            </div> :
-          <EmptyState/> }
+              ))}
+            </div>
+          ) : (
+            <EmptyState />
+          )}
       </main>
 
       {/* Bottom-right watermark */}
@@ -140,6 +162,7 @@ export default function DashboardPage({
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
+      {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null}
       <CreateFolderModal
         isOpen={isCreateModalOpen}
         onClose={() => setCreateModalOpen(false)}

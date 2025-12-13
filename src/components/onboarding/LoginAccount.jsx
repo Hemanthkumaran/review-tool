@@ -54,8 +54,8 @@ function LoginAccount({ setCurrentScreen }) {
   return (
     <div className="w-full max-w-sm">
         <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />
-        <div style={{ fontFamily:'Gilroy-SemiBold', fontSize:24 }}>Login to your account</div>
-        <div className='mt-2 mb-2 text-[#BFBFBF]'>Lorem ipsum dolor sit amet consectetur. Sed non at imperdiet non ornare sollicitudin vel.</div>
+        <div style={{ fontFamily:'Gilroy-SemiBold', fontSize:24, textAlign:'center' }}>Hello again</div>
+        <div style={{ textAlign:'center' }} className='mt-2 mb-2 text-[#BFBFBF]'>Pick up right where you left off.</div>
         <form className="space-y-4 mt-8" onSubmit={handleSubmit}>
           <OutlineInput
               label='Email'
@@ -78,7 +78,7 @@ function LoginAccount({ setCurrentScreen }) {
                 {errorMsg}
               </div>
             )}
-          <div className='mt-8'><PrimaryButton type='submit' label={'Sign in'} loading={loading}/></div>
+          <div className='mt-8'><PrimaryButton type='submit' label={'Login'} loading={loading}/></div>
         </form>
         <p className="mt-6 text-sm text-center text-[#BFBFBF]">
         Don't have an account?{" "}

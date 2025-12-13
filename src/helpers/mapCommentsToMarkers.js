@@ -47,6 +47,7 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
       createdAt: c.createdAt ? new Date(c.createdAt) : null,
       user,
       replies,
+      isResolved: !!c.isResolved,
       // keep raw comment if you ever need more fields
       _raw: c,
     };

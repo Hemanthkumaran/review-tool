@@ -1,6 +1,9 @@
 // VoiceNotePlayer.jsx
 import React, { useEffect, useRef, useState } from "react";
 
+import pauseIcon from '../../assets/svgs/pause.svg';
+import playIcon from '../../assets/svgs/play.svg';
+
 function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
     .toString()
@@ -111,25 +114,16 @@ export default function VoiceNotePlayer({ src }) {
       <button
         type="button"
         onClick={togglePlay}
-        className="flex items-center justify-center w-11 h-11 rounded-full border border-[#222327] bg-black/80 hover:bg-black transition-colors"
+        className="flex items-center justify-center w-10 h-10 cursor-pointer rounded-full border border-[#222327] bg-black/80 hover:bg-black transition-colors"
       >
         {isPlaying ? (
           // Pause icon
           <div className="flex items-center gap-[3px]">
-            <span className="w-[4px] h-5 rounded-full bg-white" />
-            <span className="w-[4px] h-5 rounded-full bg-white" />
+            <img src={pauseIcon}/>
           </div>
         ) : (
           // Play triangle
-          <div
-            className="w-0 h-0"
-            style={{
-              borderTop: "10px solid transparent",
-              borderBottom: "10px solid transparent",
-              borderLeft: "14px solid white",
-              marginLeft: "2px",
-            }}
-          />
+          <img src={playIcon}/>
         )}
       </button>
 
@@ -139,15 +133,15 @@ export default function VoiceNotePlayer({ src }) {
         ref={barRef}
         onPointerDown={handleBarPointerDown}
       >
-        <div className="w-full h-[10px] rounded-full bg-[#202124]" />
+        <div className="w-full h-[8px] rounded-full bg-[#202124]" />
         {/* filled portion */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 h-[10px] rounded-full bg-[#F9F046]"
+          className="absolute top-1/2 -translate-y-1/2 h-[8px] rounded-full bg-[#F9F046]"
           style={{ width: `${progressPct}%` }}
         />
         {/* thumb */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white shadow-md"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-md"
           style={{ left: `calc(${progressPct}% - 10px)` }}
         />
       </div>

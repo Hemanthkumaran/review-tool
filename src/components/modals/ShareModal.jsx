@@ -304,7 +304,7 @@ export default function ShareModal({ onClose }) {
             </p>
           </div>
         </div>
-        <img style={{ position:'absolute', right:15, top:15 }} onClick={onClose} src={closeCircle}/>
+        <img style={{ position:'absolute', right:15, top:15, cursor:'pointer' }} onClick={onClose} src={closeCircle}/>
         {/* Share with + role select */}
         <div className="px-8 pb-3 flex items-center gap-2">
           <span style={{ fontFamily:'Gilroy-Light', fontSize:14 }} className="text-[#fff]">Share with</span>

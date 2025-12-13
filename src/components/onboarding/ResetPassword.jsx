@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import logo from '../../assets/svgs/reviewtool-logo.svg';
 import OutlineInput from '../textInputs/OutlineInput';
 import PrimaryButton from '../buttons/PrimaryButton';
-import { forgotPasswordApi, verifyResetCodeApi, resetForgotPasswordApi } from '../../services/api';
+import { forgotPasswordApi, verifyResetCodeApi } from '../../services/api';
 
 function ResetPassword({ setCurrentScreen }) {
   const [showError, setShowError] = useState(false);
@@ -80,15 +80,14 @@ function ResetPassword({ setCurrentScreen }) {
   return (
     <div className="w-full max-w-sm">
       <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />
-
-      <div style={{ fontFamily:'Gilroy-Regular', fontSize:24 }}>
-        Forgot password
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontFamily:'Gilroy-Regular', fontSize:24 }}>
+          Need a reset?
+        </div>
+        <div className='mt-2 mb-2 text-[#BFBFBF]'>
+          Tell us your email and we'll help you get back in.
+        </div>
       </div>
-
-      <div className='mt-2 mb-2 text-[#BFBFBF]'>
-        Lorem ipsum dolor sit amet consectetur. Sed non at imperdiet non ornare sollicitudin vel.
-      </div>
-
       <form className="space-y-4 mt-8" onSubmit={handleSubmit}>
         <OutlineInput
           label='Email'

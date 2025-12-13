@@ -47,15 +47,14 @@ function CreateAccount({ setCurrentScreen }) {
   return (
     <div className="w-full max-w-sm">
       <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />
-
-      <div style={{ fontFamily: "Gilroy-SemiBold", fontSize: 24 }}>
-        Create your account
+      <div style={{ textAlign:'center'}}>
+        <div style={{ fontFamily: "Gilroy-SemiBold", fontSize: 24 }}>
+          Create your account
+        </div>
+        <div className="mt-2 mb-2 text-[#BFBFBF]">
+          Just a few details and you’re ready to get started.
+        </div>
       </div>
-
-      <div className="mt-2 mb-2 text-[#BFBFBF]">
-        Lorem ipsum dolor sit amet consectetur. Sed non at imperdiet non ornare sollicitudin vel.
-      </div>
-
       <form className="space-y-4 mt-8" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <OutlineInput

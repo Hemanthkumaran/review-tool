@@ -1,6 +1,7 @@
 // src/components/comments/CommentCard.jsx
 import React, { useState } from "react";
 import VoiceNotePlayer from "./VoiceNotePlayer";
+import { resolveCommentApi } from "../../services/api";
 
 function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
@@ -60,6 +61,8 @@ export default function CommentCard({
   index,
   onGo,
   onReplySubmit, // (text) => Promise | void
+  projectId,
+  activeVersionId
 }) {
   const {
     time,
@@ -79,6 +82,32 @@ export default function CommentCard({
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
+  const [isResolved, setIsResolved] = useState(!!marker.isResolved);
+  const [resolving, setResolving] = useState(false);
+  console.log(marker, 'marker');
+  
+  const handleToggleResolved = async () => {
+    if (resolving) return;
+
+    const next = !isResolved;
+    setIsResolved(next); // optimistic
+    setResolving(true);
+
+    try {
+      await resolveCommentApi(
+        projectId,
+        activeVersionId,
+        marker.id,
+        { isResolved: next }
+      );
+    } catch (err) {
+      console.error("Failed to update resolved state", err);
+      setIsResolved(!next); // rollback
+    } finally {
+      setResolving(false);
+    }
+  };
+
 
   const handleSubmitReply = async () => {
     const trimmed = replyText.trim();
@@ -116,7 +145,45 @@ export default function CommentCard({
         </div>
         <div className="flex items-center gap-3 text-[11px] text-gray-400">
           <span>{formatRelative(createdAt)}</span>
-          <button className="w-5 h-5 rounded-[5px] border border-white/30 hover:border-white/70" />
+          <label
+            className={`
+              w-5 h-5 rounded-[5px]
+              inline-flex items-center justify-center
+              border transition
+              cursor-pointer
+              ${isResolved
+                ? "bg-[#FEEA3B] border-[#FEEA3B]"
+                : "border-white/30 hover:border-white/70"}
+              ${resolving ? "opacity-50 pointer-events-none" : ""}
+            `}
+            title={isResolved ? "Mark as unresolved" : "Mark as resolved"}
+          >
+  <input
+    type="checkbox"
+    checked={isResolved}
+    onChange={handleToggleResolved}
+    className="sr-only"
+    disabled={resolving}
+  />
+
+  {isResolved && (
+    <svg
+      viewBox="0 0 16 16"
+      className="w-3.5 h-3.5"
+      fill="none"
+    >
+      <path
+        d="M3.5 8.5l3 3 6-7"
+        stroke="#000"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )}
+</label>
+
+
         </div>
       </div>
 

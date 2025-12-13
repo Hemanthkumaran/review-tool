@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logoSmall from '../../assets/svgs/logo-small.svg'
 import OutlineInput from '../textInputs/OutlineInput'
@@ -48,7 +48,7 @@ function VerifyAccount({ setCurrentScreen }) {
         setCurrentScreen ? setCurrentScreen('signIn') : navigate(PATHS.SIGN_IN)
       }
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Invalid verification code. Please try again.'
+      const msg = err?.response?.data?.message || 'Invalid verification code. Please enter the correct code sent to your email.'
       setErrorMsg(msg)
     } finally {
       setLoading(false)
@@ -72,20 +72,17 @@ function VerifyAccount({ setCurrentScreen }) {
   return (
     <div className="w-full max-w-sm relative">
       {/* top-left logo */}
-<img
-  src={logoSmall}
-  alt="logo"
-  className="fixed top-10 left-10 z-50 pointer-events-none h-12 w-auto"
-/>
-
-
+      <img
+        src={logoSmall}
+        alt="logo"
+        className="fixed top-10 left-10 z-50 pointer-events-none h-12 w-auto"
+      />
       <div style={{ fontFamily: 'Gilroy-SemiBold', fontSize: 24 }} className="mt-20">
-        Verify Email
+        Check your email
       </div>
 
       <div className="mt-2 mb-8 text-[#BFBFBF]">
-        We’ve sent a verification code to <span className="text-white/90">{'your email'}</span>.
-        Please enter it below to confirm your email.
+        Enter the code we sent to your inbox.
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit}>

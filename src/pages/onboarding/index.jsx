@@ -8,19 +8,11 @@ import BuildWorkspace from '../../components/onboarding/BuildWorkspace';
 import ResetPassword from '../../components/onboarding/ResetPassword';
 import SetNewPassword from '../../components/onboarding/SetNewPassword';
 import PasswordChanged from '../../components/onboarding/PasswordChanged';
-import ChoosePlan from '../chooseplan';
-import FreeTrialModal from '../../components/modals/FreetrialModal';
 
 
 export default function Onboarding() {
 
   const [currentScreen, setCurrentScreen] = useState("signIn");
-
-  // return <ChoosePlan/>
-
-  // return <FreeTrialModal
-  //   open={true}
-  // />
 
   return (
     <div className="fixed inset-0 grid grid-cols-1 md:grid-cols-[45%_55%]">

@@ -3,15 +3,12 @@ import logo from '../../assets/svgs/reviewtool-logo.svg';
 import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { resetForgotPasswordApi } from '../../services/api';
-import { useNavigate } from 'react-router-dom';
-import { PATHS } from '../../routes/paths';
 
 function SetNewPassword({ setCurrentScreen }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const navigate = useNavigate();
 
   const passwordsMatch = password && confirmPassword && password === confirmPassword;
 
@@ -49,15 +46,14 @@ function SetNewPassword({ setCurrentScreen }) {
   return (
     <div className="w-full max-w-sm">
       <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />
-
-      <div style={{ fontFamily:'Gilroy-Regular', fontSize:24 }}>
-        Set a New Password
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontFamily:'Gilroy-SemiBold', fontSize:24 }}>
+          Set a New Password
+        </div>
+        <div className='mt-2 mb-2 text-[#BFBFBF]'>
+          Make sure it's secure and easy for you to recall.
+        </div>
       </div>
-
-      <div className='mt-2 mb-2 text-[#BFBFBF]'>
-        Lorem ipsum dolor sit amet consectetur. Sed non at imperdiet non ornare sollicitudin vel.
-      </div>
-
       <form className="space-y-4 mt-8" onSubmit={handleSubmit}>
         <PasswordInput
           label="Set New Password"
@@ -67,7 +63,7 @@ function SetNewPassword({ setCurrentScreen }) {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <div className='mt-2' />
+        <div className='mt-4' />
 
         <PasswordInput
           label="Confirm New Password"

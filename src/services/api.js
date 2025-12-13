@@ -80,14 +80,42 @@ export async function updateNotesApi(projectID, data) {
 }
 
 export const addReplyApi = (projectId, versionId, commentId, payload) => {
-  // payload: { text: string }  (extend later if replies get attachments)
   return axiosClient.patch(
     `/project/addReply?projectID=${projectId}&versionID=${versionId}&commentID=${commentId}`,
-    payload,
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
+    payload
+  );
+};
+
+export const resolveCommentApi = (projectId, versionId, commentId, payload) => {
+  return axiosClient.patch(
+    `/project/resolveComment?projectID=${projectId}&versionID=${versionId}&commentID=${commentId}`,
+    payload
+  );
+};
+
+export const updateDownloadLinkApi = (projectID, payload) => {
+  return axiosClient.patch(
+    `/project/updateDownloadLink?projectID=${projectID}`,
+    payload
+  );
+};
+
+export const updateProjectStatusApi = (projectId, status) => {
+  return axiosClient.patch(
+    `/project/updateStatus?projectID=${projectId}`,
+    { status } // "in progress" | "completed"
+  );
+};
+
+export const updateFolderApi = (folderId, payload) => {
+  return axiosClient.patch(
+    `/folder/updateFolder?folderID=${folderId}`,
+    payload
+  );
+};
+
+export const deleteFolderApi = (folderId) => {
+  return axiosClient.delete(
+    `/folder/deleteFolder?folderID=${folderId}`
   );
 };

@@ -1,7 +1,7 @@
 .main-box {
   position: relative;
-  height: 220px;
-  width: 300px;
+  height: 190px;
+  width: 240px;
   overflow: hidden;
   cursor: pointer;
   /* just to visualize parent */
@@ -45,4 +45,5 @@
 .text-box-content {
   display: flex;
   align-items: center;
+  font-size: 12px;
 }

@@ -1,5 +1,8 @@
+import { useState } from 'react';
+import bellIcon from '../assets/svgs/bell.svg';
 import arrowDown from '../assets/svgs/arrow-down.svg';
 import ownerLogo from '../assets/svgs/owner.svg';
+import ProfileMenu from './ProfileMenu';
 
 
 function Plus({ className = "" }) {
@@ -10,34 +13,12 @@ function Plus({ className = "" }) {
   );
 }
 
-function PlusThin({ className = "" }) {
-  return (
-    <svg viewBox="0 0 20 20" className={className} fill="none">
-      <path d="M10 4v12M4 10h12" stroke="#111" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function Bell({ className = "" }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path d="M12 3a6 6 0 00-6 6v3.3l-1.3 2.6A1 1 0 005.6 17h12.8a1 1 0 00.9-1.5L18 12.3V9a6 6 0 00-6-6z" stroke="#BFBFBF" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M9.5 19a2.5 2.5 0 005 0" stroke="#BFBFBF" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function InviteIcon({ className = "" }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path d="M16 11a4 4 0 10-8 0 4 4 0 008 0z" stroke="#BFBFBF" strokeWidth="1.6"/>
-      <path d="M3 21c1.7-3.3 5-5.5 9-5.5s7.3 2.2 9 5.5" stroke="#BFBFBF" strokeWidth="1.6" strokeLinecap="round"/>
-    </svg>
-  );
-}
-
 
 function DashboardHeader({ role, minutesUsed, minutesCap, usagePct }) {
+
+  const [openProfile, setOpenProfile] = useState(false);
+
+
   return (
         <header className="flex items-center justify-between px-2 md:px-2">
             {/* Left: workspace pill */}
@@ -72,24 +53,32 @@ function DashboardHeader({ role, minutesUsed, minutesCap, usagePct }) {
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
-    
-              {/* Bell */}
-              <button
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#151618] border border-[#232427] hover:bg-[#1A1B1E]"
-                aria-label="Notifications"
-              >
-                <Bell className="h-4.5 w-4.5" />
-              </button>
-    
-              {/* Avatar */}
-              <button className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#151618] border border-[#232427] overflow-hidden">
-                {/* Replace with your img */}
-                <img
-                  src="https://i.pravatar.cc/80?img=32"
-                  alt="User"
-                  className="h-10 w-10 object-cover"
-                />
-              </button>
+              <div className='flex items-center justify-between' style={{ border:"2px solid #181A1C", borderRadius:30, padding:"2px 4px", width:140 }}>
+                <div className='flex items-center justify-center' style={{ border:"2px solid #181A1C", borderRadius:40, height:40, width:40 }}>
+                  <img src={bellIcon}/>
+                </div>
+                <div onClick={() => setOpenProfile((v) => !v)} className="relative cursor-pointer">
+                  <div className='flex items-center' style={{ border:"2px solid #181A1C", borderRadius:30, padding:5, width:80 }}>
+                    <button
+                      className="
+                        inline-flex h-9 w-9 items-center justify-center
+                        rounded-full bg-[#151618]
+                        border border-[#232427]
+                        overflow-hidden
+                        hover:ring-2 hover:ring-white/10 mr-3
+                      "
+                    >
+                      <img
+                        src="https://i.pravatar.cc/80?img=32"
+                        alt="User"
+                        className="h-9 w-9 object-cover"
+                      />
+                    </button>
+                    <img src={arrowDown}/>
+                  </div>
+                  {openProfile && <ProfileMenu onClose={() => setOpenProfile(false)} />}
+                </div>
+              </div>
             </div>
           </header>
   )

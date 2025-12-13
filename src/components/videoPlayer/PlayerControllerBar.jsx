@@ -1,5 +1,5 @@
 // src/components/videoPlayer/PlayerControlsBar.jsx
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import CustomSeekBar from "./CustomSeekBar";
 import playIcon from "../../assets/svgs/play.svg";
@@ -7,6 +7,7 @@ import pauseIcon from "../../assets/svgs/pause.svg";
 import speakerIcon from "../../assets/svgs/speaker.svg";
 import fullscreenIcon from "../../assets/svgs/fullscreen.svg";
 import { LoopIcon } from "../../assets/svgs/SvgComponents";
+import { MutedOutlined } from "@ant-design/icons";
 
 function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
@@ -35,7 +36,7 @@ const PlayIcon = ({ playing }) =>
   playing ? <img src={pauseIcon} /> : <img src={playIcon} />;
 
 const VolumeIcon = ({ muted }) =>
-  muted ? <img src={speakerIcon} /> : <img src={speakerIcon} />;
+  muted ? <MutedOutlined color="#fff" /> : <img src={speakerIcon} />;
 
 export default function PlayerControlsBar({
   duration,
@@ -51,8 +52,12 @@ export default function PlayerControlsBar({
   qualityLabel = "1080p",
   onFullscreen,
   onQualityChange,
+  volume,
+  onVolumeChange,
 }) {
   const [qualityMenuOpen, setQualityMenuOpen] = useState(false);
+  const [showVolume, setShowVolume] = useState(false);
+  const [volumeOpen, setVolumeOpen] = useState(false);
 
   const QUALITY_OPTIONS = [
     { value: "auto", label: "Auto" },
@@ -65,6 +70,13 @@ export default function PlayerControlsBar({
     onQualityChange?.(value);
     setQualityMenuOpen(false);
   };
+
+  useEffect(() => {
+  const close = () => setVolumeOpen(false);
+  document.addEventListener("mousedown", close);
+  return () => document.removeEventListener("mousedown", close);
+}, []);
+
 
   return (
     <div className="px-6 pb-4 pt-3">
@@ -94,14 +106,51 @@ export default function PlayerControlsBar({
           >
             <LoopIcon color={isLooping ? "#FEEA3B" : "#fff"} />
           </IconButton>
+<div className="relative">
+  {/* Volume button */}
+  <IconButton
+    onClick={() => {
+      onToggleMute();
+      setVolumeOpen(true); // keep slider open
+    }}
+    title={isMuted || volume === 0 ? "Unmute" : "Mute"}
+    active={isMuted || volume === 0}
+  >
+    <VolumeIcon muted={isMuted || volume === 0} volume={volume} />
+  </IconButton>
 
-          <IconButton
-            onClick={onToggleMute}
-            title={isMuted ? "Unmute" : "Mute"}
-            active={isMuted}
-          >
-            <VolumeIcon muted={isMuted} />
-          </IconButton>
+  {/* Volume popover */}
+  {volumeOpen && (
+    <div
+      className="
+        absolute bottom-10 left-1/2 -translate-x-1/2
+        h-28 w-8 rounded-full
+        bg-[#050507]/95
+        border border-white/10
+        shadow-lg
+        flex items-center justify-center
+        z-40
+      "
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value={isMuted ? 0 : volume}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          onVolumeChange(v);
+        }}
+        className="volume-slider"
+        orient="vertical"
+      />
+    </div>
+  )}
+</div>
+
+
         </div>
 
         {/* center time */}

@@ -29,6 +29,7 @@ export default function VideoReview() {
 
   const [markers, setMarkers] = useState([]);
   const [annotationMode, setAnnotationMode] = useState(false);
+  const [activeVersionId, setActiveVersionId] = useState(null);
 
   // voice recording
   const [isRecording, setIsRecording] = useState(false);
@@ -64,21 +65,22 @@ useEffect(() => {
     setMarkers([]);
     return;
   }
-
-  const version =
-    // projectDetail.versions?.find((v) => v._id === versionId) ||
-    projectDetail.versions?.[0];
-
+  const version = projectDetail.versions?.find((v) => v._id === activeVersionId)
+  console.log(version,'version');
+  
   const backendComments = version?.comments || [];
   const mapped = mapCommentsToMarkers(backendComments);
-
+  console.log(mapped, 'mapped');
+  
   setMarkers(mapped);
 }, [projectDetail]);
 
   function fetchProject() {
     getOneProjectApi(location.state.projectId).then((res) => {
-      console.log(res, "res");
       setProjectDetail(res.data.project);
+      console.log(res.data.project, 'res.data.project');
+      
+      setActiveVersionId(res.data.project.versions[0]?._id);
       if (res.data.project.versions[0]?.muxPlaybackID) {
         setVideoSrc(res.data.project.versions[0].muxPlaybackID);
       }
@@ -88,7 +90,6 @@ useEffect(() => {
 
   // called AFTER upload finishes in VideoUploadPlaceholder
   const handleVideoUploaded = () => {
-    console.log('called');
     // playbackUrl – e.g. https://stream.mux.com/<playbackId>.m3u8
     // playbackId   – in case you need to store/use it elsewhere
     fetchProject()
@@ -130,12 +131,7 @@ useEffect(() => {
     // keep original data in case you need it later
     _raw: v,
   }));
-
-  // optional: keep which version is active in local state
-  const [activeVersionId, setActiveVersionId] = useState(
-    versionsForSwitcher[0]?._id
-  );
-
+  
   // when user selects a version from the dropdown
   const handleChangeVersion = (ver) => {
     setActiveVersionId(ver._id);
@@ -492,7 +488,7 @@ useEffect(() => {
         goBack={() => navigate(-1)}
         projectDetail={projectDetail} 
         versions={versionsForSwitcher}
-        project={{ activeVersionId }}
+        activeVersionId={activeVersionId}
         onChangeVersion={handleChangeVersion}
       />
       <div className="mx-auto flex">
@@ -561,6 +557,7 @@ useEffect(() => {
             projectId={location.state.projectId}
             projectDetail={projectDetail}
             onAddReply={handleAddReply}
+            activeVersionId={activeVersionId}
           />
         </div>
       </div>
