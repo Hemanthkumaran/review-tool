@@ -29,11 +29,11 @@ export default function DeleteConfirmModal({
             shadow-[0_30px_80px_rgba(0,0,0,0.8)]
           "
         >
-          <Dialog.Title className="text-xl text-white mb-2">
+          <Dialog.Title style={{ fontFamily:'Gilroy-SemiBold', fontSize:18 }} className="text-white mb-2">
             {title}
           </Dialog.Title>
 
-          <p className="text-sm text-gray-400 mb-6">
+          <p style={{ fontFamily:'Gilroy-Light'}} className="text-[14px] text-[#BFBFBF] mb-6">
             {description}
           </p>
 
@@ -74,6 +74,7 @@ export default function DeleteConfirmModal({
             </button>
 
             <button
+              style={{ fontFamily:'Gilroy-SemiBold' }}
               disabled={!canDelete}
               onClick={() => {
                 onConfirm();

@@ -1,7 +1,11 @@
-import Card from "./UI/Card";
-import dummy from "../assets/images/dummy.svg";
+import { useState } from "react";
 import dot from "../assets/svgs/dot.svg";
 import message from "../assets/svgs/message.svg";
+import StatusDropdown from "./StatusDropdown";
+import ProjectMoreMenu from "./ProjectMoreMenu";
+import { PlusIcon } from "../assets/svgs/SvgComponents";
+import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
+import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
 
 const formatDateTime = (isoString) => {
   if (!isoString) return "-";
@@ -24,72 +28,107 @@ const getTotalComments = (project) => {
   );
 };
 
-const STATUS_OPTIONS = [
-  { value: "yet to start", label: "Yet to start" },
-  { value: "in progress", label: "In progress" },
-  { value: "completed", label: "Completed" },
-];
+export default function ProjectFolder({
+  project,
+  onClick,
+  onRename,
+  onDelete,
+  onStatusChange,
+}) {
 
-const ProjectFolder = ({ project, onStatusChange, onClick }) => {
   const createdAtLabel = formatDateTime(project.createdAt);
   const commentCount = getTotalComments(project);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [name, setName] = useState(project.name);
+  const [showDelete, setShowDelete] = useState(false);
+
 
   return (
-      <div style={{ color: "white", cursor:'pointer', border:"1px solid #1F1F21", padding:5, borderRadius:25 }}>
-        {/* thumbnail */}
-        <img onClick={onClick} style={{ width: "100%" }} src={dummy} alt={project.name} />
-        {/* title + meta */}
-        <div style={{ padding:"2px 5px" }}>
-          <div style={{ padding: "0px 8px", marginTop:8, fontFamily:'Gilroy-SemiBold', textTransform:'capitalize' }}>{project.name}</div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              padding: "6px 8px",
-              fontSize: 12,
-              color: "#BFBFBF",
-            }}
-          >
-            <div>{createdAtLabel}</div>
-            <img style={{ padding: "0 8px" }} src={dot} alt="" />
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <img
-                style={{ paddingRight: "4px" }}
-                src={message}
-                alt="comments"
+    <div
+      className="relative rounded-[20px] p-2 border-1 border-[#F9EF38] bg-black cursor-pointer"
+      onClick={onClick}
+    >
+      {/* Thumbnail */}
+      <div className="rounded-2xl overflow-hidden border border-[#2A2A2A]">
+        <img loading="lazy" src={getMuxGif(project?.versions[0]?.muxPlaybackID)} alt={project.name} className="w-full" />
+      </div>
+
+      {/* Content */}
+      <div className="px-2 pt-3">
+        <div className="flex items-start justify-between">
+          <div>
+            {isRenaming ? (
+              <input
+                autoFocus
+                value={name}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setName(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                onBlur={() => {
+                  if (name.trim() && name !== project.name) {
+                    onRename(project._id, name.trim());
+                  }
+                  setIsRenaming(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                  if (e.key === "Escape") {
+                    setName(project.name);
+                    setIsRenaming(false);
+                  }
+                }}
+                className="bg-transparent outline-none text-[18px] font-[Gilroy-SemiBold]"
               />
-              <span>{commentCount}</span>
+            ) : (
+              <div
+                className="text-[18px] font-[Gilroy-SemiBold]"
+              >
+                {project.name}
+              </div>
+            )}
+
+            <div className="flex items-center text-[12px] text-[#BFBFBF] mt-1">
+              <span>{createdAtLabel}</span>
+              <img src={dot} className="mx-2" />
+              <div className="flex items-center gap-1">
+                <img src={message} />
+                <span>{commentCount}</span>
+              </div>
             </div>
           </div>
+          <ProjectMoreMenu
+            onRename={() => setIsRenaming(true)}
+            onDelete={() => setShowDelete(true)}
+          />
         </div>
-        {/* status */}
-        <div style={{ padding: "8px 8px" }}>
-          <select
-            style={{
-              padding: "4px 8px",
-              width: "40%",
-              borderRadius: "12px",
-              outline: "none",
-              border: "1px solid #2B2B2B",
-              background: "#101013",
-              color: "#fff",
-              fontFamily: "Gilroy-Regular",
-              fontSize: 14,
-            }}
-            value={project.status}
-            onChange={(e) =>
-              onStatusChange?.(project._id, e.target.value)
-            }
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className="flex items-center gap-2 mt-3">
+        {/* existing avatars here */}
+        <button
+          className="w-8 h-8 rounded-full bg-[#BFBFBF] text-black flex items-center justify-center text-xl hover:opacity-90"
+          title="Add collaborator"
+        >
+          <PlusIcon color="#000000"/>
+        </button>
       </div>
+        <StatusDropdown
+          value={project.status}
+          onChange={(status) => onStatusChange?.(project._id, status)}
+        />
+      </div>
+      <DeleteConfirmModal
+        open={showDelete}
+        onOpenChange={setShowDelete}
+        title="Delete this project?"
+        description="The project and its contents (versions, comments, notes, etc) will be removed permanently."
+        confirmText="DELETE"
+        confirmLabel="Delete permanently"
+        onConfirm={() => {
+          setShowDelete(false);
+          onDelete(project._id);
+        }}
+      />
+    </div>
   );
-};
-
-export default ProjectFolder;
+}

@@ -5,12 +5,13 @@ import cutjamm from '../../assets/svgs/cutjamm.svg';
 import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
 import { useNavigate } from 'react-router-dom';
-import { allFoldersApi, createFolderApi } from '../../services/api';
+import { allFoldersApi, allProjectsApi, createFolderApi } from '../../services/api';
 import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
 import DashboardHeader from '../../components/DashboardHeader';
 import AppLoader from '../../components/common/AppLoader';
 import ShareModal from '../../components/modals/ShareModal';
+import ProjectAccordion from '../../components/karn-comp/components/Accordion/Accordion';
 
 export default function DashboardPage({
   role = "Owner",
@@ -35,7 +36,7 @@ export default function DashboardPage({
 
   function handleCreate(name) {
     setCreateLoading(true);
-    createFolderApi({ name })
+    createFolderApi({ name : 'Untitled' })
     .then(res => {
       setCreateLoading(false);
       setCreateModalOpen(false);
@@ -46,10 +47,10 @@ export default function DashboardPage({
     })
   }
 
+
   function getAllFolders() {
     allFoldersApi()
     .then(res => {
-      console.log(res, 'ress');
       setLoading(false);
       setAllFolders(res.data.folderArray);
     })
@@ -66,11 +67,32 @@ export default function DashboardPage({
       )
     );
   }
-
+  console.log(allFolders, 'allFolders');
+  
   function handleFolderDeleted(folderId) {
     setAllFolders((prev) =>
       prev.filter((f) => f._id !== folderId)
     );
+  }
+
+  function getActiveContent() {
+    if (activeTab === "allFolders") {
+      return <div className="flex gap-4 mt-3 flex-wrap">
+        {allFolders.map((item) => (
+          <Folder
+            key={item._id}
+            folder={item}
+            onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })}
+            onRenamed={handleFolderUpdated}
+            onDeleted={handleFolderDeleted}
+          />
+        ))}
+      </div>
+    } else {
+      return allFolders.map(folder => {
+        return <ProjectAccordion key={folder._id} folder={folder} getAllFolders={getAllFolders}/>
+      })
+    }
   }
 
 
@@ -89,7 +111,7 @@ export default function DashboardPage({
         {/* Title row */}
         <div className="mt-8 flex items-center justify-between">
           <div style={{ fontFamily:"Gilroy-SemiBold", fontSize:24 }}>
-            Welcome to {JSON.parse(localStorage.getItem('user')).workspaceName}’s workspace
+            Welcome to {JSON.parse(localStorage.getItem('user')).workspaceName}'s workspace
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -101,7 +123,7 @@ export default function DashboardPage({
               <span>Invite</span>
             </button>
             <button
-              onClick={() => setCreateModalOpen(true)}
+              onClick={handleCreate}
               className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
             >
               <PlusThin className="h-4 w-4" />
@@ -140,23 +162,8 @@ export default function DashboardPage({
             </button>
           </div>
         </div>
-        {allFolders.length ? (
-            <div className="flex gap-4 mt-3 flex-wrap">
-              {allFolders.map((item) => (
-                <Folder
-                  key={item._id}
-                  folder={item}
-                  onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })}
-                  onRenamed={handleFolderUpdated}
-                  onDeleted={handleFolderDeleted}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState />
-          )}
+        {getActiveContent()}
       </main>
-
       {/* Bottom-right watermark */}
       <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
         <img src={cutjamm}/>

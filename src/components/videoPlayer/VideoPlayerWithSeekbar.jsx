@@ -19,7 +19,7 @@ export default function VideoPlayerWithSeekbar({
   onLoadedMetadata,
   onTogglePlay,
   onSeek,
-  onAddAnnotation, // still accepted (legacy)
+  activeVersionId,
   onCancelAnnotation,
   onAnnotationDraftChange,
   markers = [],  
@@ -32,7 +32,7 @@ export default function VideoPlayerWithSeekbar({
   const [projectDetail, setProjectDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
-
+const [ready, setReady] = useState(false);
   const [quality, setQuality] = useState("auto"); // "auto" | "480p" | "720p" | "1080p"
   const lastVolumeRef = useRef(1);
 
@@ -243,13 +243,16 @@ const handleToggleMute = () => {
     setDrawingAnnotation(null);
   };
 
-  const muxPlayerStyle = {
-    width: "100%",
-    height: "100%",
-    display: "block",
-    backgroundColor: "black",
-    "--controls": "none",
-  };
+const muxPlayerStyle = {
+  width: "100%",
+  height: "100%",
+  display: "block",
+  backgroundColor: "black",
+  objectFit: "contain",
+  "--controls": "none",
+  "--media-object-fit": "contain", // ✅ IMPORTANT
+};
+
 
   const handleTogglePlay = () => {
     if (!playerRef.current) return;
@@ -290,10 +293,40 @@ const handleToggleMute = () => {
   }
 
   return (
-    <div className="bg-[#0b0c0e] rounded-2xl overflow-hidden shadow-lg">
+    <div className="rounded-2xl overflow-hidden shadow-lg">
       <div className="p-6 pb-0">
-        <div className="w-full rounded-xl overflow-hidden border border-[#1b1b1b] relative bg-black">
-          <MuxPlayer
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-[#1b1b1b] bg-black">
+            {!ready && src && (
+              <img
+                src={`https://image.mux.com/${src}/thumbnail.jpg?time=0`}
+                className="absolute inset-0 w-full h-full object-contain"
+                alt=""
+              />
+            )}
+            <div className="w-full h-full flex items-center justify-center bg-black">
+            <MuxPlayer
+              key={activeVersionId}
+              ref={playerRef}
+              autoPlay={false}
+              playsInline
+              streamType="on-demand"
+              playbackId={src}
+              controls={false}
+              style={muxPlayerStyle}
+              // className={`absolute inset-0 transition-opacity duration-200 ${
+              //   ready ? "opacity-100" : "opacity-0"
+              // }`}
+              className="max-h-full max-w-full object-contain"
+              onTimeUpdate={onTimeUpdate}
+              onLoadedMetadata={(e) => {
+                setReady(true);
+                onLoadedMetadata?.(e);
+              }}
+              maxResolution={quality === "auto" ? undefined : quality}
+            />
+</div>
+          {/* <MuxPlayer
+            key={activeVersionId}  
             ref={playerRef}
             autoPlay={false}
             playsInline
@@ -304,7 +337,7 @@ const handleToggleMute = () => {
             onTimeUpdate={onTimeUpdate}
             onLoadedMetadata={onLoadedMetadata}
             maxResolution={quality === "auto" ? undefined : quality}
-          />
+          /> */}
 
           <div
             className={`absolute inset-0 ${
@@ -340,26 +373,24 @@ const handleToggleMute = () => {
           </div>
         </div>
       </div>
-
-      <div className="px-6">
-        <PlayerControlsBar
-          duration={duration}
-          currentTime={currentTime}
-          markers={markers}
-          isPlaying={isPlaying}
-          onTogglePlay={handleTogglePlay}
-          onSeek={onSeek}
-          onToggleLoop={handleLoopToggle}
-          isLooping={isLooping}
-          isMuted={isMuted}
-          qualityLabel={quality === "auto" ? "Auto" : quality}
-          onQualityChange={setQuality}
-          onFullscreen={handleFullscreen}
-          volume={volume}
-          onVolumeChange={handleVolumeChange}
-          onToggleMute={handleToggleMute}
-        />
-      </div>
+      <PlayerControlsBar
+        duration={duration}
+        currentTime={currentTime}
+        markers={markers}
+        isPlaying={isPlaying}
+        onTogglePlay={handleTogglePlay}
+        onSeek={onSeek}
+        onToggleLoop={handleLoopToggle}
+        isLooping={isLooping}
+        isMuted={isMuted}
+        qualityLabel={quality === "auto" ? "Auto" : quality}
+        onQualityChange={setQuality}
+        onFullscreen={handleFullscreen}
+        volume={volume}
+        onVolumeChange={handleVolumeChange}
+        onToggleMute={handleToggleMute}
+        playbackId={src}
+      />
       <div className="h-4" />
     </div>
   );

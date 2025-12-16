@@ -119,3 +119,16 @@ export const deleteFolderApi = (folderId) => {
     `/folder/deleteFolder?folderID=${folderId}`
   );
 };
+
+export const updateProjectApi = (projectId, payload) => {
+  return axiosClient.patch(
+    `/project/updateProject?projectID=${projectId}`,
+    payload
+  );
+};
+
+export const deleteProjectApi = (projectId) => {
+  return axiosClient.delete(
+    `/project/deleteProject?projectID=${projectId}`
+  );
+};

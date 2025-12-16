@@ -1,5 +1,5 @@
 // VideoReview.jsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import VideoPlayerWithSeekbar from "../../components/videoPlayer/VideoPlayerWithSeekbar";
 import CommentBar from "../../components/videoPlayer/CommentBar";
@@ -8,9 +8,10 @@ import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import ShareModal from "../../components/modals/ShareModal";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
 import { useLocation, useNavigate } from "react-router-dom";
-import { addCommentApi, addReplyApi, getOneProjectApi } from "../../services/api";
+import { addCommentApi, addReplyApi, getOneProjectApi, getVideoUploadUrl } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
+import { uploadToMux } from "../../helpers/muxHelpers";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
@@ -42,6 +43,17 @@ export default function VideoReview() {
   // annotation draft (from canvas)
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
   const annotationStartTimeRef = useRef(0);
+  const fileInputRef = useRef(null);
+  const [uploadPct, setUploadPct] = useState(null); // 0–100
+  const [isUploading, setIsUploading] = useState(false);
+  const rawVersions = projectDetail?.versions || [];
+
+    const activeRawVersion = useMemo(() => {
+  if (!activeVersionId || !rawVersions?.length) return null;
+  return rawVersions.find(v => v._id === activeVersionId) || null;
+}, [activeVersionId, rawVersions]);
+const playbackId = activeRawVersion?.muxPlaybackID || null;
+const muxStatus = activeRawVersion?.muxStatus;
 
   const currentUser = {
     id: "me",
@@ -59,6 +71,20 @@ export default function VideoReview() {
     };
   }, [videoSrc]);
 
+  useEffect(() => {
+  if (!rawVersions?.length) return;
+
+  // pick latest version (last item from backend)
+  const latest = rawVersions[rawVersions.length - 1];
+  setActiveVersionId(latest._id);
+}, [rawVersions]);
+
+useEffect(() => {
+  console.log("Active version ID:", activeVersionId);
+  console.log("Active raw version:", activeRawVersion);
+  console.log("Playback ID:", playbackId);
+}, [activeVersionId, activeRawVersion]);
+
   
 useEffect(() => {
   if (!projectDetail) {
@@ -66,7 +92,6 @@ useEffect(() => {
     return;
   }
   const version = projectDetail.versions?.find((v) => v._id === activeVersionId)
-  console.log(version,'version');
   
   const backendComments = version?.comments || [];
   const mapped = mapCommentsToMarkers(backendComments);
@@ -75,18 +100,25 @@ useEffect(() => {
   setMarkers(mapped);
 }, [projectDetail]);
 
-  function fetchProject() {
-    getOneProjectApi(location.state.projectId).then((res) => {
-      setProjectDetail(res.data.project);
-      console.log(res.data.project, 'res.data.project');
-      
-      setActiveVersionId(res.data.project.versions[0]?._id);
-      if (res.data.project.versions[0]?.muxPlaybackID) {
-        setVideoSrc(res.data.project.versions[0].muxPlaybackID);
-      }
-      setLoading(false);
-    });
-  }
+function fetchProject() {
+  getOneProjectApi(location.state.projectId).then((res) => {
+    const project = res.data.project;
+
+    setProjectDetail(project);
+
+    // default → latest version (NOT first)
+    const latest = project.versions?.[project.versions.length - 1];
+    if (latest) {
+      setActiveVersionId(latest._id);
+    }
+
+    setLoading(false);
+  });
+}
+
+
+
+
 
   // called AFTER upload finishes in VideoUploadPlaceholder
   const handleVideoUploaded = () => {
@@ -117,7 +149,6 @@ useEffect(() => {
 
     // VideoReview.jsx (or wherever you render <VideoHeader />)
 
-  const rawVersions = projectDetail?.versions || [];
 
   const versionsForSwitcher = rawVersions.map((v, index) => ({
     _id: v._id,
@@ -132,13 +163,10 @@ useEffect(() => {
     _raw: v,
   }));
   
-  // when user selects a version from the dropdown
   const handleChangeVersion = (ver) => {
     setActiveVersionId(ver._id);
-    // if you need the full original version object:
-    const original = rawVersions.find((rv) => rv._id === ver._id);
-    // update the rest of your UI / player using `original`
   };
+
 
   const pauseVideo = () => {
     if (playerRef.current) {
@@ -185,13 +213,6 @@ useEffect(() => {
     setCurrentTime(newTime);
   };
 
-  // const goToTimeAndPause = (time) => {
-  //   pauseVideo();
-  //   if (playerRef.current) {
-  //     playerRef.current.currentTime = time;
-  //   }
-  //   setCurrentTime(time);
-  // };
 
   const startVoiceRecording = async () => {
     pauseVideo();
@@ -301,7 +322,10 @@ useEffect(() => {
 
   // assuming you already have these from earlier work:
     const projectId = projectDetail?._id;
-    const activeVersion = projectDetail?.versions?.[0]; // or however you pick version
+      const activeVersion = projectDetail?.versions?.find(
+    (v) => v._id === activeVersionId
+  );
+
     const versionId = activeVersion?._id;
 
     // reuse your existing function that refetches project + remaps markers
@@ -465,6 +489,48 @@ useEffect(() => {
 };
 
 
+const handleNewVersionFile = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  e.target.value = "";
+
+  try {
+    setIsUploading(true);
+    setUploadPct(0);
+
+    const uploadRes = await getVideoUploadUrl(projectId);
+    const { muxUploadURL } = uploadRes.data;
+
+    await uploadToMux(muxUploadURL, file, (pct) => {
+      setUploadPct(pct);
+    });
+
+    // Upload finished → backend webhook still processing
+    setUploadPct(null);
+    setIsUploading(false);
+
+    const response = await getOneProjectApi(projectId);
+    const project = response.data.project;
+
+    setProjectDetail(project);
+
+    const latest =
+      project.versions[project.versions.length - 1];
+
+    setActiveVersionId(latest._id);
+
+    if (latest.muxStatus === "ready") {
+      setVideoSrc(latest.muxPlaybackID);
+    } else {
+      setVideoSrc(null);
+    }
+  } catch (err) {
+    console.error(err);
+    setIsUploading(false);
+    setUploadPct(null);
+  }
+};
+
   const hasPendingAnnotation =
     !!pendingAnnotation &&
     !!pendingAnnotation.annotation &&
@@ -473,94 +539,116 @@ useEffect(() => {
   const hasPendingVoice =
     !!pendingVoice && !!pendingVoice.url;
 
+    const showVideo =
+  activeVersion?.muxStatus === "ready" &&
+  !!activeVersion?.muxPlaybackID;
+
+
   if (loading) return <AppLoader visible={loading} message="Loading folders…" />
 
 
 
 
   return (
-    <div
-      style={{ margin: 25 }}
-      className="min-h-screen text-gray-200 font-sans"
-    >
-      {/* <ShareModal onClose={() => null} /> */}
-      <VideoHeader 
-        goBack={() => navigate(-1)}
-        projectDetail={projectDetail} 
-        versions={versionsForSwitcher}
-        activeVersionId={activeVersionId}
-        onChangeVersion={handleChangeVersion}
-      />
-      <div className="mx-auto flex">
-        {/* Col 1 */}
-        <div
-          className={`flex flex-col transition-all duration-300 ${
-            isCommentsOpen ? "basis-3/4" : "basis-full"
-          }`}
-        >
-          {videoSrc ? (
-            <VideoPlayerWithSeekbar
-              src={videoSrc}
-              playerRef={playerRef}
-              currentTime={currentTime}
-              duration={duration}
-              isPlaying={isPlaying}
-              markers={markers}
-              pendingAnnotation={pendingAnnotation}
-              annotationMode={annotationMode}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onTogglePlay={handleTogglePlay}
-              onSeek={handleSeek}
-              onAddAnnotation={handleAddAnnotation}
-              onCancelAnnotation={handleCancelAnnotation}
-              onAnnotationDraftChange={handleAnnotationDraftChange}
-            />
-          ) : (
-            <div style={{ marginRight:10, marginBottom:10 }}>
-            <VideoUploadPlaceholder
-              projectId={location.state.projectId}
-              onVideoUploaded={handleVideoUploaded}
-            />
-            </div>
-          )}
-          <CommentBar
-            currentTime={currentTime}
-            isRecording={isRecording}
-            hasPendingVoice={hasPendingVoice}
-            isAnnotating={annotationMode}
-            hasPendingAnnotation={hasPendingAnnotation}
-            onSend={handleSendComment}
-            onStartVoice={startVoiceRecording}
-            onStopVoice={stopVoiceRecording}
-            onCancelVoice={handleCancelVoice}
-            onStartAnnotation={handleStartAnnotation}
-            onCancelAnnotation={handleCancelAnnotation}
-            pauseVideo={pauseVideo}
-          />
-        </div>
-        {/* Col 2 */}
-        <div
-          className={`relative transition-all duration-300 ${
-            isCommentsOpen
-              ? "basis-1/4 max-w-[360px]"
-              : "basis-[32px] max-w-[32px]"
-          }`}
-        >
-          <CommentsColumn
-            isOpen={isCommentsOpen}
-            onToggle={() => setIsCommentsOpen((v) => !v)}
-            markers={markers}
-            currentTime={currentTime}
-            onSeek={handleSeek}
-            pauseVideo={pauseVideo}
-            projectId={location.state.projectId}
-            projectDetail={projectDetail}
-            onAddReply={handleAddReply}
+   <div
+  style={{ margin: 15 }}
+  className="min-h-screen text-gray-200 font-sans"
+>
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept="video/*"
+    hidden
+    onChange={handleNewVersionFile}
+  />
+
+  <VideoHeader
+    goBack={() => navigate(-1)}
+    projectDetail={projectDetail}
+    versions={versionsForSwitcher}
+    activeVersionId={activeVersionId}
+    onChangeVersion={handleChangeVersion}
+    onAddNewVersion={() => {
+      fileInputRef.current?.click();
+    }}
+  />
+
+  {/* MAIN LAYOUT */}
+  <div
+    className={`
+      mx-auto grid transition-all duration-300
+      ${isCommentsOpen ? "grid-cols-[65%_32%]" : "grid-cols-[100%_0%]"}
+    `}
+    style={{ height: "calc(100vh - 160px)" }}
+  >
+    {/* ================= COLUMN 1 ================= */}
+    <div className="flex flex-col min-w-0 ">
+      {/* Video container */}
+      <div className="relative w-full flex-1 rounded-3xl bg-black">
+        {showVideo ? (
+           <div className="relative w-full h-full overflow-hidden rounded-3xl">
+          <VideoPlayerWithSeekbar
             activeVersionId={activeVersionId}
+            src={playbackId}
+            playerRef={playerRef}
+            currentTime={currentTime}
+            duration={duration}
+            isPlaying={isPlaying}
+            markers={markers}
+            pendingAnnotation={pendingAnnotation}
+            annotationMode={annotationMode}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onTogglePlay={handleTogglePlay}
+            onSeek={handleSeek}
+            onAddAnnotation={handleAddAnnotation}
+            onCancelAnnotation={handleCancelAnnotation}
+            onAnnotationDraftChange={handleAnnotationDraftChange}
           />
-        </div>
+          </div>
+        ) : (
+          <VideoUploadPlaceholder
+            projectId={location.state.projectId}
+            onVideoUploaded={handleVideoUploaded}
+            muxStatus={activeVersion?.muxStatus}
+          />
+        )}
       </div>
+
+      {/* Comment input bar */}
+      <CommentBar
+        currentTime={currentTime}
+        isRecording={isRecording}
+        hasPendingVoice={hasPendingVoice}
+        isAnnotating={annotationMode}
+        hasPendingAnnotation={hasPendingAnnotation}
+        onSend={handleSendComment}
+        onStartVoice={startVoiceRecording}
+        onStopVoice={stopVoiceRecording}
+        onCancelVoice={handleCancelVoice}
+        onStartAnnotation={handleStartAnnotation}
+        onCancelAnnotation={handleCancelAnnotation}
+        pauseVideo={pauseVideo}
+      />
     </div>
+
+    {/* ================= COLUMN 2 ================= */}
+    <div className="relative h-full overflow-hidden">
+      <CommentsColumn
+        isOpen={isCommentsOpen}
+        onToggle={() => setIsCommentsOpen((v) => !v)}
+        markers={markers}
+        currentTime={currentTime}
+        onSeek={handleSeek}
+        pauseVideo={pauseVideo}
+        projectId={location.state.projectId}
+        projectDetail={projectDetail}
+        onAddReply={handleAddReply}
+        activeVersionId={activeVersionId}
+      />
+    </div>
+  </div>
+</div>
+
   );
 }

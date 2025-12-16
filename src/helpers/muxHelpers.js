@@ -1,0 +1,46 @@
+import dummy from "../assets/images/dummy.svg";
+
+export function uploadToMux(muxUploadURL, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", muxUploadURL, true);
+
+    xhr.setRequestHeader(
+      "Content-Type",
+      file.type || "application/octet-stream"
+    );
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        onProgress(pct);
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error("Mux upload failed"));
+      }
+    };
+
+    xhr.onerror = reject;
+    xhr.send(file);
+  });
+}
+
+
+export function getMuxThumbnail(playbackId) {
+  if (playbackId) {
+    return `https://image.mux.com/${playbackId}/thumbnail.jpg?time=1&width=640`
+  }
+  return dummy;
+}
+
+export const getMuxGif = (playbackId) => {
+  if (playbackId) {
+    return `https://image.mux.com/${playbackId}/animated.gif?start=1&end=4&width=480&fps=10`;
+  }
+  return dummy;
+};

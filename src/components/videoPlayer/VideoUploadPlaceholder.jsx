@@ -109,11 +109,13 @@ function uploadToMux(muxUploadURL, file, onProgress) {
  *  - projectId       (string)
  *  - onVideoUploaded (func)  – called after successful upload so parent can refetch project
  */
-export default function VideoUploadPlaceholder({ projectId, onVideoUploaded }) {
+export default function VideoUploadPlaceholder({ projectId, onVideoUploaded, muxStatus, }) {
   const inputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
+const showProcessing =
+  !isUploading && muxStatus === "waiting";
 
   const openFilePicker = () => {
     if (isUploading) return;
@@ -167,37 +169,44 @@ export default function VideoUploadPlaceholder({ projectId, onVideoUploaded }) {
         {/* Inner dark panel */}
         <div className="absolute inset-[3px] rounded-[22px] bg-[#18191b] flex items-center justify-center">
           {/* Idle vs uploading state */}
-          {!isUploading ? (
-            /* --- IDLE: exact “Click to upload” placeholder --- */
-            <button
-              type="button"
-              onClick={openFilePicker}
-              className="flex flex-col items-center justify-center gap-3 select-none focus:outline-none"
-            >
-              <img src={uploadIcon}/>
-              <span style={{ fontFamily:'Gilroy-Light' }} className="cursor-pointer text-[14px] text-[#BFBFBF] underline underline-offset-[3px] decoration-gray-500 hover:text-gray-100 hover:decoration-gray-300">
-                Click to upload
-              </span>
-              {error && (
-                <span className="mt-1 text-[11px] text-red-400 max-w-xs text-center">
-                  {error}
-                </span>
-              )}
-            </button>
-          ) : (
-            /* --- UPLOADING: Figma image-frame style loader --- */
-            <div className="flex flex-col items-center gap-3 select-none">
-              <UploadFrameLoader progress={progress} label="Uploading" />
-              <div className="text-[11px] text-gray-400">
-                Uploading… {progress}%
-              </div>
-              {error && (
-                <span className="mt-1 text-[11px] text-red-400 max-w-xs text-center">
-                  {error}
-                </span>
-              )}
-            </div>
-          )}
+          {isUploading ? (
+  /* --- UPLOADING: real progress --- */
+  <div className="flex flex-col items-center gap-3 select-none">
+    <UploadFrameLoader progress={progress} label="Uploading" />
+    <div className="text-[11px] text-gray-400">
+      Uploading… {progress}%
+    </div>
+  </div>
+) : showProcessing ? (
+  /* --- BACKEND PROCESSING --- */
+  <div className="flex flex-col items-center gap-3 select-none">
+    <UploadFrameLoader progress={100} label="Processing" />
+    <div className="text-[11px] text-gray-400">
+      Processing video…
+    </div>
+  </div>
+) : (
+  /* --- IDLE: click to upload --- */
+  <button
+    type="button"
+    onClick={openFilePicker}
+    className="flex flex-col items-center justify-center gap-3 select-none focus:outline-none"
+  >
+    <img src={uploadIcon} />
+    <span
+      style={{ fontFamily: "Gilroy-Light" }}
+      className="cursor-pointer text-[14px] text-[#BFBFBF] underline underline-offset-[3px] decoration-gray-500 hover:text-gray-100 hover:decoration-gray-300"
+    >
+      Click to upload
+    </span>
+    {error && (
+      <span className="mt-1 text-[11px] text-red-400 max-w-xs text-center">
+        {error}
+      </span>
+    )}
+  </button>
+)}
+
         </div>
       </div>
 

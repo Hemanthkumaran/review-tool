@@ -1,7 +1,6 @@
-// src/components/videoPlayer/PlayerControlsBar.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-import CustomSeekBar from "./CustomSeekBar";
+import CustomSeekBar from "./CustomSeekbar";
 import playIcon from "../../assets/svgs/play.svg";
 import pauseIcon from "../../assets/svgs/pause.svg";
 import speakerIcon from "../../assets/svgs/speaker.svg";
@@ -54,9 +53,9 @@ export default function PlayerControlsBar({
   onQualityChange,
   volume,
   onVolumeChange,
+  playbackId
 }) {
   const [qualityMenuOpen, setQualityMenuOpen] = useState(false);
-  const [showVolume, setShowVolume] = useState(false);
   const [volumeOpen, setVolumeOpen] = useState(false);
 
   const QUALITY_OPTIONS = [
@@ -79,13 +78,14 @@ export default function PlayerControlsBar({
 
 
   return (
-    <div className="px-6 pb-4 pt-3">
+    <div style={{ marginTop:-20}} className="px-6">
       {/* seek bar with markers */}
       <CustomSeekBar
         duration={duration}
         currentTime={currentTime}
         markers={markers}
         onSeek={onSeek}
+        playbackId={playbackId}
       />
 
       {/* controls row */}

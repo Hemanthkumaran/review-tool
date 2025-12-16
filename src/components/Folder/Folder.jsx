@@ -10,6 +10,7 @@ import { updateFolderApi, deleteFolderApi } from "../../services/api";
 import DeleteConfirmModal from "../modals/DeleteConfirmationModal";
 
 import "./Folder.css";
+import { PenIcon, TrashIcon } from "../../assets/svgs/SvgComponents";
 
 const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
   const [hovered, setHovered] = useState(false);
@@ -75,7 +76,7 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
       <div className="absolute top-[45px] right-[10px] z-10">
         <ActionPopover
           open={menuOpen}
-          onOpenChange={setMenuOpen} // ✅ CONTROLLED
+          onOpenChange={setMenuOpen}
           trigger={
             <img
               src={moreCircle}
@@ -94,33 +95,16 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
             {
               id: "rename",
               label: "Rename",
-              icon: (
-                <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none">
-                  <path
-                    d="M4 13.5L4.5 11l7-7 2.5 2.5-7 7"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  />
-                </svg>
-              ),
+              icon: <PenIcon color="#fff"/>,
               onClick: () => {
                 setIsRenaming(true);
-                setMenuOpen(false); // ✅ CLOSE AFTER CLICK
+                setMenuOpen(false);
               },
             },
             {
               id: "delete",
               label: "Delete",
-              danger: true,
-              icon: (
-                <svg viewBox="0 0 20 20" className="w-5 h-5" fill="none">
-                  <path
-                    d="M5 5h10l-1 11H6L5 5z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  />
-                </svg>
-              ),
+              icon: <TrashIcon color="#fff"/>,
               onClick: () => {
                 setShowDelete(true);
                 setMenuOpen(false); // ✅ CLOSE AFTER CLICK

@@ -13,7 +13,7 @@ const menuItems = [
 ];
 
 
-function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeVersionId }) {
+function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion }) {
     const [open, setOpen] = useState(false);
 
     const handleItemClick = (id) => {
@@ -33,9 +33,7 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
                 versions={versions}
                 currentVersionId={activeVersionId}
                 onSelectVersion={(v) => onChangeVersion(v)}
-                onAddNewVersion={() => {
-                // open your "upload new version" flow here
-                }}
+                onAddNewVersion={onAddNewVersion}
                 onUploadNewVersion={() => {
                 // same upload flow from inside the modal
                 }}

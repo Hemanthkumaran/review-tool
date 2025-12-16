@@ -1,14 +1,60 @@
 // src/components/videoPlayer/CustomSeekBar.jsx
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
+
+/* ---------- helpers ---------- */
+
+function formatClockTime(t = 0) {
+  const sec = Math.floor(t % 60)
+    .toString()
+    .padStart(2, "0");
+  const min = Math.floor(t / 60)
+    .toString()
+    .padStart(2, "0");
+  return `${min}:${sec}`;
+}
+
+function getMuxThumbnail(playbackId, time) {
+  return `https://image.mux.com/${playbackId}/thumbnail.jpg?time=${Math.floor(
+    time
+  )}&width=320`;
+}
+
+/* ---------- component ---------- */
 
 export default function CustomSeekBar({
   currentTime = 0,
   duration = 0,
   onSeek,
   markers = [],
+  playbackId, // ✅ REQUIRED
 }) {
-  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const [hoverTime, setHoverTime] = useState(null);
+  const [hoverX, setHoverX] = useState(0);
+
+  const safeDuration =
+    Number.isFinite(duration) && duration > 0 ? duration : 0;
+
   const pct = safeDuration ? Math.min(currentTime / safeDuration, 1) : 0;
+
+  /* ---------- hover logic ---------- */
+
+  const handleMouseMove = (e) => {
+    if (!safeDuration) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = Math.min(Math.max(x / rect.width, 0), 1);
+    const t = ratio * safeDuration;
+
+    setHoverTime(t);
+    setHoverX(x);
+  };
+
+  const handleMouseLeave = () => {
+    setHoverTime(null);
+  };
+
+  /* ---------- click ---------- */
 
   const handleClickTrack = useCallback(
     (e) => {
@@ -16,11 +62,12 @@ export default function CustomSeekBar({
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const ratio = Math.min(Math.max(x / rect.width, 0), 1);
-      const newTime = ratio * safeDuration;
-      onSeek?.(newTime);
+      onSeek?.(ratio * safeDuration);
     },
     [onSeek, safeDuration]
   );
+
+  /* ---------- drag ---------- */
 
   const handleDragThumb = useCallback(
     (e) => {
@@ -28,18 +75,18 @@ export default function CustomSeekBar({
 
       const track = e.currentTarget.parentElement;
       if (!track) return;
+
       const rect = track.getBoundingClientRect();
 
-      const updateFromEvent = (ev) => {
+      const update = (ev) => {
         const x = ev.clientX - rect.left;
         const ratio = Math.min(Math.max(x / rect.width, 0), 1);
-        const newTime = ratio * safeDuration;
-        onSeek?.(newTime);
+        onSeek?.(ratio * safeDuration);
       };
 
       const move = (ev) => {
         ev.preventDefault();
-        updateFromEvent(ev);
+        update(ev);
       };
 
       const up = () => {
@@ -50,61 +97,91 @@ export default function CustomSeekBar({
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
 
-      updateFromEvent(e);
+      update(e);
     },
     [onSeek, safeDuration]
   );
 
+  /* ---------- thumbnail positioning ---------- */
+
+  const thumbLeft = Math.min(
+    Math.max(hoverX - 80, 0),
+    window.innerWidth - 160
+  );
+
   return (
     <div className="relative w-full h-14">
-      {/* track + progress + thumb (bottom-aligned) */}
+      {/* TRACK */}
       <div
         className="absolute left-0 right-0 bottom-0 h-2 rounded-full bg-[#252525] cursor-pointer"
         onClick={handleClickTrack}
+        onMouseMove={handleMouseMove}   // ✅ ATTACHED
+        onMouseLeave={handleMouseLeave} // ✅ ATTACHED
       >
-        {/* filled yellow portion */}
+        {/* PROGRESS */}
         <div
           className="absolute left-0 top-0 h-2 rounded-full bg-[#FEEA3B]"
           style={{ width: `${pct * 100}%` }}
         />
 
-        {/* thumb */}
+        {/* THUMB */}
         <div
-          className="absolute top-1/2 -translate-y-1/14 w-4 h-4 rounded-full bg-white shadow pointer-events-auto"
-          style={{ left: `${pct * 100}%`, transform: "translate(-50%, -50%)", zIndex:1000000 }}
+          className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow"
+          style={{
+            left: `${pct * 100}%`,
+            transform: "translate(-50%, -50%)",
+          }}
           onPointerDown={handleDragThumb}
         />
       </div>
 
-      {/* marker avatars + green ticks */}
+      {/* MARKERS */}
       <div className="absolute inset-x-0 top-6.5 h-10 pointer-events-none">
         {markers.map((m) => {
-          const leftPct = safeDuration ? (m.time / safeDuration) * 100 : 0;
-          const avatar =
-            m.user?.avatarUrl ||
-            "https://i.pravatar.cc/40?u=default-marker";
+          const leftPct = safeDuration
+            ? (m.time / safeDuration) * 100
+            : 0;
+
           return (
             <button
               key={m.id}
               type="button"
-              className="pointer-events-auto absolute flex flex-col items-center -translate-x-1/2"
+              className="pointer-events-auto absolute -translate-x-1/2"
               style={{ left: `${leftPct}%` }}
               onClick={() => onSeek?.(m.time)}
             >
-              {/* avatar above */}
-              <div className="w-4 h-4 cursor-pointer rounded-full border border-[#FEEA3B] overflow-hidden bg-black mb-[3px]">
+              <div className="w-4 h-4 rounded-full border border-[#FEEA3B] overflow-hidden bg-black mb-[3px]">
                 <img
-                  src={avatar}
-                  alt=""
+                  src={
+                    m.user?.avatarUrl ||
+                    "https://i.pravatar.cc/40?u=default-marker"
+                  }
                   className="w-full h-full object-cover"
                 />
               </div>
-              {/* green tick touching the track */}
-              <div className="w-[2px] h-2 bg-[#27C46A] mt-0.5" />
+              <div className="w-[2px] h-2 bg-[#27C46A]" />
             </button>
           );
         })}
       </div>
+
+      {/* HOVER THUMBNAIL */}
+      {hoverTime != null && playbackId && (
+        <div
+          className="absolute bottom-8 z-50 pointer-events-none"
+          style={{ left: thumbLeft }}
+        >
+          <div className="w-[160px] rounded-lg overflow-hidden bg-black shadow-xl">
+            <img
+              src={getMuxThumbnail(playbackId, hoverTime)}
+              className="w-full h-auto"
+            />
+            <div className="text-[11px] text-center text-white py-1 bg-black/70">
+              {formatClockTime(hoverTime)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

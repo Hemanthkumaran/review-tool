@@ -8,10 +8,11 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PATHS } from '../../routes/paths';
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import AddProjectModal from '../../components/modals/AddProjectModal';
-import { allProjectsApi, createProjectApi } from '../../services/api';
+import { allProjectsApi, createProjectApi, deleteProjectApi, updateProjectApi } from '../../services/api';
 import DashboardHeader from '../../components/DashboardHeader';
 import AppLoader from '../../components/common/AppLoader';
 import ShareModal from '../../components/modals/ShareModal';
+import { uploadToMux } from '../../helpers/muxHelpers';
 
 export default function AddProject({
   role = "Owner",
@@ -33,6 +34,25 @@ export default function AddProject({
     getAllProjects();
   }, []);
 
+  const handleUpdateProject = async (id, payload) => {
+    try {
+      await updateProjectApi(id, payload);
+      getAllProjects();
+    } catch (err) {
+      console.error("Update failed", err);
+    }
+  };
+
+  const handleDeleteProject = async (id) => {
+    try {
+      await deleteProjectApi(id);
+      getAllProjects();
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
+
+
 function handleCreate(name, selectedFile) {
   setCreateLoading(true);
 
@@ -49,7 +69,7 @@ function handleCreate(name, selectedFile) {
     .then(async (res) => {
       console.log(res, "res");
 
-      const { muxUploadURL, projectId } = res.data || {};
+      const { muxUploadURL } = res.data || {};
 
       // if backend created a mux direct upload AND we actually have a file
       if (muxUploadURL && selectedFile) {
@@ -84,42 +104,6 @@ function handleCreate(name, selectedFile) {
     });
 }
 
-
-  // uploads a File to the direct upload URL from Mux
-function uploadToMux(muxUploadURL, file, onProgress) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", muxUploadURL, true); // or "POST" – Mux supports both
-
-    xhr.setRequestHeader(
-      "Content-Type",
-      file.type || "application/octet-stream"
-    );
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && typeof onProgress === "function") {
-        const pct = Math.round((event.loaded / event.total) * 100);
-        onProgress(pct);
-      }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-      } else {
-        reject(
-          new Error(`Mux upload failed: ${xhr.status} ${xhr.responseText}`)
-        );
-      }
-    };
-
-    xhr.onerror = () => {
-      reject(new Error("Network error while uploading to Mux"));
-    };
-
-    xhr.send(file);
-  });
-}
 
 
   function getAllProjects() {
@@ -176,7 +160,10 @@ function uploadToMux(muxUploadURL, file, onProgress) {
               <span>Invite</span>
             </button>
             <button
-              onClick={() => setAddProjectOpen(true)}
+                onClick={(e) => {
+                e.stopPropagation();  
+                setAddProjectOpen(true);
+              }}
               className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
             >
               <PlusThin className="h-4 w-4" />
@@ -204,15 +191,21 @@ function uploadToMux(muxUploadURL, file, onProgress) {
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-5 gap-3">
           {allProjects.map((item) => (
             <ProjectFolder
               key={item._id}
               project={item}
-              onClick={() => navigate(PATHS.VIDEO_REVIEW, { state: { projectId: item._id } })}
-              onStatusChange={(id, status) => {
-                console.log(id, status);
-              }}
+              onClick={() =>
+                navigate(PATHS.VIDEO_REVIEW, { state: { projectId: item._id } })
+              }
+              onRename={(id, name) =>
+                handleUpdateProject(id, { name })
+              }
+              onStatusChange={(id, status) =>
+                handleUpdateProject(id, { status })
+              }
+              onDelete={handleDeleteProject}
             />
           ))}
         </div>
