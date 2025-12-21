@@ -1,0 +1,47 @@
+.brand-wrapper {
+  width: 90%;
+  /* max-width: 520px; */
+  font-family: "Inter", sans-serif;
+  color: #ffffff;
+  position: relative;
+}
+
+
+
+.brand-label {
+  display: block;
+
+  margin-bottom: 14px;
+}
+
+.brand-input {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #1b1b1b 0%, #141414 100%);
+  border-radius: 14px;
+  border: 1px solid #2a2a2a;
+  cursor: pointer;
+}
+
+.color-box {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.color-text {
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: #cfcfcf;
+}
+
+.picker-popover {
+  margin-top: 12px;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 12px;
+  width: fit-content;
+}
