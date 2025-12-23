@@ -58,3 +58,88 @@
   font-size: 16px;
   opacity: 0.85;
 }
+
+
+.plan-wrapper {
+  background: #0b0b0b;
+  padding-top: 24px;
+  font-family: Inter, system-ui, sans-serif;
+  color: #fff;
+}
+
+/* Card */
+.plan-card {
+  max-width: 100%;
+  border-radius: 16px;
+  background: radial-gradient(
+      circle at top,
+      rgba(255, 255, 255, 0.06),
+      transparent 45%
+    ),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 22px 24px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* Rows */
+.plan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 10px 0;
+}
+
+.plan-row.header {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.plan-row.total {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Text */
+.strong {
+  font-weight: 600;
+  color: #fff;
+}
+
+.highlight {
+  color: #f5e600;
+  font-weight: 700;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px 0;
+}
+
+/* Action */
+.plan-action {
+  max-width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.change-btn {
+  background: #f5e600;
+  color: #000;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.change-btn:hover {
+  filter: brightness(0.95);
+}

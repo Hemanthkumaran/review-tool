@@ -1,4 +1,4 @@
-const Button = ({ width, content, bgColor, border, textColor, marginRight, padding }) => {
+const Button = ({ width, content, bgColor, border, textColor, marginRight, padding, contentSize, fontFamily }) => {
   return (
     <button
       style={{
@@ -10,6 +10,8 @@ const Button = ({ width, content, bgColor, border, textColor, marginRight, paddi
         color: textColor,
         marginRight: marginRight? marginRight:"0",
         cursor:"pointer",
+        fontSize:contentSize? contentSize:"12px",
+        fontFamily:fontFamily? fontFamily:"sans-serif"
         
       }}
     >

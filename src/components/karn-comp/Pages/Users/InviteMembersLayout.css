@@ -1,0 +1,223 @@
+.invite-page {
+  min-height: 100vh;
+  padding: 32px;
+  background: radial-gradient(
+      circle at top,
+      rgba(255, 255, 255, 0.06),
+      transparent 40%
+    ),
+    #0b0b0b;
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+/* Header */
+.invite-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.breadcrumb {
+  font-size: 20px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.breadcrumb-link {
+  cursor: pointer;
+}
+
+.breadcrumb span {
+  margin: 0 6px;
+}
+
+.breadcrumb strong {
+  color: #fff;
+  font-weight: 500;
+}
+
+.invite-subtitle {
+  margin-top: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Close */
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Invite as */
+.invite-row {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.invite-row label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.role-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.role-dropdown:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Email box */
+.email-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: text;
+}
+
+.email-input {
+  flex: 1;
+  min-width: 180px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+}
+
+.email-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.email-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.chip-remove {
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.chip-remove:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Actions */
+.invite-actions {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.invite-btn {
+  background: #f5e600;
+  color: #000;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.invite-btn:hover {
+  filter: brightness(0.95);
+}
+
+.invite-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.invite-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.role-menu {
+  position: absolute;
+  top: 42px;
+  left: 80px;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 180px;
+  z-index: 10;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.role-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.role-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.role-item.active {
+  background: rgba(255, 255, 255, 0.12);
+}

@@ -1,0 +1,15 @@
+.domain{
+    margin-top: 8px;
+    
+    width: 75%;
+    margin-left: 5%;
+    border-top: 2px solid #2a2a2a;
+    padding-top: 24px;
+    
+}
+
+.domain-head{
+    display: flex;
+    align-items: center;
+
+}
