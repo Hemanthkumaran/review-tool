@@ -132,3 +132,25 @@ export const deleteProjectApi = (projectId) => {
     `/project/deleteProject?projectID=${projectId}`
   );
 };
+
+export const getAllUserWorkspace = () => {
+  return axiosClient.get(`/user/getAllUserWorkspace`);
+};
+
+export const getWorkspaceSettings = () => {
+  return axiosClient.get(`/user/getWorkspaceMembers`);
+};
+
+export const inviteUserToWorkspace = (workspaceID, payload) => {
+  return axiosClient.put(
+    `user/inviteUserToWorkspace?workspaceID=${workspaceID}`,
+    payload
+  );
+};
+
+export const removeUserFromWorkspace = (workspaceID, payload) => {
+  return axiosClient.put(
+    `user/removeUserFromWorkspace?workspaceID=${workspaceID}`,
+    payload
+  );
+};

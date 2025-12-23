@@ -2,11 +2,13 @@ import React from "react";
 import { createPortal } from "react-dom";
 
 import confetti from "../../assets/svgs/confetti.svg"
+import { Confetti } from "../../assets/svgs/SvgComponents";
 
 export default function FreeTrialModal({
   open = false,
   onClose = () => {},
   onStart = () => {},
+  title
 }) {
   if (!open) return null;
 
@@ -24,7 +26,7 @@ export default function FreeTrialModal({
       />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-sm rounded-[20px] bg-[#151619] text-white border border-[#24262A] shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden">
+      <div className="relative z-10 w-full max-w-md rounded-[20px] bg-[#131313] text-white border border-[#24262A] shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden">
         {/* subtle inner glow / vignette */}
         <div className="pointer-events-none absolute inset-0 rounded-[20px] bg-[radial-gradient(120%_80%_at_50%_-20%,rgba(255,255,255,0.06),rgba(0,0,0,0)_55%)]" />
 
@@ -42,13 +44,14 @@ export default function FreeTrialModal({
         {/* Content */}
         <div className="relative px-6 pt-8 pb-6 text-center">
           {/* Icon badge */}
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#202226]">
-            <img src={confetti}/>
+          
+          <div className="mx-auto mb-5 flex items-center justify-center">
+            <Confetti/>
           </div>
 
           {/* Title */}
-          <h2 className="text-lg sm:text-xl font-semibold">
-            Enjoy your <span className="font-semibold">free trial</span>!
+          <h2 style={{ fontFamily:"Gilroy-SemiBold", fontSize:18  }} className="text-lg sm:text-xl font-semibold">
+            {title}
           </h2>
 
           {/* Subtitle */}

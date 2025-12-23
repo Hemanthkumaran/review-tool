@@ -5,7 +5,7 @@ import cutjamm from '../../assets/svgs/cutjamm.svg';
 import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
 import { useNavigate } from 'react-router-dom';
-import { allFoldersApi, allProjectsApi, createFolderApi } from '../../services/api';
+import { allFoldersApi, createFolderApi } from '../../services/api';
 import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
 import DashboardHeader from '../../components/DashboardHeader';

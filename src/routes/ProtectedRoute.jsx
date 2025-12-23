@@ -1,9 +1,12 @@
-// src/routes/ProtectedRoute.jsx
+import { Navigate } from "react-router-dom";
+import { PATHS } from "./paths";
+
 export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
+
   if (!token) {
-    window.location.replace('/'); // or '/signin'
-    return null;
+    return <Navigate to={PATHS.SIGN_IN} replace />;
   }
+
   return children;
 }

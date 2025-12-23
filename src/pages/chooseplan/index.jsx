@@ -1,105 +1,87 @@
 import React, { useState } from "react";
-
-/**
- * Exact pricing layout from your screenshot
- * - Dark rounded canvas
- * - Title + subtitle
- * - Segmented Monthly/Yearly switch
- * - Two glossy pricing cards (Team, Agency)
- * - Checklist (enabled/disabled)
- * - Pill "Choose plan" buttons
- * - Footer note with yellow link
- */
+import ToggleButton from "../../components/buttons/ToggleButton";
+import FreeTrialModal from "../../components/modals/FreetrialModal";
 
 export default function ChoosePlan() {
-  const [billing, setBilling] = useState("monthly"); // 'monthly' | 'yearly'
+  const [isAnnual, setIsAnnual] = useState(false);
 
-  // You can tweak yearly prices if needed; UI mirrors the screenshot (25/50 monthly)
-  const priceTeam = billing === "monthly" ? 25 : 250;   // example: $250/yr
-  const priceAgency = billing === "monthly" ? 50 : 500; // example: $500/yr
+  const priceTeam = isAnnual ? 25 : 250;   // example: $250/yr
+  const priceAgency = isAnnual ? 50 : 500; // example: $500/yr
 
   return (
-    <div className="min-h-screen w-full bg-[#0d0e0f] flex items-center justify-center p-4">
-      {/* Outer rounded canvas */}
-      <div className="w-full max-w-6xl rounded-[28px] border border-[#1e1f22] bg-[#121315] shadow-[0_0_0_1px_rgba(255,255,255,0.02)] px-4 sm:px-8 py-8 sm:py-10 relative overflow-hidden">
-        {/* subtle corner softness */}
+    <div className="min-h-screen w-full flex items-center justify-center p-4">
+      <div className="">
         <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-black/10" />
-
-        {/* Header */}
         <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white">
-            Lorem ipsum dolor sit amet consectetur.
+          <h1 style={{ fontFamily:'Gilroy-SemiBold', fontSize:24 }}>
+            Choose how you'd like to start
           </h1>
-          <p className="mt-3 text-sm sm:text-base text-[#bfbfbf]">
-            Lorem ipsum dolor sit amet consectetur. Sed non at imperdiet non ornare sollicitudin vel.
+          <p style={{ fontSize:12 }}>
+            Try any plan for 7 days with no card required.
           </p>
         </div>
-
-        {/* Segmented control */}
-        <div className="mt-6 flex justify-center">
-          <div className="inline-flex items-center rounded-full border border-[#2a2b2f] bg-[#141518] p-1">
-            <button
-              onClick={() => setBilling("monthly")}
-              className={`px-6 py-2 rounded-full text-sm transition
-                ${billing === "monthly" ? "bg-[#222329] text-white shadow-inner" : "text-[#bfbfbf] hover:text-white"}`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBilling("yearly")}
-              className={`px-6 py-2 rounded-full text-sm transition
-                ${billing === "yearly" ? "bg-[#222329] text-white shadow-inner" : "text-[#bfbfbf] hover:text-white"}`}
-            >
-              Yearly
-            </button>
-          </div>
+        <div className="flex items-center flex-end w-full justify-end">
+          <div style={{ fontFamily:'Gilroy-Light', color:"#A1A1A1", marginRight:10 }}>Annual</div>
+          <ToggleButton
+            checked={isAnnual}
+            onChange={() => setIsAnnual(prev => !prev)}
+            size="sm"
+          />
         </div>
 
         {/* Cards */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {/* TEAM CARD */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6">
           <PricingCard
-            title="Team"
+            title="Freelancer"
             price={priceTeam}
-            period={billing === "monthly" ? "monthly" : "yearly"}
+            period={isAnnual ? "year" : "month"}
+            description="Everythign in Team, but :"
             features={[
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: false },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: false },
+              { text: "1 user", enabled: true },
+              { text: "100 mins of storage + Storage addons", enabled: true },
             ]}
-            buttonLabel="Choose plan"
+            buttonLabel="Start free trial"
             highlight={false}
           />
-
-          {/* AGENCY CARD */}
           <PricingCard
-            title="Agency"
+            title="Team"
             price={priceAgency}
-            period={billing === "monthly" ? "monthly" : "yearly"}
+            period={isAnnual ? "year" : "month"}
+            description="What's included :"
             features={[
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
-              { text: "Lorem ipsum dolor sit amet consectetur.", enabled: true },
+              { text: "Upto 5 team members", enabled: true },
+              { text: "500 mins of storage + Storage addons", enabled: true },
+              { text: "Unlimited folders & projects", enabled: true },
+              { text: "Unlimited reviewers", enabled: true },
+              { text: "Voice notes in comments", enabled: true },
+              { text: "Secure link sharing", enabled: true },
+              { text: "Internal notes", enabled: true },
+              { text: "Version management", enabled: true },
             ]}
-            buttonLabel="Choose plan"
+            buttonLabel="Start free trial"
+            highlight={true}
+          />
+          <PricingCard
+            title="Team Plus"
+            price={priceAgency}
+            period={isAnnual ? "year" : "month"}
+            description="Everythign in Team, but :"
+            features={[
+              { text: "Upto 10 team members", enabled: true },
+              { text: "Unlimited Collaborators ( Freelancers )", enabled: true },
+              { text: "1000 mins of storage + Storage addons", enabled: true },
+              { text: "Custom UI branding (Paid addon)", enabled: true },
+            ]}
+            buttonLabel="Start free trial"
             highlight={true}
           />
         </div>
-
         {/* Footer line */}
-        <div className="mt-8 sm:mt-10 text-center text-sm text-[#bfbfbf]">
-          Explore Team plan 7 days for free.
-          <button className="ml-2 text-[#F9EF38] hover:opacity-90 underline-offset-2 hover:underline">
-            Start free trial
-          </button>
+        <div className="flex items-center justify-center mt-6" style={{ fontSize:12 }}>
+          <span style={{ fontFamily:'Gilroy-Bold', marginRight:3}}>Note:{" "}</span>{" "}Billing details will be requested after 7 days.
         </div>
       </div>
+              <FreeTrialModal open={true}/>
     </div>
   );
 }
@@ -108,27 +90,24 @@ function PricingCard({ title, price, period, features, buttonLabel, highlight })
   return (
     <div className="relative">
       {/* Card */}
-      <div className="relative overflow-hidden rounded-[24px] border border-[#2a2b2f] bg-[#17181c] px-6 sm:px-8 py-7 sm:py-8">
+      <div className="relative h-full overflow-hidden rounded-[24px] border border-[#2a2b2f] bg-[#131313] px-6 py-4 flex flex-col">
         {/* Gloss / soft spotlight */}
         <div className="pointer-events-none absolute inset-0 rounded-[24px]
             bg-[radial-gradient(120%_60%_at_30%_0%,rgba(255,255,255,0.08),rgba(0,0,0,0)_50%)]" />
-        <div className="relative">
+        <div className="relative flex flex-col h-full">
           {/* Title */}
-          <div className="text-white/95 text-lg font-medium">{title}</div>
-
+          <div style={{ fontFamily:'Gilroy-Light', fontSize:24, textAlign:'center' }}>{title}</div>
           {/* Price */}
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-2 flex items-baseline justify-center gap-2">
             <span className="text-[#F9EF38] text-4xl font-semibold">${price}</span>
-            <span className="text-sm text-[#bfbfbf]">{period}</span>
+            <span className="text-sm text-[#bfbfbf]">/ {period}</span>
           </div>
-
           {/* Divider */}
           <div className="mt-5 h-px w-full bg-gradient-to-r from-transparent via-[#2a2b2f] to-transparent" />
-
           {/* Included */}
-          <div className="mt-4 text-white/90 text-sm">What’s included :</div>
+          <div className="mt-4 text-white/90 text-sm">Everythign in Team, but :</div>
 
-          <ul className="mt-3 space-y-3">
+          <ul className="mt-3 space-y-3 mb-4">
             {features.map((f, idx) => (
               <li key={idx} className="flex items-start gap-3">
                 {f.enabled ? <IconCheck /> : <IconCross />}
@@ -138,18 +117,17 @@ function PricingCard({ title, price, period, features, buttonLabel, highlight })
               </li>
             ))}
           </ul>
-
           {/* Button */}
-          <div className="mt-7">
-            <button
-              className={`w-full sm:w-auto px-8 py-3 rounded-full font-medium transition
-                ${highlight
-                  ? "bg-[#F9EF38] text-black hover:opacity-90"
-                  : "bg-[#F9EF38] text-black hover:opacity-90"}`}
-            >
-              {buttonLabel}
-            </button>
-          </div>
+            <div className="mt-10 mt-auto flex justify-center ">
+              <button
+                className={`w-full sm:w-auto px-8 py-3 rounded-full font-medium transition cursor-pointer
+                  ${highlight
+                    ? "bg-[#F9EF38] text-black hover:opacity-90"
+                    : "bg-[#F9EF38] text-black hover:opacity-90"}`}
+              >
+                {buttonLabel}
+              </button>
+            </div>
         </div>
       </div>
     </div>
