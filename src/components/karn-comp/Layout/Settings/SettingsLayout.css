@@ -1,13 +1,49 @@
-/* GLOBAL LAYOUT */
-.layout-wrapper {
+/* ========================= */
+/* FIXED MODAL SHELL (NEW)   */
+/* ========================= */
+
+.modal-shell {
+  width: 92vw;
+  max-width: 950px;
+  height: 88vh;
+  max-height: 720px;
+
   display: flex;
-  width: 100%;
-  min-height: 100vh;
-  background: #0f0f0f;
-  font-family: "Inter", sans-serif;
-  border-radius: 16px;
-  color: #e5e5e5;
 }
+
+
+/* ========================= */
+/* MAIN MODAL CONTAINER      */
+/* ========================= */
+
+.layout-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+
+  background: #0b0b0c;
+  border-radius: 32px;
+  border: 1px solid #1e1f22;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.8);
+
+  overflow: hidden; /* 🔑 locks modal size */
+}
+
+
+/* ❌ REMOVE THIS CLASS COMPLETELY */
+/*
+.settings-modal {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  background: #0b0b0c;
+  border-radius: 32px;
+  border: 1px solid #1e1f22;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+*/
+
 
 /* ========================= */
 /* LEFT SIDEBAR              */
@@ -15,7 +51,6 @@
 
 .sidebar {
   width: 260px;
-  
   padding: 24px 0;
   border-right: 1px solid #2d2d2d;
   display: flex;
@@ -47,34 +82,45 @@
 }
 
 
-
 /* Yellow left strip for active tab */
 .active-strip {
   position: absolute;
   left: -6px;
   top: 4px;
-  height: 80%;
+  height: calc(100% - 8px);
   width: 3px;
   background: #ffd300;
   border-radius: 0 12px 12px 0;
 }
 
+
 /* ========================= */
-/* RIGHT PANEL               */
+/* RIGHT PANEL (SCROLL AREA) */
 /* ========================= */
 
 .right-panel {
   flex: 1;
-  background: black;
-  padding: 0;
-  border-top-right-radius: 26px;
+  height: 100%;
+  padding: 20px;
   overflow-y: auto;
 }
 
-/* TEMP PLACEHOLDER CONTENT */
+
+/* Hide scrollbar but keep scroll */
+.right-panel::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.right-panel {
+  scrollbar-width: none; /* Firefox */
+}
+
+
+/* ========================= */
+/* CONTENT SAFETY            */
+/* ========================= */
+
 .placeholder-content {
-  background: black;
-  padding: 22px 40px;
-  color: #9e9e9e;
-  font-size: 18px;
+  min-height: 100%; /* 🔑 prevents collapse */
 }

@@ -1,76 +1,36 @@
 // src/components/ShareModal.jsx
 import React, { useMemo, useState } from "react";
 import Select, { components } from "react-select";
+import Modal from "react-modal";
 
 import arrowDown from '../../assets/svgs/arrow-down.svg';
 
 import closeCircle from "../../assets/svgs/close-with-circle.svg"
-
-const PEOPLE = [
-  {
-    id: 1,
-    name: "John",
-    email: "john@igmail.com",
-    role: "Collaborator",
-    avatar: "https://i.pravatar.cc/64?u=john",
-  },
-  {
-    id: 2,
-    name: "Mia",
-    email: "mia@gmail.com",
-    role: "Collaborator",
-    avatar: "https://i.pravatar.cc/64?u=mia",
-  },
-  {
-    id: 3,
-    name: "Daniel",
-    email: "daniel@gmail.com",
-    role: "Collaborator",
-    avatar: "https://i.pravatar.cc/64?u=daniel",
-  },
-  {
-    id: 4,
-    name: "Mitchell",
-    email: "mitchell@gmail.com",
-    role: "Collaborator",
-    avatar: "https://i.pravatar.cc/64?u=mitchell",
-  },
-  {
-    id: 5,
-    name: "Jenny Wilson",
-    email: "jenny@gmail.com",
-    role: "Collaborator",
-    avatar: "https://i.pravatar.cc/64?u=jenny",
-  },
-  {
-    id: 6,
-    name: "Albert Flores",
-    email: "albert@gmail.com",
-    role: "Collaborator",
-    avatar: "https://i.pravatar.cc/64?u=albert",
-  },
-];
+import RemoveAccessModal from "./RemoveAccessModal";
+import { addUserToProjectApi, removeUserFromProjectApi } from "../../services/api";
+import { constants } from "../../helpers/enum";
+import PublicLinkAccessCard from "../PublicLinkAccessCard";
 
 const ROLE_OPTIONS = [
   { value: "collaborator", label: "Collaborator" },
-  { value: "viewer", label: "Viewer" },
-  { value: "owner", label: "Owner" },
+  { value: "reviewer", label: "Reviewer" },
 ];
 
 const reactSelectStyles = {
   control: (base) => ({
     ...base,
-    backgroundColor: "#101013",
+    backgroundColor: "#131313",
     fontFamily:'Gilroy-Light',
     borderRadius: 9999,
     borderColor: '#181A1C',
     boxShadow: "none",
+    cursor:'pointer',
     minHeight: 34,
     paddingLeft: 4,
     paddingRight: 4,
     fontSize:14,
     "&:hover": {
-      borderColor: "#3A3A42",
+      borderColor: "#181A1C",
     },
   }),
   valueContainer: (base) => ({
@@ -96,8 +56,10 @@ const reactSelectStyles = {
   }),
   option: (base, state) => ({
     ...base,
-    backgroundColor: state.isFocused ? "#151518" : "transparent",
-    color: "#E5E5E8",
+    backgroundColor: "transparent",
+    color: state.isFocused ? "#F9EF38" : "#fff",
+    fontFamily:'Gilroy-Light',
+    fontSize:14,
     paddingTop: 8,
     paddingBottom: 8,
     cursor: "pointer",
@@ -137,6 +99,10 @@ const reactSelectStyles = {
 };
 
 const reactSelectStyles2 = {
+    menuPortal: (base) => ({
+  ...base,
+  zIndex: 9999 
+}),
   control: (base) => ({
     ...base,
     backgroundColor: "#101013",
@@ -256,58 +222,74 @@ const CustomMultiValue = (props) => {
   );
 };
 
-export default function ShareModal({ onClose }) {
+export default function ShareModal({ open = false, onClose, permissions, projectAccess, projectID, onRefresh }) {
   const [role, setRole] = useState(ROLE_OPTIONS[0]);
-  const [inputValue, setInputValue] = useState("janecooper@gmail.com");
+  const [inputValue, setInputValue] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]);
-  const [selectedEmail, setSelectedEmail] = useState({
-    value: "janecooper@gmail.com",
-    label: "janecooper@gmail.com",
-  });
-
-  const emailOptions = PEOPLE.map((p) => ({
-  value: p.email,
-  label: p.name,          // used by react-select, but we override with formatOptionLabel
-  ...p,                   // brings in name, email, avatar, role
-}));
+  const [removeTarget, setRemoveTarget] = useState(null);
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  
+  const emailOptions = permissions?.map((p) => ({
+    value: p.email,
+    label: p.email, 
+    ...p
+  }));
 
   const filteredSuggestions = useMemo(() => {
     const query = inputValue.toLowerCase();
     if (!query) return [];
-    return PEOPLE.filter(
+    return permissions?.filter(
       (p) =>
-        p.name.toLowerCase().includes(query) ||
+        p.email.toLowerCase().includes(query) ||
         p.email.toLowerCase().includes(query)
     ).slice(0, 3);
   }, [inputValue]);
 
-  const handleShare = () => {
-    // hook up to API later
-    console.log("Share", {
-      email: selectedEmail?.value,
-      role: role.value,
-    });
+
+  const handleShare = async () => {
+    await Promise.all(
+      selectedPeople.map((p) =>
+        addUserToProjectApi(projectID, p.email)
+      )
+    );
+
+    setSelectedPeople([]);
+    onRefresh?.();
   };
 
+
+  const handleRemove = async (email) => {
+    await removeUserFromProjectApi(projectID, email);
+    onRefresh?.();
+  };
+  
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-40">
-      <div className="w-[500px] bg-[#050506] rounded-[32px] border border-[#27272F] shadow-2xl text-gray-100 relative overflow-hidden">
+    <Modal
+  isOpen={open}
+  onRequestClose={onClose}
+  shouldCloseOnOverlayClick
+  shouldCloseOnEsc
+  overlayClassName="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+  className="outline-none"
+  aria={{ modal: true }}
+>
+
+      <div onClick={(e) => e.stopPropagation()} className="w-[500px] bg-[#131313] rounded-[32px] border border-[#27272F] shadow-2xl text-gray-100 relative overflow-hidden">
         {/* header */}
         <div className="flex items-start justify-between px-8 pt-6 pb-4">
           <div>
             <div style={{ fontFamily:'Gilroy-SemiBold' }} className="text-[18px] mb-1">
-              Share with people to work on the project
+              Share this project
             </div>
             <p style={{ fontFamily:'Gilroy-Light', fontSize:14, width:"90%" }} className="text-[#BFBFBF]">
-              Lorem ipsum dolor sit amet consectetur. Sed non at imperdiet
-              non ornare sollicitudin vel.
+              Invite a collaborator or reviewer to join in. Users added as Team members will have to access to this project already.
             </p>
           </div>
         </div>
         <img style={{ position:'absolute', right:15, top:15, cursor:'pointer' }} onClick={onClose} src={closeCircle}/>
         {/* Share with + role select */}
         <div className="px-8 pb-3 flex items-center gap-2">
-          <span style={{ fontFamily:'Gilroy-Light', fontSize:14 }} className="text-[#fff]">Share with</span>
+          <span style={{ fontFamily:'Gilroy-Light', fontSize:14 }} className="text-[#fff]">Share with a:</span>
           <div className="w-[135px]">
             <Select
               value={role}
@@ -319,76 +301,85 @@ export default function ShareModal({ onClose }) {
             />
           </div>
         </div>
-
         {/* email input + Share button */}
-        <div className="px-6 pb-2 flex items-center gap-3">
-          <div className="flex-1">
-            <Select
-                styles={reactSelectStyles2}
-                value={selectedPeople}
-                onChange={(opts) => setSelectedPeople(opts || [])}
-                options={emailOptions}
-                placeholder="Enter name or email"
-                isMulti
-                menuPlacement="auto"
-                components={{
-                  MultiValue: CustomMultiValue,
-                  DropdownIndicator: () => null,
-                  ClearIndicator: () => null,
-                  IndicatorSeparator: () => null,
-                    MenuList: (props) => (
-                    <components.MenuList {...props} className="no-scrollbar" />
-                  ),
-                }}
-                
-                getOptionLabel={(option) => `${option.name} ${option.email}`}
-                getOptionValue={(option) => option.email}
-                formatOptionLabel={(option) => (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={option.avatar}
-                        alt={option.name}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                      <div>
-                        <div
-                          className="leading-tight text-[13px] text-white"
-                          style={{ fontFamily: "Gilroy-Light" }}
-                        >
-                          {option.name}
-                        </div>
-                        <div
-                          className="text-[11px] text-[#8A8A8A]"
-                          style={{ fontFamily: "Gilroy-Light" }}
-                        >
-                          {option.email}
+        {
+          role.value == constants.COLLABORATOR ?
+          <div className="px-6 pb-2 flex items-center gap-3">
+            <div className="flex-1">
+              <Select
+                  styles={reactSelectStyles2}
+                  value={selectedPeople}
+                  onChange={(opts) => setSelectedPeople(opts || [])}
+                  options={emailOptions}
+                  placeholder="Enter name or email"
+                  isMulti
+                  menuPlacement="auto"
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  components={{
+                    MultiValue: CustomMultiValue,
+                    DropdownIndicator: () => null,
+                    ClearIndicator: () => null,
+                    IndicatorSeparator: () => null,
+                      MenuList: (props) => (
+                      <components.MenuList {...props} className="no-scrollbar" />
+                    ),
+                  }}
+                  
+                  getOptionLabel={(option) => `${option.name} ${option.email}`}
+                  getOptionValue={(option) => option.email}
+                  formatOptionLabel={(option) => (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={option.avatar}
+                          alt={option.name}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div>
+                          <div
+                            className="leading-tight text-[13px] text-white"
+                            style={{ fontFamily: "Gilroy-Light" }}
+                          >
+                            {option.name}
+                          </div>
+                          <div
+                            className="text-[11px] text-[#8A8A8A]"
+                            style={{ fontFamily: "Gilroy-Light" }}
+                          >
+                            {option.email}
+                          </div>
                         </div>
                       </div>
+                      <div
+                        className="text-[11px] text-[#C7C7C7]"
+                        style={{ fontFamily: "Gilroy-Light" }}
+                      >
+                        {option.role}
+                      </div>
                     </div>
-                    <div
-                      className="text-[11px] text-[#C7C7C7]"
-                      style={{ fontFamily: "Gilroy-Light" }}
-                    >
-                      {option.role}
-                    </div>
-                  </div>
-                )}
-              />
-
-          </div>
-          <button
-            type="button"
-            onClick={handleShare}
-            style={{ fontFamily:'Gilroy-Light', fontSize:14 }}
-            className="px-5 py-2 rounded-full bg-[#212121] text-[#fff] shadow-sm hover:brightness-105"
-          >
-            Share
-          </button>
-        </div>
-
+                  )}
+                />
+            </div>
+            <button
+              type="button"
+              onClick={handleShare}
+              style={{ fontFamily:'Gilroy-Light', fontSize:14, opacity: selectedPeople?.length > 0 ? 1 : 0.5 }}
+              disabled={selectedPeople?.length > 0 ? false : true}
+              className="px-5 py-2 rounded-full bg-[#F9EF38] text-[#000] shadow-sm hover:brightness-105"
+            >
+              Invite
+            </button>
+          </div> :
+          <PublicLinkAccessCard
+            link="www.cutjamm.com/suhail/xyz project"
+            passwordRequired={false}
+            onTogglePassword={() => {}}
+            onCopy={() => navigator.clipboard.writeText("www.cutjamm.com/suhail/xyz project")}
+          />
+        }
         {/* suggestions dropdown card */}
-        {filteredSuggestions.length > 0 && (
+        {filteredSuggestions?.length > 0 && (
           <div className="px-6">
             <div className="bg-black rounded-2xl border border-[#222229] mt-2 mb-3 max-h-44 overflow-auto">
               {filteredSuggestions.map((p, idx) => (
@@ -397,7 +388,7 @@ export default function ShareModal({ onClose }) {
                   type="button"
                   className={`w-full flex items-center justify-between px-3 py-2 text-left text-[13px] hover:bg-[#15151B] ${
                     idx === 0 ? "rounded-t-2xl" : ""
-                  } ${idx === filteredSuggestions.length - 1 ? "rounded-b-2xl" : ""}`}
+                  } ${idx === filteredSuggestions?.length - 1 ? "rounded-b-2xl" : ""}`}
                   onClick={() =>
                     setSelectedEmail({ value: p.email, label: p.email })
                   }
@@ -430,14 +421,8 @@ export default function ShareModal({ onClose }) {
         {/* current members */}
         <div className="px-6 py-3">
             <span style={{ fontFamily:'Gilroy-Light', fontSize:14}}>People with access</span>
-          {/* <div className="flex items-center justify-between text-[11px] text-gray-400 mb-2">
-            <button className="flex items-center gap-1">
-              <span>3 members</span>
-              <span className="text-xs">›</span>
-            </button>
-          </div> */}
           <div className="space-y-2 max-h-60 overflow-auto pb-2 no-scrollbar">
-            <div
+            {/* <div
                 className="flex items-center justify-between text-[13px] mt-3 mb-2"
               >
                 <div className="flex items-center gap-3">
@@ -453,41 +438,47 @@ export default function ShareModal({ onClose }) {
                     </div>
                   </div>
                 </div>
-
                 <div className="flex items-center gap-1 text-[11px] text-gray-300">
                   <span>{'Owner'}</span>
                 </div>
-              </div>
-            {PEOPLE.map((p) => (
-              <div
-                key={`member-${p.id}`}
-                className="flex items-center justify-between text-[13px]"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={p.avatar}
-                    alt={p.name}
-                    className="w-8 h-8 rounded-sm object-cover"
-                  />
-                  <div>
-                    <div className="leading-tight">{p.name}</div>
-                    <div className="text-[11px] text-gray-500">
+              </div> */}
+            <div className="space-y-3">
+              {projectAccess.map((p) => {
+                return <>
+                  <div
+                    key={p._id}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="text-xs text-white/50">
                       {p.email}
                     </div>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-1 text-[11px] text-gray-300">
-                  <span>{p.role}</span>
-                  <span className="text-xs">
-                    <img src={arrowDown}/>
-                  </span>
-                </div>
-              </div>
-            ))}
+                    {p.role !== "Owner" && (
+                      <button
+                        onClick={() => setRemoveTarget(p.email)}
+                        className="w-7 h-7 cursor-pointer rounded-full bg-[#1E1F22] flex items-center justify-center hover:bg-white/10"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                </>
+              })}
+            </div>
+            <RemoveAccessModal
+              open={!!removeTarget}
+              onClose={() => setRemoveTarget(null)}
+              title={`Remove ${removeTarget} from this project?`}
+              description="They'll no longer be able to view or work on this project."
+              buttonText="Remove access"
+              handleRemove={async () => {
+                await handleRemove(removeTarget);
+                setRemoveTarget(null);
+              }}
+            />
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

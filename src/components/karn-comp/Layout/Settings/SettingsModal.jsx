@@ -1,0 +1,99 @@
+import React, { useEffect, useState } from "react";
+import "./SettingsLayout.css";
+import Profile from "../../Pages/Profile/Profile";
+import WorkspaceSettings from "../../Pages/WorkspaceSettings/WorkspaceSettings";
+import WorkspaceMembersPage from "../../Pages/Users/WorkspaceMembers";
+import Billing from "../../Pages/Billing/Billing";
+import { Usage } from "../../Pages/Usage/Usage";
+
+import profile from "../../assets/icons/Settings/profile.svg";
+import workspace from "../../assets/icons/Settings/workspace.svg";
+import users from "../../assets/icons/Settings/users.svg";
+import usage from "../../assets/icons/Settings/usage.svg";
+import billing from "../../assets/icons/Settings/billing.svg";
+import Modal from "react-modal";
+import close from "../../assets/icons/close.svg";
+
+const tabs = [
+  { id: "profile", label: "Profile info", icon: profile },
+  { id: "workspace", label: "Workspace Settings", icon: workspace },
+  { id: "users", label: "Users", icon: users },
+  { id: "usage", label: "Usage", icon: usage },
+  { id: "billing", label: "Billing", icon: billing },
+];
+
+const modalStyles = {
+  overlay: {
+    backgroundColor: "rgba(0,0,0,0.7)",
+    backdropFilter: "blur(6px)",
+    zIndex: 2000,
+  },
+  content: {
+    inset: "50% auto auto 50%",
+    transform: "translate(-50%, -50%)",
+    padding: 0,
+    border: "none",
+    background: "transparent",
+    overflow: "visible",
+  },
+};
+
+export default function SettingsModal({ isOpen, onClose, activeWorkspace }) {
+  const [active, setActive] = useState("profile");
+
+  const renderContent = () => {
+    switch (active) {
+      case "profile":
+        return <Profile />;
+      case "workspace":
+        return <WorkspaceSettings activeWorkspace={activeWorkspace}/>;
+      case "users":
+        return <WorkspaceMembersPage activeWorkspace={activeWorkspace}/>;
+      case "usage":
+        return <Usage />;
+      case "billing":
+        return <Billing />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onRequestClose={onClose}
+      shouldCloseOnOverlayClick
+      style={modalStyles}
+    >
+      {/* 🔑 FIXED HEIGHT SHELL */}
+      <div className="modal-shell">
+        <div className="layout-wrapper">
+          {/* SIDEBAR */}
+          <div className="sidebar">
+            {tabs.map((t) => (
+              <div
+                key={t.id}
+                className={`sidebar-item ${active === t.id ? "active" : ""}`}
+                onClick={() => setActive(t.id)}
+              >
+                <div className="sidebar-icon">
+                  <img height="24" width="22" src={t.icon} alt="" />
+                </div>
+                <span>{t.label}</span>
+                {active === t.id && <div className="active-strip" />}
+              </div>
+            ))}
+          </div>
+
+          {/* RIGHT PANEL (SCROLLABLE) */}
+          <div className="right-panel">
+            <div onClick={onClose} style={{ position:'absolute', right:20, cursor:'pointer', background:"#181A1C", height:40, width:40, borderRadius:40, display:'flex', justifyContent:'center', alignItems:'center' }}>
+              <img width="26px" src={close} alt="" />
+            </div>
+            {renderContent()}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+}

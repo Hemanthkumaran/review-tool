@@ -6,7 +6,7 @@ import requestIcon from '../assets/svgs/request.svg';
 import settingsIcon from '../assets/svgs/settings.svg';
 import ticketIcon from '../assets/svgs/ticket.svg';
 
-export default function ProfileMenu({ onClose }) {
+export default function ProfileMenu({ onClose, onOpenSettings }) {
   const menuRef = useRef(null);
 
   // click outside
@@ -18,8 +18,9 @@ export default function ProfileMenu({ onClose }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
-  const Item = ({ icon, label, danger }) => (
+  const Item = ({ icon, label, danger, onClick }) => (
     <button
+    onClick={onClick}
       className={`flex items-center gap-3 px-4 py-2.5 text-sm w-full text-left
         ${danger ? "text-red-400 hover:bg-red-500/10" : "text-[#C3C3C3] hover:bg-white/5"}
       `}
@@ -44,7 +45,14 @@ export default function ProfileMenu({ onClose }) {
       "
     >
       <div className="py-2">
-        <Item label="Settings" icon={<img src={settingsIcon}/>} />
+        <Item 
+          label="Settings" 
+          icon={<img src={settingsIcon}/>} 
+          onClick={() => {
+            onOpenSettings();
+            onClose();
+          }}
+        />
         <div style={{ background:"#2B2B2B", height:1 }} />
         <Item label="Raise a ticket" icon={<img src={ticketIcon}/>} />
         <Item label="Submit feature request" icon={<img src={requestIcon}/>} />

@@ -37,8 +37,8 @@ export const createFolderApi = (data) => {
   return axiosClient.post(`/folder/createFolder`, data);
 };
 
-export const allFoldersApi = (sortBy = 'createdAt', sortOrder = 'desc') => {
-  return axiosClient.get(`/folder/getAllFolders?sortField=${sortBy}&sortOrder=${sortOrder}`);
+export const allFoldersApi = (sortBy = 'createdAt', sortOrder = 'desc', workspaceID) => {
+  return axiosClient.get(`/folder/getAllFolders?sortField=${sortBy}&sortOrder=${sortOrder}&workspaceID=${workspaceID}`);
 };
 
 export const getOneFolderApi = (folderId) => {
@@ -137,7 +137,7 @@ export const getAllUserWorkspace = () => {
   return axiosClient.get(`/user/getAllUserWorkspace`);
 };
 
-export const getWorkspaceSettings = () => {
+export const getWorkspaceUsers = () => {
   return axiosClient.get(`/user/getWorkspaceMembers`);
 };
 
@@ -152,5 +152,58 @@ export const removeUserFromWorkspace = (workspaceID, payload) => {
   return axiosClient.put(
     `user/removeUserFromWorkspace?workspaceID=${workspaceID}`,
     payload
+  );
+};
+
+export const updateCommentApi = (projectID, versionID, commentID, payload) => {
+  return axiosClient.patch(
+    `/project/updateComment?projectID=${projectID}&versionID=${versionID}&commentID=${commentID}`,
+    payload
+  );
+};
+
+export const deleteCommentApi = (projectID, versionID, commentID) => {
+  return axiosClient.delete(
+    `/project/deleteComment?projectID=${projectID}&versionID=${versionID}&commentID=${commentID}`
+  );
+};
+
+export const updateReplyApi = (
+  projectID,
+  versionID,
+  commentID,
+  replyID,
+  payload
+) => {
+  return axiosClient.patch(
+    `/project/updateReply?projectID=${projectID}&versionID=${versionID}&commentID=${commentID}&replyID=${replyID}`,
+    payload
+  );
+};
+
+export const deleteReplyApi = (
+  projectID,
+  versionID,
+  commentID,
+  replyID
+) => {
+  return axiosClient.delete(
+    `/project/deleteReply?projectID=${projectID}&versionID=${versionID}&commentID=${commentID}&replyID=${replyID}`
+  );
+};
+
+
+export const addUserToProjectApi = (projectID, email) => {
+  return axiosClient.put(
+    `/project/addUserToProject?projectID=${projectID}`,
+    { email }
+  );
+};
+
+
+export const removeUserFromProjectApi = (projectID, email) => {
+  return axiosClient.put(
+    `/project/removeUserFromProject?projectID=${projectID}`,
+    { email }
   );
 };

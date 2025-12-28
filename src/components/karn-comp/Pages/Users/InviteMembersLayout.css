@@ -11,7 +11,10 @@
   font-family: Inter, system-ui, sans-serif;
 }
 
-/* Header */
+/* ========================= */
+/* HEADER                    */
+/* ========================= */
+
 .invite-header {
   display: flex;
   justify-content: space-between;
@@ -43,7 +46,8 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* Close */
+/* Close button */
+
 .close-btn {
   width: 36px;
   height: 36px;
@@ -58,12 +62,16 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Invite as */
+/* ========================= */
+/* INVITE AS ROW             */
+/* ========================= */
+
 .invite-row {
-  margin-top: 32px;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  margin-top: 28px;
 }
 
 .invite-row label {
@@ -71,24 +79,98 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
+/* ========================= */
+/* ROLE DROPDOWN (PILL)      */
+/* ========================= */
+
 .role-dropdown {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  gap: 10px;
+
+  padding: 10px 18px;
+
+  background: #0f1012;
+  border: 1px solid #2a2a2a;
+  border-radius: 999px;
+
   color: #fff;
-  padding: 8px 14px;
-  border-radius: 10px;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 14px;
+
+  transition: background 0.2s ease;
 }
 
 .role-dropdown:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: #151618;
 }
 
-/* Email box */
+/* Chevron animation */
+.role-dropdown svg {
+  transition: transform 0.25s ease;
+}
+
+.role-dropdown.open svg {
+  transform: rotate(180deg);
+}
+
+/* ========================= */
+/* ROLE MENU (DROPDOWN)      */
+/* ========================= */
+
+.role-menu {
+  position: absolute;
+  top: 52px;
+  left: 70px;
+
+  width: 200px;
+  padding: 8px;
+
+  background: #0b0b0c;
+  border: 1px solid #1e1f22;
+  border-radius: 18px;
+
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+  z-index: 50;
+
+  animation: roleFadeIn 0.18s ease-out;
+}
+
+/* ========================= */
+/* ROLE ITEM                 */
+/* ========================= */
+
+.role-item {
+  width: 100%;
+  text-align: left;
+
+  padding: 14px 16px;
+  border-radius: 14px;
+
+  background: transparent;
+  border: none;
+
+  font-size: 16px;
+  color: #e5e5e5;
+  font-family: 'Gilroy-Light';
+
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.role-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Active role (yellow) */
+.role-item.active {
+  color: #f9ef38;
+}
+
+/* ========================= */
+/* EMAIL INPUT BOX           */
+/* ========================= */
+
 .email-box {
   display: flex;
   flex-wrap: wrap;
@@ -139,7 +221,10 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Actions */
+/* ========================= */
+/* ACTION BUTTONS            */
+/* ========================= */
+
 .invite-actions {
   margin-top: 32px;
   display: flex;
@@ -165,7 +250,7 @@
   color: #000;
   border: none;
   border-radius: 999px;
-  padding: 10px 22px;
+  padding: 10px 30px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -182,42 +267,17 @@
   cursor: not-allowed;
 }
 
-.invite-row {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 28px;
-}
+/* ========================= */
+/* DROPDOWN ANIMATION        */
+/* ========================= */
 
-.role-menu {
-  position: absolute;
-  top: 42px;
-  left: 80px;
-  background: #111;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  overflow: hidden;
-  min-width: 180px;
-  z-index: 10;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
-}
-
-.role-item {
-  width: 100%;
-  text-align: left;
-  padding: 10px 14px;
-  background: transparent;
-  border: none;
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.role-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.role-item.active {
-  background: rgba(255, 255, 255, 0.12);
+@keyframes roleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

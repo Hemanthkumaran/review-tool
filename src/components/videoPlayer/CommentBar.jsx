@@ -9,6 +9,9 @@ import clipIcon from "../../assets/svgs/clip.svg";
 import emojiIcon from "../../assets/svgs/emoji.svg";
 import micIcon from "../../assets/svgs/mic.svg";
 import sendIcon from "../../assets/svgs/send.svg";
+import AudienceSelect from "../AudienceSelect";
+import { useWorkspace } from "../../context/WorkspaceContext";
+import { constants } from "../../helpers/enum";
 
 function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
@@ -45,11 +48,23 @@ export default function CommentBar({
   onCancelAnnotation,
   pauseVideo
 }) {
+  const {
+    userAccess
+  } = useWorkspace();
   const [text, setText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [attachments, setAttachments] = useState([]); // [{ url, name }]
   const fileInputRef = useRef(null);
+  const [audience, setAudience] = useState("everyone");
+  
+
+
+  useEffect(() => {
+    if (userAccess) {
+      setAudience(userAccess == constants.COLLABORATOR ? "team only" : "everyone")
+    }
+  }, [userAccess]);
 
   // recording timer
   useEffect(() => {
@@ -72,7 +87,7 @@ export default function CommentBar({
     if (!trimmed && !hasPendingVoice && images.length === 0 && !hasPendingAnnotation)
       return;
 
-    onSend?.({ text: trimmed, images });
+    onSend?.({ text: trimmed, images, commentType: audience });
 
     setText("");
     setAttachments([]);
@@ -164,9 +179,10 @@ export default function CommentBar({
             <img src={clockIcon} />
             <span>{formatClockTime(currentTime)}</span>
           </div>
-          <button className="flex items-center gap-1 px-3 py-[5px] rounded-full bg-[#111111] text-[11px]">
-            <VersionPill label="Everyone" />
-          </button>
+          <AudienceSelect
+            value={audience}
+            onChange={setAudience}
+          />
         </div>
 
         {/* right: tools + voice/annotation UI */}

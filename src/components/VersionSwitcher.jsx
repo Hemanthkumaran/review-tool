@@ -5,6 +5,7 @@ import addVersion from '../assets/svgs/add-version.svg';
 import manageVersion from '../assets/svgs/manage-version.svg';
 import downloadIcon from '../assets/svgs/download-icon.svg';
 import trashIcon from '../assets/svgs/trash-icon.svg';
+import { constants } from "../helpers/enum";
 
 // Small helpers --------------------------------------------------
 
@@ -51,6 +52,7 @@ export default function VersionSwitcher({
   onUploadNewVersion,
   onDownloadVersion,
   onDeleteVersion,
+  userAccess
 }) {
   const [open, setOpen] = useState(false);
   const [showManage, setShowManage] = useState(false);
@@ -99,7 +101,7 @@ export default function VersionSwitcher({
         {open && (
           <div className="absolute mt-2 left-0 z-30 w-[360px] rounded-2xl bg-[#050506] border border-[#26262A] shadow-xl overflow-hidden">
             {/* Add new version */}
-            <button
+            {userAccess != constants.REVIEWER && <button
               type="button"
               onClick={() => {
                 setOpen(false);
@@ -111,7 +113,7 @@ export default function VersionSwitcher({
               <div style={{ fontFamily:'Gilroy-Light'}} className="text-[14px]">
                 Add new version
               </div>
-            </button>
+            </button>}
               <div style={{height:1, backgroundColor:"#2B2B2B" }}/>
             {/* Versions list */}
             <div className="max-h-[260px] overflow-y-auto">
@@ -214,6 +216,7 @@ export default function VersionSwitcher({
           onUploadNewVersion={onUploadNewVersion}
           onDownloadVersion={onDownloadVersion}
           onDeleteVersion={onDeleteVersion}
+          userAccess={userAccess}
         />
       )}
     </>
@@ -230,6 +233,7 @@ function ManageVersionsModal({
   onUploadNewVersion,
   onDownloadVersion,
   onDeleteVersion,
+  userAccess
 }) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
@@ -340,6 +344,7 @@ function ManageVersionsModal({
                   </button>
 
                   {/* delete */}
+                  {userAccess !== constants.REVIEWER && 
                   <button
                     type="button"
                     onClick={() =>
@@ -348,7 +353,7 @@ function ManageVersionsModal({
                     className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded-full"
                   >
                     <img className='cursor-pointer' src={trashIcon}/>
-                  </button>
+                  </button>}
                 </div>
               );
             })}
@@ -356,6 +361,7 @@ function ManageVersionsModal({
         </div>
 
         {/* footer buttons */}
+        {userAccess !== constants.REVIEWER && 
         <div className="px-7 pb-6 pt-3 flex items-center justify-between gap-4">
           <button
             type="button"
@@ -371,7 +377,7 @@ function ManageVersionsModal({
           >
             Upload new version
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );

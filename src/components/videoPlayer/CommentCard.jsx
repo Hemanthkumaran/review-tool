@@ -1,7 +1,7 @@
 // src/components/comments/CommentCard.jsx
 import React, { useState } from "react";
 import VoiceNotePlayer from "./VoiceNotePlayer";
-import { resolveCommentApi } from "../../services/api";
+import { deleteCommentApi, deleteReplyApi, resolveCommentApi, updateCommentApi, updateReplyApi } from "../../services/api";
 
 function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
@@ -24,37 +24,108 @@ function formatRelative(date) {
   return `${hours}h ago`;
 }
 
-function ReplyItem({ reply }) {
-  const name = reply?.user?.name ?? "John";
-  const role = reply?.user?.role ?? "Owner";
-  const avatar =
-    reply?.user?.avatarUrl ?? "https://i.pravatar.cc/32?u=reply-default";
-  const createdAt = reply?.createdAt ? formatRelative(reply.createdAt) : "";
+function ReplyItem({
+  reply,
+  projectId,
+  versionId,
+  commentId,
+  onReplyDeleted,
+  onReplyUpdated
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [text, setText] = useState(reply.text);
 
   return (
-    <div className="flex gap-3">
-      <div className="w-9 h-9 rounded-2xl overflow-hidden bg-white/10 flex-shrink-0">
-        <img src={avatar} alt={name} className="w-full h-full object-cover" />
+    <div className="group flex gap-3 relative">
+      {/* avatar */}
+      <div className="w-9 h-9 rounded-2xl overflow-hidden bg-white/10">
+        <img src={reply.user?.avatarUrl} />
       </div>
+
       <div className="flex-1">
-        <div className="flex items-baseline justify-between mb-1">
-          <div>
-            <div className="text-[14px] leading-tight">{name}</div>
-            <div className="text-[11px] text-gray-500 leading-tight">
-              {role}
+        {!isEditing ? (
+          <>
+            <div className="text-[13px] text-gray-200 whitespace-pre-line">
+              {reply.text}
             </div>
-          </div>
-          {createdAt && (
-            <div className="text-[11px] text-gray-500">{createdAt}</div>
-          )}
-        </div>
-        <div className="text-[13px] text-gray-200 leading-relaxed whitespace-pre-line">
-          {reply?.text}
-        </div>
+
+            {/* hover actions */}
+            <div className="
+              absolute right-0 top-0
+              opacity-0 group-hover:opacity-100
+              transition flex gap-3 text-gray-400 text-xs
+            ">
+              <button
+                onClick={() => {
+                  setIsEditing(true);
+                  setText(reply.text);
+                }}
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={async () => {
+                  await deleteReplyApi(
+                    projectId,
+                    versionId,
+                    commentId,
+                    reply.id
+                  );
+                  onReplyDeleted(commentId, reply.id);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <textarea
+              className="
+                w-full bg-[#101213] border border-[#1F1F21]
+                rounded-xl p-3 text-[13px]
+              "
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
+
+            <div className="flex justify-end gap-2 mt-2">
+              <button
+                className="px-3 py-1 rounded-full border"
+                onClick={() => {
+                  setIsEditing(false);
+                  setText(reply.text);
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="px-4 py-1 rounded-full bg-[#F9EF38] text-black"
+                onClick={async () => {
+                  await updateReplyApi(
+                    projectId,
+                    versionId,
+                    commentId,
+                    reply.id,
+                    { text }
+                  );
+
+onReplyUpdated(commentId, reply.id, text);
+                  setIsEditing(false);
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
+
 
 export default function CommentCard({
   marker,
@@ -62,7 +133,12 @@ export default function CommentCard({
   onGo,
   onReplySubmit, // (text) => Promise | void
   projectId,
-  activeVersionId
+  activeVersionId,
+    onCommentUpdated,
+  onCommentDeleted,
+  onReplyUpdated,
+  onReplyDeleted
+
 }) {
   const {
     time,
@@ -74,7 +150,7 @@ export default function CommentCard({
     user,
     replies = [],
   } = marker;
-
+  
   const name = user?.name ?? "John";
   const role = user?.role ?? "Owner";
   const avatar = user?.avatarUrl ?? "https://i.pravatar.cc/32?u=john";
@@ -84,7 +160,12 @@ export default function CommentCard({
   const [sending, setSending] = useState(false);
   const [isResolved, setIsResolved] = useState(!!marker.isResolved);
   const [resolving, setResolving] = useState(false);
-  console.log(marker, 'marker');
+  const [isEditingComment, setIsEditingComment] = useState(false);
+  const [editedText, setEditedText] = useState(text);
+
+  const [editingReplyId, setEditingReplyId] = useState(null);
+  const [editedReplyText, setEditedReplyText] = useState("");
+
   
   const handleToggleResolved = async () => {
     if (resolving) return;
@@ -158,32 +239,29 @@ export default function CommentCard({
             `}
             title={isResolved ? "Mark as unresolved" : "Mark as resolved"}
           >
-  <input
-    type="checkbox"
-    checked={isResolved}
-    onChange={handleToggleResolved}
-    className="sr-only"
-    disabled={resolving}
-  />
-
-  {isResolved && (
-    <svg
-      viewBox="0 0 16 16"
-      className="w-3.5 h-3.5"
-      fill="none"
-    >
-      <path
-        d="M3.5 8.5l3 3 6-7"
-        stroke="#000"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )}
-</label>
-
-
+            <input
+              type="checkbox"
+              checked={isResolved}
+              onChange={handleToggleResolved}
+              className="sr-only"
+              disabled={resolving}
+            />
+            {isResolved && (
+              <svg
+                viewBox="0 0 16 16"
+                className="w-3.5 h-3.5"
+                fill="none"
+              >
+                <path
+                  d="M3.5 8.5l3 3 6-7"
+                  stroke="#000"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              )}
+            </label>
         </div>
       </div>
 
@@ -202,7 +280,78 @@ export default function CommentCard({
 
       {/* main content */}
       <div className="text-[13px] text-gray-200 leading-relaxed mb-3 space-y-2">
-        {text && <p className="whitespace-pre-line">{text}</p>}
+        {/* {text && <p className="whitespace-pre-line">{text}</p>} */}
+<div
+  className="group relative"
+>
+  {!isEditingComment ? (
+    <>
+      <p className="whitespace-pre-line">{text}</p>
+
+      {/* hover actions */}
+      <div className="
+        absolute right-0 bottom-0
+        opacity-0 group-hover:opacity-100
+        transition flex gap-3
+        text-gray-400
+      ">
+        <button onClick={() => setShowReplyBox(true)}>Reply</button>
+        <button onClick={() => setIsEditingComment(true)}>Edit</button>
+        <button
+          onClick={async () => {
+            await deleteCommentApi(projectId, activeVersionId, marker.id);
+            onCommentDeleted(marker.id);
+          }}
+        >
+          Delete
+        </button>
+      </div>
+    </>
+  ) : (
+    <>
+      {/* EDIT UI (image #2 style) */}
+      <div className="bg-[#0F1011] rounded-2xl border border-[#232427] p-4">
+        <textarea
+          className="
+            w-full bg-transparent outline-none resize-none
+            text-[14px] text-white min-h-[80px]
+          "
+          value={editedText}
+          onChange={(e) => setEditedText(e.target.value)}
+        />
+
+        <div className="flex justify-end gap-2 mt-3">
+          <button
+            className="px-4 py-2 rounded-full border border-[#2A2B2F]"
+            onClick={() => {
+              setIsEditingComment(false);
+              setEditedText(text);
+            }}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="px-5 py-2 rounded-full bg-[#F9EF38] text-black"
+            onClick={async () => {
+              await updateCommentApi(
+                projectId,
+                activeVersionId,
+                marker.id,
+                { text: editedText }
+              );
+              
+            onCommentUpdated(marker.id, editedText);
+            setIsEditingComment(false);
+            }}
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </>
+  )}
+</div>
 
         {type === "voice" && audioUrl && (
           <div className="mt-1">
@@ -246,8 +395,16 @@ export default function CommentCard({
             </button>
           </div>
           <div className="border-l border-white/10 pl-4 space-y-4 ml-2 mt-1">
-            {replies.map((r) => (
-              <ReplyItem key={r.id} reply={r} />
+                {replies.map((r) => (
+              <ReplyItem
+                key={r.id}
+                reply={r}
+                projectId={projectId}
+                versionId={activeVersionId}
+                commentId={marker.id}
+                onReplyUpdated={onReplyUpdated}
+                onReplyDeleted={onReplyDeleted}
+              />
             ))}
           </div>
         </div>

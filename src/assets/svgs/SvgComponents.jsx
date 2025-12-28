@@ -125,3 +125,88 @@ export const Confetti = (props) => (
     />
   </svg>
 )
+
+export const AssignIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={16}
+    height={16}
+    fill="none"
+    {...props}
+  >
+    <path
+      stroke={props.color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8 8a3.333 3.333 0 1 0 0-6.666 3.333 3.333 0 0 0 0 6.667ZM2.273 14.667C2.273 12.087 4.84 10 8 10c.64 0 1.26.087 1.84.247"
+    />
+    <path
+      stroke={props.color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeMiterlimit={10}
+      d="M14.667 12c0 .214-.027.42-.08.62a2.49 2.49 0 0 1-.307.754A2.646 2.646 0 0 1 12 14.667c-.687 0-1.307-.26-1.773-.686-.2-.174-.374-.38-.507-.607a2.614 2.614 0 0 1-.387-1.373A2.666 2.666 0 0 1 12 9.334c.787 0 1.5.34 1.98.887.427.473.687 1.1.687 1.78ZM12.993 11.986h-1.986M12 11.014v1.993"
+    />
+  </svg>
+)
+
+export const ShareIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={16}
+    height={16}
+    fill="none"
+    {...props}
+  >
+    <path
+      stroke={props.color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeOpacity={0.75}
+      d="M11.307 4.113a5.753 5.753 0 0 1 2.44 4.1M2.327 8.246a5.734 5.734 0 0 1 2.4-4.1M5.46 13.96a5.682 5.682 0 0 0 2.58.614c.893 0 1.733-.2 2.487-.566M8.04 5.132a1.853 1.853 0 1 0 0-3.706 1.853 1.853 0 0 0 0 3.706ZM3.22 13.28a1.853 1.853 0 1 0 0-3.706 1.853 1.853 0 0 0 0 3.707ZM12.78 13.28a1.853 1.853 0 1 0 0-3.706 1.853 1.853 0 0 0 0 3.707Z"
+    />
+  </svg>
+)
+
+export const ShareLinkIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={20}
+    height={20}
+    fill="none"
+    {...props}
+  >
+    <path
+      stroke="#BFBFBF"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.2}
+      d="m10.834 9.166 6.833-6.833M18.334 5.667v-4h-4M9.166 1.667H7.499c-4.166 0-5.833 1.667-5.833 5.833v5c0 4.167 1.667 5.834 5.833 5.834h5c4.167 0 5.834-1.667 5.834-5.834v-1.666"
+    />
+  </svg>
+)
+
+export const CopyIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={20}
+    height={20}
+    fill="none"
+    {...props}
+  >
+    <path
+      stroke={props.color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.2}
+      d="M13.333 10.75v3.5c0 2.917-1.167 4.084-4.084 4.084h-3.5c-2.916 0-4.083-1.167-4.083-4.084v-3.5c0-2.916 1.167-4.083 4.083-4.083h3.5c2.917 0 4.084 1.167 4.084 4.083Z"
+    />
+    <path
+      stroke={props.color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.2}
+      d="M18.333 5.75v3.5c0 2.917-1.167 4.084-4.084 4.084h-.916V10.75c0-2.916-1.167-4.083-4.084-4.083H6.666V5.75c0-2.916 1.167-4.083 4.083-4.083h3.5c2.917 0 4.084 1.167 4.084 4.083Z"
+    />
+  </svg>
+)

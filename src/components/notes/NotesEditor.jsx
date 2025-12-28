@@ -3,6 +3,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import { useWorkspace } from "../../context/WorkspaceContext";
+import { constants } from "../../helpers/enum";
 
 /**
  * Props:
@@ -28,7 +30,9 @@ export default function NotesEditor({
   const defaultSectionId = sections[0]?.id;
   const [activeSection, setActiveSection] = useState(defaultSectionId);
   const isSwitchingRef = useRef(false);
-
+      const {
+        userAccess
+      } = useWorkspace();
   // state: content + dirty per section
   const [contents, setContents] = useState(() => {
     const obj = {};
@@ -51,6 +55,7 @@ export default function NotesEditor({
   }, [activeSection]);
 
   const editor = useEditor({
+    editable: (userAccess == constants.OWNER || userAccess == constants.MEMBER) ? true : false,
     extensions: [
       StarterKit.configure({
         heading: {
@@ -248,7 +253,8 @@ export default function NotesEditor({
       </div>
 
       {/* toolbar footer */}
-      <div className="mt-auto px-4 py-2 border-top border-white/5 flex items-center justify-between text-[11px]">
+      {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
+        <div className="mt-auto px-4 py-2 border-top border-white/5 flex items-center justify-between text-[11px]">
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -312,7 +318,7 @@ export default function NotesEditor({
             </button>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

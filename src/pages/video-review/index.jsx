@@ -12,6 +12,7 @@ import { addCommentApi, addReplyApi, getOneProjectApi, getVideoUploadUrl } from 
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 import { uploadToMux } from "../../helpers/muxHelpers";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
@@ -39,6 +40,7 @@ export default function VideoReview() {
   const chunksRef = useRef([]);
   const voiceStartTimeRef = useRef(0);
   const cancelledRef = useRef(false);
+  const { userAccess } = useWorkspace();
 
   // annotation draft (from canvas)
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
@@ -54,6 +56,7 @@ export default function VideoReview() {
 }, [activeVersionId, rawVersions]);
 const playbackId = activeRawVersion?.muxPlaybackID || null;
 const muxStatus = activeRawVersion?.muxStatus;
+
 
   const currentUser = {
     id: "me",
@@ -84,6 +87,7 @@ useEffect(() => {
   console.log("Active raw version:", activeRawVersion);
   console.log("Playback ID:", playbackId);
 }, [activeVersionId, activeRawVersion]);
+console.log(projectDetail, 'projectDetail');
 
   
 useEffect(() => {
@@ -346,7 +350,7 @@ function fetchProject() {
     };
 
 
-  const handleSendComment = async ({ text, images }) => {
+  const handleSendComment = async ({ text, images, commentType }) => {
   pauseVideo();
 
   const trimmed = (text || "")?.trim();
@@ -399,7 +403,7 @@ function fetchProject() {
   /* ---------- 2) Build FormData for backend ---------- */
 
   const formData = new FormData();
-
+  formData.append('commentType', commentType);
   // timeline in seconds (backend expects string)
   formData.append("timeline", Math.round(baseTime).toString());
 
@@ -550,10 +554,10 @@ const handleNewVersionFile = async (e) => {
 
 
   return (
-   <div
-  style={{ margin: 15 }}
-  className="min-h-screen text-gray-200 font-sans"
->
+  <div
+    style={{ margin: 15 }}
+    className="min-h-screen text-gray-200 font-sans"
+  >
   <input
     ref={fileInputRef}
     type="file"
@@ -571,6 +575,7 @@ const handleNewVersionFile = async (e) => {
     onAddNewVersion={() => {
       fileInputRef.current?.click();
     }}
+    userAccess={userAccess}
   />
 
   {/* MAIN LAYOUT */}
@@ -611,6 +616,7 @@ const handleNewVersionFile = async (e) => {
             projectId={location.state.projectId}
             onVideoUploaded={handleVideoUploaded}
             muxStatus={activeVersion?.muxStatus}
+            userAccess={userAccess}
           />
         )}
       </div>
@@ -638,6 +644,7 @@ const handleNewVersionFile = async (e) => {
         isOpen={isCommentsOpen}
         onToggle={() => setIsCommentsOpen((v) => !v)}
         markers={markers}
+        setMarkers={setMarkers}
         currentTime={currentTime}
         onSeek={handleSeek}
         pauseVideo={pauseVideo}
@@ -645,6 +652,7 @@ const handleNewVersionFile = async (e) => {
         projectDetail={projectDetail}
         onAddReply={handleAddReply}
         activeVersionId={activeVersionId}
+        userAccess={userAccess}
       />
     </div>
   </div>

@@ -1,10 +1,9 @@
 // CreateFolderModal.jsx
-import React, { useState } from "react";
+import { useState } from "react";
 import Modal from "react-modal";
 import Button from "../UI/Button";
 import cancelIcon from "../../assets/svgs/cancel.svg";
 import OutlineInput from "../textInputs/OutlineInput";
-import { createFolderApi } from "../../services/api";
 
 
 const modalStyles = {

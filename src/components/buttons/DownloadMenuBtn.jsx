@@ -6,6 +6,7 @@ import FinalLinkPopover from "../DownloadLinkPopover";
 const menuItems = [
   { id: "rename", label: "Rename", icon: "edit" },
   { id: "share", label: "Share", icon: "share" },
+  { id: "assign", label: "Assign", icon: "share" },
   { id: "delete", label: "Delete", icon: "trash" },
 ];
 

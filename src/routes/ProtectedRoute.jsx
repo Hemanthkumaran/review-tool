@@ -5,7 +5,7 @@ export default function ProtectedRoute({ children }) {
   const token = localStorage.getItem("authToken");
 
   if (!token) {
-    return <Navigate to={PATHS.SIGN_IN} replace />;
+    return <Navigate to={PATHS.ROOT} replace />;
   }
 
   return children;

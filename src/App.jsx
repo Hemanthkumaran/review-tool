@@ -1,14 +1,26 @@
 import "./App.css";
-import FeatureLockedModal from "./components/karn-comp/components/WorkSpaceModal/FeatureLockedModal";
-import WorkSpaceModal from "./components/karn-comp/components/WorkSpaceModal/WorkSpaceModal";
-import SettingsLayout from "./components/karn-comp/Layout/Settings/SettingsLayout";
+import { AuthProvider } from "./context/AuthContext";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
 import AppRouter from "./routes/AppRouter";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return <div style={{ position: "relative" }}>
-    {/* <AppRouter /> */}
-
-   <SettingsLayout />
+    <AuthProvider>
+      <WorkspaceProvider>
+        <AppRouter />
+      </WorkspaceProvider>
+    </AuthProvider>
+    <ToastContainer
+        position="top-center"
+        autoClose={4000}
+        hideProgressBar
+        closeButton={false}
+        draggable={false}
+        pauseOnHover
+        toastClassName={() => "bg-transparent shadow-none"}
+      />
     </div>;
 }
 

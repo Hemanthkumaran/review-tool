@@ -1,7 +1,6 @@
 import OutlineInput from "../../../textInputs/OutlineInput";
 import EditableAvatar from "../../components/EditAvatar/EditableAvatar";
 import Button from "../../../UI/Button";
-import close from "../../assets/icons/close.svg";
 import "./Profile.css";
 
 const Profile = () => {
@@ -9,7 +8,6 @@ const Profile = () => {
     <div>
       <div className="flex justify-between content-center">
         <div className="text-2xl font-bold pb-4 text-[#ffffff]">Profile</div>
-        <img  width="26px" src={close} alt="" />
       </div>
       <div>Lorem ipsum dolor sit amet ,te eos molestiae debitis.</div>
       <br />

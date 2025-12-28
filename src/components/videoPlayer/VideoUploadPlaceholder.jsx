@@ -2,50 +2,8 @@
 import React, { useRef, useState } from "react";
 import { getVideoUploadUrl } from "../../services/api";
 import uploadIcon from '../../assets/svgs/upload.svg';
+import { constants } from "../../helpers/enum";
 
-/* ---------- Small upload icon (center) ---------- */
-
-const UploadIcon = () => (
-  <svg
-    width="32"
-    height="32"
-    viewBox="0 0 40 40"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="text-gray-400"
-  >
-    <rect
-      x="9"
-      y="6"
-      width="22"
-      height="28"
-      rx="6"
-      stroke="currentColor"
-      strokeWidth="1.6"
-    />
-    <path
-      d="M20 23V13"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    />
-    <path
-      d="M16.5 16.5L20 13L23.5 16.5"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M15 26H25"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    />
-  </svg>
-);
-
-/* ---------- Figma-style “image frame” loader card ---------- */
 
 function UploadFrameLoader({ progress = 0, label = "Uploading" }) {
   const fillWidth = Math.max(progress, 8); // never look empty
@@ -109,7 +67,7 @@ function uploadToMux(muxUploadURL, file, onProgress) {
  *  - projectId       (string)
  *  - onVideoUploaded (func)  – called after successful upload so parent can refetch project
  */
-export default function VideoUploadPlaceholder({ projectId, onVideoUploaded, muxStatus, }) {
+export default function VideoUploadPlaceholder({ projectId, onVideoUploaded, muxStatus, userAccess }) {
   const inputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -186,26 +144,25 @@ const showProcessing =
     </div>
   </div>
 ) : (
-  /* --- IDLE: click to upload --- */
-  <button
-    type="button"
-    onClick={openFilePicker}
-    className="flex flex-col items-center justify-center gap-3 select-none focus:outline-none"
-  >
-    <img src={uploadIcon} />
-    <span
-      style={{ fontFamily: "Gilroy-Light" }}
-      className="cursor-pointer text-[14px] text-[#BFBFBF] underline underline-offset-[3px] decoration-gray-500 hover:text-gray-100 hover:decoration-gray-300"
-    >
-      Click to upload
-    </span>
-    {error && (
-      <span className="mt-1 text-[11px] text-red-400 max-w-xs text-center">
-        {error}
-      </span>
-    )}
-  </button>
-)}
+        <button
+          type="button"
+          onClick={userAccess !== constants.REVIEWER ? openFilePicker : null}
+          className="flex flex-col items-center justify-center gap-3 select-none focus:outline-none"
+        >
+          <img src={uploadIcon} />
+          <span
+            style={{ fontFamily: "Gilroy-Light" }}
+            className="cursor-pointer text-[14px] text-[#BFBFBF] underline underline-offset-[3px] decoration-gray-500 hover:text-gray-100 hover:decoration-gray-300"
+          >
+            Click to upload
+          </span>
+          {error && (
+            <span className="mt-1 text-[11px] text-red-400 max-w-xs text-center">
+              {error}
+            </span>
+          )}
+        </button>
+      )}
 
         </div>
       </div>

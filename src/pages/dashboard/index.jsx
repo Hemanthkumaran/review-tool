@@ -12,9 +12,10 @@ import DashboardHeader from '../../components/DashboardHeader';
 import AppLoader from '../../components/common/AppLoader';
 import ShareModal from '../../components/modals/ShareModal';
 import ProjectAccordion from '../../components/karn-comp/components/Accordion/Accordion';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { constants } from '../../helpers/enum';
 
 export default function DashboardPage({
-  role = "Owner",
   minutesUsed = 89,
   minutesCap = 500,
   onCreateFolder = () => {},
@@ -25,49 +26,56 @@ export default function DashboardPage({
   const [inviteModal, setInviteModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
-  const [loading, setLoading] = useState(true);
+  const { activeWorkspace, loading: workspaceLoading, userAccess } = useWorkspace();
+  const [foldersLoading, setFoldersLoading] = useState(false);
 
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
+  
+useEffect(() => {
+  if (workspaceLoading) return;
+  if (!activeWorkspace?._id) return;
 
-  useEffect(() => {
-    getAllFolders();
-  }, []);
+  getAllFolders();
+}, [workspaceLoading, activeWorkspace?._id]);
 
-  function handleCreate(name) {
+
+  function handleCreate() {
     setCreateLoading(true);
-    createFolderApi({ name : 'Untitled' })
-    .then(res => {
+    createFolderApi({ name: 'Untitled', workspaceID: activeWorkspace._id })
+    .then(() => {
       setCreateLoading(false);
       setCreateModalOpen(false);
       getAllFolders();
     })
-    .catch(err => {
+    .catch(() => {
       setCreateLoading(false);
     })
   }
 
 
   function getAllFolders() {
-    allFoldersApi()
-    .then(res => {
-      setLoading(false);
-      setAllFolders(res.data.folderArray);
-    })
-    .catch(err => {
-      setLoading(false);
-      console.log(err);
-    })
+    setFoldersLoading(true);
+    allFoldersApi("createdAt", "desc", activeWorkspace._id)
+      .then((res) => {
+        setAllFolders(res.data.folderArray);
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+      .finally(() => {
+        setFoldersLoading(false);
+      });
   }
 
-    function handleFolderUpdated(folderId, newName) {
+
+  function handleFolderUpdated(folderId, newName) {
     setAllFolders((prev) =>
       prev.map((f) =>
         f._id === folderId ? { ...f, name: newName } : f
       )
     );
   }
-  console.log(allFolders, 'allFolders');
   
   function handleFolderDeleted(folderId) {
     setAllFolders((prev) =>
@@ -76,7 +84,7 @@ export default function DashboardPage({
   }
 
   function getActiveContent() {
-    if (activeTab === "allFolders") {
+    if (activeTab === "allFolders" && userAccess !== constants.REVIEWER) {
       return <div className="flex gap-4 mt-3 flex-wrap">
         {allFolders.map((item) => (
           <Folder
@@ -88,7 +96,8 @@ export default function DashboardPage({
           />
         ))}
       </div>
-    } else {
+    }
+     else {
       return allFolders.map(folder => {
         return <ProjectAccordion key={folder._id} folder={folder} getAllFolders={getAllFolders}/>
       })
@@ -96,12 +105,18 @@ export default function DashboardPage({
   }
 
 
-  if (loading) return <AppLoader visible={loading} message="Loading folders…" />
+  if (workspaceLoading) {
+    return <AppLoader visible message="Loading workspace…" />;
+  }
+
+  if (foldersLoading) {
+    return <AppLoader visible message="Loading folders…" />;
+  }
+
 
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
       <DashboardHeader
-        role={role}
         minutesUsed={minutesUsed}
         minutesCap={minutesCap}
         usagePct={usagePct}
@@ -111,31 +126,32 @@ export default function DashboardPage({
         {/* Title row */}
         <div className="mt-8 flex items-center justify-between">
           <div style={{ fontFamily:"Gilroy-SemiBold", fontSize:24 }}>
-            Welcome to {JSON.parse(localStorage.getItem('user')).workspaceName}'s workspace
+            Welcome to {activeWorkspace?.name}'s workspace
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <button
+            {userAccess == constants.OWNER && <button
               onClick={() => setInviteModal(true)}
               className="inline-flex items-center cursor-pointer gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
             >
               <InviteIcon className="h-4 w-4" />
               <span>Invite</span>
-            </button>
-            <button
+            </button>}
+            {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
+             <button
               onClick={handleCreate}
               className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
             >
               <PlusThin className="h-4 w-4" />
               <span>Create folder</span>
-            </button>
+            </button>}
           </div>
         </div>
 
         {/* Tabs & mobile actions */}
         <div className="mt-6 flex items-center justify-between">
           {/* Segmented tabs */}
-            <div style={{ width:250 }} className="mt-2">
+            { userAccess != constants.REVIEWER && <div style={{ width:250 }} className="mt-2">
               <SegmentedTabs
                 options={[
                   { id: "allFolders", label: "All folders" },
@@ -144,7 +160,7 @@ export default function DashboardPage({
                 value={activeTab}
                 onChange={setActiveTab}
               />
-            </div>
+            </div>}
           {/* Mobile actions */}
           <div className="md:hidden flex items-center gap-2">
             <button
@@ -169,7 +185,7 @@ export default function DashboardPage({
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
-      {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null}
+      {/* {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null} */}
       <CreateFolderModal
         isOpen={isCreateModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -178,19 +194,6 @@ export default function DashboardPage({
       />
     </div>
   );
-}
-
-function EmptyState() {
-  return <section className="relative mt-16 h-[48vh] md:h-[56vh] rounded-3xl">
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-[#7E7E7E] text-base md:text-lg">There are no folders here</p>
-        <p className="text-[#7E7E7E] text-sm md:text-base mt-1">
-          Please create a new folder to get started
-        </p>
-      </div>
-    </div>
-  </section>
 }
 
 function PlusThin({ className = "" }) {

@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { X, ChevronDown } from "lucide-react";
 import "./InviteMembersLayout.css";
+import { inviteUserToWorkspace } from "../../../../services/api";
+import { showSuccessToast } from "../../../../helpers/showToast";
 
-const ROLES = ["Owner", "Collaborator", "Team member"];
+const ROLES = ["Collaborator", "Team member"];
 
-export default function InviteMembersLayout({ onBack = () => {} }) {
+export default function InviteMembersLayout({ onBack = () => {}, activeWorkspace }) {
   const [emails, setEmails] = useState([]);
   const [value, setValue] = useState("");
   const [role, setRole] = useState("Collaborator");
@@ -44,6 +46,24 @@ export default function InviteMembersLayout({ onBack = () => {} }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  function handleInvite() {
+    const data = {
+      emails,
+      "permissionType": role == "Team member" ? "member" : role.toLowerCase()
+    }
+    console.log(data, activeWorkspace, 'data');
+    inviteUserToWorkspace(activeWorkspace._id, data)
+    .then(res => {
+      setEmails([]);
+      setValue("");
+      showSuccessToast("The invitation was sent to the user");
+      console.log(res,'eer')
+    })
+    .catch(err => {
+      console.log(err.response.data.error)
+    })
+  }
+
   return (
     <div>
       {/* Header */}
@@ -70,14 +90,13 @@ export default function InviteMembersLayout({ onBack = () => {} }) {
       {/* Invite as */}
       <div className="invite-row" ref={dropdownRef}>
         <label>Invite as:</label>
-
-        <button className="role-dropdown" onClick={() => setOpen((o) => !o)}>
-          {role}
-          <ChevronDown size={16} />
-        </button>
-
-        
-
+          <button
+            className={`role-dropdown ${open ? "open" : ""}`}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {role}
+            <ChevronDown size={16} />
+          </button>
         {open && (
           <div className="role-menu">
             {ROLES.map((r) => (
@@ -130,8 +149,7 @@ export default function InviteMembersLayout({ onBack = () => {} }) {
           Cancel
         </button>
 
-        <button className="invite-btn" disabled={!emails.length}>
-          <span className="plus">+</span>
+        <button className="invite-btn" disabled={!emails.length} onClick={handleInvite}>
           Invite
         </button>
       </div>

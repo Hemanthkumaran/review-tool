@@ -1,5 +1,4 @@
 import "./WorkspaceSettings.css";
-import close from "../../assets/icons/close.svg";
 import OutlineInput from "../../../textInputs/OutlineInput";
 import lock from "../../assets/icons/lock.svg";
 import lockgray from "../../assets/icons/lockgray.svg";
@@ -15,7 +14,6 @@ const WorkspaceSettings = () => {
         <div className="text-2xl font-bold pb-4 text-[#ffffff]">
           Workspace settings
         </div>
-        <img width="26px" src={close} alt="" />
       </div>
       <div>Edit your workspace name and customize the tool to your brand.</div>
       <br />
@@ -77,7 +75,7 @@ const WorkspaceSettings = () => {
           />
         </div>
         <br />
-        <div className="relative">
+        <div className="relative mt-2 mb-2">
           <div className="flex absolute bottom-[-24px] right-[0px]">
             <Button
               width="120px"

@@ -37,7 +37,7 @@ export default function AppLoader({
 
   // overlay variant
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* dim / blur background */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 

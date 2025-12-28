@@ -1,24 +1,51 @@
-import StatusPill from '../buttons/StatusPill'
-import VersionPill from './VersionPill'
 import DownloadMenuButton from '../Buttons/DownloadMenuBtn'
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import VersionSwitcher from '../VersionSwitcher';
 import { useState } from 'react';
 import ProjectStatusDropdown from '../ProjectStatus';
-
-const menuItems = [
-  { id: "rename", label: "Rename", icon: "edit" },
-  { id: "share", label: "Share", icon: "share" },
-  { id: "delete", label: "Delete", icon: "trash" },
-];
+import { constants } from '../../helpers/enum';
+import StatusDropdown from '../StatusDropdown';
+import { updateProjectApi } from '../../services/api';
 
 
-function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion }) {
-    const [open, setOpen] = useState(false);
 
-    const handleItemClick = (id) => {
-        setOpen(false);
-    };
+
+function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion, userAccess }) {
+  
+  const [open, setOpen] = useState(false);
+  const [projectStatus, setProjectStatus] = useState(projectDetail.status)
+  console.log(projectStatus, 'ldkjsf');
+  
+  const handleItemClick = (id) => {
+    setOpen(false);
+  };
+
+  function getMenutItems() {
+    const menuItems = [
+      { id: "rename", label: "Rename", icon: "edit" },
+    ];
+
+    if (userAccess == constants.OWNER || userAccess == constants.MEMBER) {
+      menuItems.push({ id: "share", label: "Share", icon: "share" });
+    }
+
+    if (userAccess == constants.OWNER) {
+      menuItems.push({ id: "delete", label: "Delete", icon: "trash" }, { id: "assign", label: "Assign", icon: "share" });
+    }
+
+    return menuItems;
+  }
+
+  const onStatusChange = async (id, payload) => {
+    console.log(id, payload, 'id, payload');
+    setProjectStatus(payload);
+    try {
+      await updateProjectApi(id, {status: payload});
+    } catch (err) {
+      console.error("Update failed", err);
+    }
+  };
+
 
   return (
     <div style={{ marginLeft:40}} className="flex items-center justify-between mb-6">
@@ -34,6 +61,7 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
                 currentVersionId={activeVersionId}
                 onSelectVersion={(v) => onChangeVersion(v)}
                 onAddNewVersion={onAddNewVersion}
+                userAccess={userAccess}
                 onUploadNewVersion={() => {
                 // same upload flow from inside the modal
                 }}
@@ -49,74 +77,76 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
         </div>
         <div className="flex items-center justify-between">
             {/* <StatusPill/> */}
-            <ProjectStatusDropdown
+            {/* <ProjectStatusDropdown
               projectId={projectDetail._id}
               initialStatus={projectDetail.status || "in progress"}
               onChange={(s) => {
                 // optional: update local projectDetail state
                 console.log("Project status updated:", s);
               }}
-            />
-            <div style={{ margin:"0 10px" }}><DownloadMenuButton projectDetail={projectDetail} onAction={() => null} /></div>
+            /> */}
+              <StatusDropdown
+                value={projectStatus}
+                onChange={(status) => onStatusChange?.(projectDetail._id, status)}
+              />
+              {userAccess !== constants.REVIEWER && <div style={{ margin:"0 10px" }}>
+                <DownloadMenuButton projectDetail={projectDetail} onAction={() => null} />
+              </div>}
             <div className="relative">
-  <button
-    onClick={() => setOpen(prev => !prev)}
-    style={{ border: "1px solid #181A1C", borderRadius: 30 }}
-    className="p-3.5 px-5 rounded-full hover:bg-white/5 cursor-pointer"
-  >
-    <svg
-      width="4"
-      height="16"
-      viewBox="0 0 4 16"
-      fill="none"
-    >
-      <circle cx="2" cy="2" r="1.4" fill="#D1D5DB" />
-      <circle cx="2" cy="8" r="1.4" fill="#D1D5DB" />
-      <circle cx="2" cy="14" r="1.4" fill="#D1D5DB" />
-    </svg>
-  </button>
-
-  {open && (
-    <div
-      className="
-        absolute right-0 top-full mt-2
-        w-40
-        rounded-xl
-        bg-[#050505]
-        border border-[#2A2A2A]
-        shadow-[0_12px_30px_rgba(0,0,0,0.6)]
-        overflow-hidden
-        z-50
-      "
-    >
-      <ul className="py-1">
-        {menuItems.map((item, index) => (
-          <li key={item.id}>
-            <button
-              type="button"
-              onClick={() => handleItemClick(item.id)}
-              className={`
-                flex items-center gap-2 w-full
-                px-3 py-2 text-sm
-                text-[#E5E5E5]
-                hover:bg-[#141414]
-                cursor-pointer
-                ${index === menuItems.length - 1 ? "border-t border-[#292929]" : ""}
-              `}
+            {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && <button
+              onClick={() => setOpen(prev => !prev)}
+              style={{ border: "1px solid #181A1C", borderRadius: 30 }}
+              className="p-3.5 px-5 rounded-full hover:bg-white/5 cursor-pointer"
             >
-              {getIcon(item.icon)}
-              <span>{item.label}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )}
-</div>
-
+              <svg
+                width="4"
+                height="16"
+                viewBox="0 0 4 16"
+                fill="none"
+              >
+                <circle cx="2" cy="2" r="1.4" fill="#D1D5DB" />
+                <circle cx="2" cy="8" r="1.4" fill="#D1D5DB" />
+                <circle cx="2" cy="14" r="1.4" fill="#D1D5DB" />
+              </svg>
+            </button>}
+            {open && (
+              <div
+                className="
+                  absolute right-0 top-full mt-2
+                  w-40
+                  rounded-xl
+                  bg-[#050505]
+                  border border-[#2A2A2A]
+                  shadow-[0_12px_30px_rgba(0,0,0,0.6)]
+                  overflow-hidden
+                  z-50
+                "
+              >
+                <ul className="py-1">
+                  {getMenutItems().map((item, index) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleItemClick(item.id)}
+                        className={`
+                          flex items-center gap-2 w-full
+                          px-3 py-2 text-sm
+                          text-[#E5E5E5]
+                          hover:bg-[#141414]
+                          cursor-pointer
+                          ${index === getMenutItems().length - 1 ? "border-t border-[#292929]" : ""}
+                        `}
+                      >
+                        {getIcon(item.icon)}
+                        <span>{item.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
-        {/* Popover menu */}
-      
     </div>
   )
 }

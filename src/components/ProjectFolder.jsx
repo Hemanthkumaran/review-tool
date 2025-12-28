@@ -5,7 +5,13 @@ import StatusDropdown from "./StatusDropdown";
 import ProjectMoreMenu from "./ProjectMoreMenu";
 import { PlusIcon } from "../assets/svgs/SvgComponents";
 import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
-import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
+import { getMuxGif } from "../helpers/muxHelpers";
+import { useWorkspace } from "../context/WorkspaceContext";
+import { constants } from "../helpers/enum";
+import AssignEditorsModal from "./modals/AssignEditorsModal";
+import { addUserToProjectApi } from "../services/api";
+import { showSuccessToast } from "../helpers/showToast";
+import ShareModal from "./modals/ShareModal";
 
 const formatDateTime = (isoString) => {
   if (!isoString) return "-";
@@ -28,12 +34,57 @@ const getTotalComments = (project) => {
   );
 };
 
+function AssignedEditorsRow({
+  permissions = [],
+  onOpenAssign,
+  userAccess
+}) {
+  const visible = permissions.slice(0, 3);
+  const extra = permissions.length - visible.length;
+  
+  return (
+    <div className="flex items-center gap-1">
+      {/* Avatars */}
+      {visible.map((p, idx) => (
+        <div
+          key={p._id}
+          title={p.email}
+          className={`w-8 h-8 rounded-full border-2 border-black bg-[#2A2B2F]
+            overflow-hidden flex items-center justify-center text-xs text-white cursor-pointer
+            ${idx !== 0 ? "-ml-2" : ""}`}
+        >
+          {/* placeholder avatar */}
+          <span className="uppercase">
+            {p.email?.[0] || "?"}
+          </span>
+        </div>
+      ))}
+
+        {userAccess == constants.OWNER && <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenAssign();
+        }}
+          className="-ml-2 w-8 h-8 rounded-full bg-[#D1D5DB]
+            text-black flex items-center justify-center text-sm font-medium cursor-pointer"
+        >
+          { 
+            extra <= 0 ?  
+            <PlusIcon color="#000" /> :
+            <span> + {extra} </span>
+          }
+        </div>}
+    </div>
+  );
+}
+
 export default function ProjectFolder({
   project,
   onClick,
   onRename,
   onDelete,
   onStatusChange,
+  fetchGetAllProjs
 }) {
 
   const createdAtLabel = formatDateTime(project.createdAt);
@@ -41,6 +92,26 @@ export default function ProjectFolder({
   const [isRenaming, setIsRenaming] = useState(false);
   const [name, setName] = useState(project.name);
   const [showDelete, setShowDelete] = useState(false);
+  const [openAssign, setOpenAssign] = useState(false);
+  const [openShare, setOpenShare] = useState(false);
+
+  const { userAccess, workspaceUsers } = useWorkspace();
+  
+const handleAssignEditors = async (editors) => {
+  try {
+    await Promise.all(
+      editors.map((user) =>
+        addUserToProjectApi(project._id, user.email)
+      )
+    );
+
+    showSuccessToast("Editors assigned successfully"); // if you’re using toast
+    setOpenAssign(false);
+  } catch (err) {
+    console.error(err);
+    alert("Failed to assign editors");
+  }
+};
 
 
   return (
@@ -98,25 +169,45 @@ export default function ProjectFolder({
               </div>
             </div>
           </div>
-          <ProjectMoreMenu
-            onRename={() => setIsRenaming(true)}
-            onDelete={() => setShowDelete(true)}
-          />
+          {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && 
+            <ProjectMoreMenu
+              userAccess={userAccess}
+              onRename={() => setIsRenaming(true)}
+              onDelete={() => setShowDelete(true)}
+              onOpenAssign={() => setOpenAssign(true)}
+              openShare={() => setOpenShare(true)}
+            />}
         </div>
         <div className="flex items-center gap-2 mt-3">
         {/* existing avatars here */}
-        <button
-          className="w-8 h-8 rounded-full bg-[#BFBFBF] text-black flex items-center justify-center text-xl hover:opacity-90"
-          title="Add collaborator"
-        >
-          <PlusIcon color="#000000"/>
-        </button>
+        <AssignedEditorsRow
+          permissions={project.permissions}
+          onOpenAssign={() => setOpenAssign(true)}
+          userAccess={userAccess}
+        />
+        <AssignEditorsModal
+          open={openAssign}
+          onClose={() => setOpenAssign(false)}
+          permissions={workspaceUsers?.permissions}
+          projectAccess={project?.permissions}
+          onAssign={handleAssignEditors}
+          projectID={project._id}
+          onRefresh={fetchGetAllProjs}
+        />
       </div>
         <StatusDropdown
           value={project.status}
           onChange={(status) => onStatusChange?.(project._id, status)}
         />
       </div>
+      <ShareModal 
+        onClose={() => setOpenShare(false)} 
+        open={openShare}
+        permissions={workspaceUsers?.permissions}
+        projectAccess={project?.permissions}
+        projectID={project._id}
+        onRefresh={fetchGetAllProjs}
+      />
       <DeleteConfirmModal
         open={showDelete}
         onOpenChange={setShowDelete}

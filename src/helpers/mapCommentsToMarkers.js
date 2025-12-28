@@ -45,6 +45,7 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
       images,
       annotation,
       createdAt: c.createdAt ? new Date(c.createdAt) : null,
+      commentType: c.commentType ?? "everyone",
       user,
       replies,
       isResolved: !!c.isResolved,

@@ -4,7 +4,6 @@ import PublicRoute from "./PublicRoute";
 import { PATHS } from "./paths";
 
 import CreateAccount from "../pages/onboarding";
-const SignIn = () => <div className="p-8">Sign In (placeholder)</div>;
 import Dashboard from "../pages/dashboard";
 import AddProject from "../pages/dashboard/AddProject";
 import VideoReview from "../pages/video-review";
@@ -19,14 +18,6 @@ const router = createBrowserRouter([
     element: (
       <PublicRoute>
         <CreateAccount />
-      </PublicRoute>
-    ),
-  },
-  {
-    path: PATHS.SIGN_IN,
-    element: (
-      <PublicRoute>
-        <SignIn />
       </PublicRoute>
     ),
   },

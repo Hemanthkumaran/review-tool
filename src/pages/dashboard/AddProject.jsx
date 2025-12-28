@@ -13,9 +13,10 @@ import DashboardHeader from '../../components/DashboardHeader';
 import AppLoader from '../../components/common/AppLoader';
 import ShareModal from '../../components/modals/ShareModal';
 import { uploadToMux } from '../../helpers/muxHelpers';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { constants } from '../../helpers/enum';
 
 export default function AddProject({
-  role = "Owner",
   minutesUsed = 89,
   minutesCap = 500,
   onCreateFolder = () => {},
@@ -29,10 +30,13 @@ export default function AddProject({
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
   const location = useLocation();
+  const { activeWorkspace, loading: workspaceLoading, userAccess } = useWorkspace();
   
-  useEffect(() => {
-    getAllProjects();
-  }, []);
+    useEffect(() => {
+    if (activeWorkspace !== null) {
+      getAllProjects();
+    }
+  }, [activeWorkspace]);
 
   const handleUpdateProject = async (id, payload) => {
     try {
@@ -111,7 +115,8 @@ function handleCreate(name, selectedFile) {
     const params = {
       sortField: 'createdAt',
       sortOrder: 'desc',
-      folderID: location.state._id
+      folderID: location.state._id,
+      workspaceID: activeWorkspace._id
     };
 
     allProjectsApi(params)
@@ -131,7 +136,6 @@ function handleCreate(name, selectedFile) {
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
       <DashboardHeader
-        role={role}
         minutesUsed={minutesUsed}
         minutesCap={minutesCap}
         usagePct={usagePct}
@@ -153,12 +157,13 @@ function handleCreate(name, selectedFile) {
             </div>
           </div>
           <div onClick={() => setInviteModal(true)} className="hidden md:flex items-center gap-3">
-            <button
+            {userAccess == constants.OWNER &&<button
               className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
             >
               <InviteIcon className="h-4 w-4" />
               <span>Invite</span>
-            </button>
+            </button>}
+            {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
             <button
                 onClick={(e) => {
                 e.stopPropagation();  
@@ -168,7 +173,7 @@ function handleCreate(name, selectedFile) {
             >
               <PlusThin className="h-4 w-4" />
               <span>Add project</span>
-            </button>
+            </button>}
           </div>
         </div>
 
@@ -196,6 +201,7 @@ function handleCreate(name, selectedFile) {
             <ProjectFolder
               key={item._id}
               project={item}
+              fetchGetAllProjs={getAllProjects}
               onClick={() =>
                 navigate(PATHS.VIDEO_REVIEW, { state: { projectId: item._id } })
               }
@@ -215,7 +221,7 @@ function handleCreate(name, selectedFile) {
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
-      {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null}
+      {/* {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null} */}
       {addProjectOpen && <AddProjectModal
         isOpen={addProjectOpen}
         onClose={() => setAddProjectOpen(false)}

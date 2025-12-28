@@ -6,39 +6,45 @@ import {
 } from "@tanstack/react-table";
 import { X, Clock } from "lucide-react";
 import "./MembersLayout.css";
+import RemoveAccessModal from "../../../modals/RemoveAccessModal";
+import { removeUserFromWorkspace } from "../../../../services/api";
+import AppLoader from "../../../common/AppLoader";
 
-export default function MembersLayout({ onInvite = () => {} }) {
-  const [data, setData] = useState([
-    {
-      id: 1,
-      name: "Vijayaragavan",
-      email: "vijayaragavan@gmail.com",
-      role: "Owner",
-      pending: false,
-    },
-    {
-      id: 2,
-      name: "Mia",
-      email: "mia@gmail.com",
-      role: "Collaborator",
-      pending: false,
-    },
-    {
-      id: 3,
-      name: "Daniel",
-      email: "daniel@gmail.com",
-      role: "Team member",
-      pending: false,
-    },
-    {
-      id: 4,
-      name: "Pending",
-      email: "mitchell@gmail.com",
-      role: "Collaborator",
-      pending: true,
-    },
-  ]);
+export default function MembersLayout({
+  onInvite = () => {},
+  activeWorkspace,
+  fetchWorkspaceUsers,
+  workspaceUsers
+}) {
 
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setIsLoading] = useState(false);
+  
+
+  /* ---------------------------------------
+   * Transform backend data → table data
+   * ------------------------------------- */
+const data = useMemo(() => {
+
+
+  return (workspaceUsers.permissions || []).map((perm) => ({
+    id: perm._id,
+    name: perm.name || null,
+    email: perm.email,
+    role:
+      perm.permissionType === "owner"
+        ? "Owner"
+        : perm.permissionType === "member"
+        ? "Team member"
+        : "Collaborator",
+    pending: !perm.name,
+  }));
+}, [workspaceUsers.permissions]);
+
+
+  /* ---------------------------------------
+   * Columns
+   * ------------------------------------- */
   const columns = useMemo(
     () => [
       {
@@ -61,7 +67,9 @@ export default function MembersLayout({ onInvite = () => {} }) {
       {
         header: "Role",
         accessorKey: "role",
-        cell: ({ getValue }) => <span className="role">{getValue()}</span>,
+        cell: ({ getValue }) => (
+          <span className="role">{getValue()}</span>
+        ),
       },
       {
         header: "Action",
@@ -70,11 +78,7 @@ export default function MembersLayout({ onInvite = () => {} }) {
           row.original.role !== "Owner" && (
             <button
               className="remove-btn"
-              onClick={() =>
-                setData((prev) =>
-                  prev.filter((item) => item.id !== row.original.id)
-                )
-              }
+              onClick={() => setIsOpen(true)}
             >
               Remove
             </button>
@@ -90,13 +94,45 @@ export default function MembersLayout({ onInvite = () => {} }) {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  /* ---------------------------------------
+   * Counts
+   * ------------------------------------- */
+  const teamCount = data.filter(
+    (d) => d.role === "Owner" || d.role === "Team member"
+  ).length;
+
+  const collaboratorCount = data.filter(
+    (d) => d.role === "Collaborator"
+  ).length;
+
+  async function handleRemove(rowItem) {
+    setIsLoading(true);
+    const data = {
+      "email": rowItem.email
+    }
+    try {
+      const res = await removeUserFromWorkspace(activeWorkspace._id, data);
+      console.log(res,'dkdlfnl');
+      
+      fetchWorkspaceUsers();
+      setIsLoading(false);
+    } catch (e) {
+      setIsLoading(false);
+      console.error(e);
+    }
+  }
+
+  if (loading) return <AppLoader visible={loading} message="Loading folders…" />
+
   return (
     <div>
       {/* Header */}
       <div className="page-header">
         <div>
           <h1 className="title">Manage workspace members</h1>
-          <p className="subtitle">Add or remove teammates and collaborators.</p>
+          <p className="subtitle">
+            Add or remove teammates and collaborators.
+          </p>
         </div>
 
         <button className="close-btn">
@@ -109,9 +145,7 @@ export default function MembersLayout({ onInvite = () => {} }) {
         <div>
           <div className="members-count">{data.length} members</div>
           <div className="members-meta">
-            {data.filter((d) => d.role !== "Collaborator").length} team members
-            · {data.filter((d) => d.role === "Collaborator").length}{" "}
-            collaborator
+            {teamCount} team members · {collaboratorCount} collaborator
           </div>
         </div>
 
@@ -141,17 +175,34 @@ export default function MembersLayout({ onInvite = () => {} }) {
 
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
+              <>
+                            <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
                   </td>
                 ))}
               </tr>
+               <RemoveAccessModal
+                    open={isOpen}
+                    onClose={() => setIsOpen(false)}
+                    title="Remove Jane from your workspace?"
+                    description="This user won't be able to view or work in the workspace once removed. You can add them later from Settings → Users."
+                    buttonText="Remove from workspace"
+                    handleRemove={() => handleRemove(row.original)}
+                  />
+
+              </>
+
             ))}
+                 
           </tbody>
         </table>
       </div>
+
     </div>
   );
 }

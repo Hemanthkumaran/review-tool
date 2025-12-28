@@ -8,6 +8,23 @@ import filterIcon from "../../assets/svgs/filter.svg";
 import NotesEditor from "../notes/NotesEditor";
 import { updateNotesApi } from "../../services/api";
 import ToggleButton from "../buttons/ToggleButton";
+import { constants } from "../../helpers/enum";
+import CommentFilterDropdown from "./CommentFilterDropdown";
+
+const COMMENT_FILTER_OPTIONS = [
+  {
+    label: "Team",
+    value: "team only",
+  },
+  {
+    label: "Reviewer",
+    value: "reviewer only",
+  },
+  {
+    label: "Client",
+    value: "everyone",
+  },
+];
 
 
 export default function CommentsColumn({
@@ -18,7 +35,9 @@ export default function CommentsColumn({
   projectId,
   projectDetail,
   onAddReply,
-  activeVersionId
+  activeVersionId,
+  userAccess,
+  setMarkers
 }) {
   const [activeTab, setActiveTab] = useState("comments");
   const NOTES_SECTIONS = [
@@ -35,13 +54,71 @@ export default function CommentsColumn({
   });
   const [notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
   const [savingSectionId, setSavingSectionId] = useState(null);
-  const [checked, setChecked] = useState(false);
   const [showResolved, setShowResolved] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [commentFilters, setCommentFilters] = useState([]);
 
-
-  const filteredComments = markers.filter(c =>
-    showResolved ? c.isResolved : !c.isResolved
+const handleCommentUpdated = (commentId, newText) => {
+  setMarkers((prev) =>
+    prev.map((c) =>
+      c._id === commentId ? { ...c, text: newText } : c
+    )
   );
+};
+
+const handleCommentDeleted = (commentId) => {
+  setMarkers((prev) =>
+    prev.filter((c) => c._id !== commentId)
+  );
+};
+
+const handleReplyUpdated = (commentId, replyId, newText) => {
+  setMarkers((prev) =>
+    prev.map((c) =>
+      c._id === commentId
+        ? {
+            ...c,
+            replies: c.replies.map((r) =>
+              r._id === replyId ? { ...r, text: newText } : r
+            ),
+          }
+        : c
+    )
+  );
+};
+
+const handleReplyDeleted = (commentId, replyId) => {
+  setMarkers((prev) =>
+    prev.map((c) =>
+      c._id === commentId
+        ? {
+            ...c,
+            replies: c.replies.filter((r) => r._id !== replyId),
+          }
+        : c
+    )
+  );
+};
+
+const filteredComments = markers.filter((c) => {
+      // 1️⃣ resolved / unresolved
+      if (showResolved ? !c.isResolved : c.isResolved) {
+        return false;
+      }
+
+      // 2️⃣ no filters selected → show all
+      if (!commentFilters.length) return true;
+
+      // 3️⃣ normalize backend value
+      const commentType = c.commentType ?? "everyone";
+
+      // 4️⃣ match directly against backend values
+      return commentFilters.includes(commentType);
+    });
+
+
+
+
 
   // somewhere near the top of the file
 const SECTION_FIELD_MAP = {
@@ -88,32 +165,6 @@ const handleSaveNotesSection = async (sectionId, html) => {
   }
 };
 
-
-  // const handleSaveNotesSection = async (sectionId, html) => {
-  //   if (!projectId) return;
-
-  //   setSavingSectionId(sectionId);
-  //   try {
-  //     setNotesBySection((prev) => ({
-  //       ...prev,
-  //       [sectionId]: html,
-  //     }));
-  //     console.log(projectId, html);
-      
-  //     // backend: still using same API you had before
-  //     // if you later support per-section, you can add &section=sectionId
-  //     await updateNotesApi(projectId, html);
-
-  //     setNotesUpdatedBySection((prev) => ({
-  //       ...prev,
-  //       [sectionId]: new Date(),
-  //     }));
-  //   } catch (err) {
-  //     console.error("Failed to update notes", err);
-  //   } finally {
-  //     setSavingSectionId(null);
-  //   }
-  // };
 
   return (
     <>
@@ -162,10 +213,11 @@ const handleSaveNotesSection = async (sectionId, html) => {
           {/* tabs */}
           <div className="mt-2">
             <SegmentedTabs
-              options={[
-                { id: "comments", label: "Comments" },
-                { id: "notes", label: "Notes" },
-              ]}
+              options={
+                userAccess !== constants.REVIEWER ?
+                [{ id: "comments", label: "Comments" }, { id: "notes", label: "Notes" }] :
+                [{ id: "comments", label: "Comments" }]
+              }
               value={activeTab}
               onChange={setActiveTab}
             />
@@ -187,7 +239,21 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     checked={showResolved}
                     onChange={setShowResolved}
                   />
-                  <img style={{ marginLeft:10 }} src={filterIcon}/>
+                  <div className="relative">
+                    <img
+                      src={filterIcon}
+                      className="cursor-pointer"
+                      onClick={() => setShowFilter((v) => !v)}
+                    />
+
+                    {showFilter && (
+                      <CommentFilterDropdown
+                        selected={commentFilters}
+                        onChange={setCommentFilters}
+                        onClose={() => setShowFilter(false)}
+                      />
+                    )}
+                  </div>
               </div>
             </div> : null }
             {activeTab === "comments" ? (
@@ -209,6 +275,10 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     onReplySubmit={(text) =>
                       onAddReply ? onAddReply(m.id, text) : null
                     }
+                    onCommentUpdated={handleCommentUpdated}
+                    onCommentDeleted={handleCommentDeleted}
+                    onReplyUpdated={handleReplyUpdated}
+                    onReplyDeleted={handleReplyDeleted}
                   />
                 ))}
               </>

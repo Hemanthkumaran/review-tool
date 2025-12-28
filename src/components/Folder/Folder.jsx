@@ -11,6 +11,8 @@ import DeleteConfirmModal from "../modals/DeleteConfirmationModal";
 
 import "./Folder.css";
 import { PenIcon, TrashIcon } from "../../assets/svgs/SvgComponents";
+import { useWorkspace } from "../../context/WorkspaceContext";
+import { constants } from "../../helpers/enum";
 
 const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
   const [hovered, setHovered] = useState(false);
@@ -19,9 +21,9 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
   const [name, setName] = useState(folder.name);
   const [saving, setSaving] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-
+  const { userAccess } = useWorkspace();
   const inputRef = useRef(null);
-
+  
   useEffect(() => {
     if (isRenaming) {
       inputRef.current?.focus();
@@ -64,6 +66,32 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
     }
   };
 
+  function getActionItemsArray() {
+    const resultArray = [{
+      id: "rename",
+      label: "Rename",
+      icon: <PenIcon color="#fff"/>,
+      onClick: () => {
+        setIsRenaming(true);
+        setMenuOpen(false);
+      },
+    }];
+
+    if (userAccess == constants.OWNER) {
+      resultArray.push({
+        id: "delete",
+        label: "Delete",
+        icon: <TrashIcon color="#fff"/>,
+        onClick: () => {
+          setShowDelete(true);
+          setMenuOpen(false);
+        },
+      })
+    }
+
+    return resultArray;
+  }
+
   return (
     <div
       className="relative"
@@ -73,6 +101,7 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
       }}
     >
       {/* MORE MENU */}
+      {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && 
       <div className="absolute top-[45px] right-[10px] z-10">
         <ActionPopover
           open={menuOpen}
@@ -91,28 +120,9 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
               `}
             />
           }
-          items={[
-            {
-              id: "rename",
-              label: "Rename",
-              icon: <PenIcon color="#fff"/>,
-              onClick: () => {
-                setIsRenaming(true);
-                setMenuOpen(false);
-              },
-            },
-            {
-              id: "delete",
-              label: "Delete",
-              icon: <TrashIcon color="#fff"/>,
-              onClick: () => {
-                setShowDelete(true);
-                setMenuOpen(false); // ✅ CLOSE AFTER CLICK
-              },
-            },
-          ]}
+          items={getActionItemsArray()}
         />
-      </div>
+      </div>}
 
       {/* FOLDER CARD */}
       <div
