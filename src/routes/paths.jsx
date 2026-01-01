@@ -4,5 +4,5 @@ export const PATHS = {
   SIGN_IN: '/signin',
   DASHBOARD: '/dashboard',
   ADD_PROJECT: '/add-project',
-  VIDEO_REVIEW: '/video-review',
+  VIDEO_REVIEW: '/video-review/:projectId',
 };

@@ -203,7 +203,7 @@ function handleCreate(name, selectedFile) {
               project={item}
               fetchGetAllProjs={getAllProjects}
               onClick={() =>
-                navigate(PATHS.VIDEO_REVIEW, { state: { projectId: item._id } })
+                navigate(`/video-review/${item._id}`)
               }
               onRename={(id, name) =>
                 handleUpdateProject(id, { name })

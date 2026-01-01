@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Switch from "react-switch";
 
 import SegmentedTabs from "../SegmentedTabs";
-import CommentCard from "./CommentCard";
+import CommentCard from "./comment/CommentCard";
 import downloadIcon from "../../assets/svgs/download.svg";
 import filterIcon from "../../assets/svgs/filter.svg";
 import NotesEditor from "../notes/NotesEditor";
@@ -37,7 +37,8 @@ export default function CommentsColumn({
   onAddReply,
   activeVersionId,
   userAccess,
-  setMarkers
+  setMarkers,
+  handleSendComment
 }) {
   const [activeTab, setActiveTab] = useState("comments");
   const NOTES_SECTIONS = [
@@ -61,25 +62,26 @@ export default function CommentsColumn({
 const handleCommentUpdated = (commentId, newText) => {
   setMarkers((prev) =>
     prev.map((c) =>
-      c._id === commentId ? { ...c, text: newText } : c
+      c.id === commentId ? { ...c, text: newText } : c
     )
   );
 };
 
 const handleCommentDeleted = (commentId) => {
   setMarkers((prev) =>
-    prev.filter((c) => c._id !== commentId)
+    prev.filter((c) => c.id !== commentId)
   );
 };
+
 
 const handleReplyUpdated = (commentId, replyId, newText) => {
   setMarkers((prev) =>
     prev.map((c) =>
-      c._id === commentId
+      c.id === commentId
         ? {
             ...c,
             replies: c.replies.map((r) =>
-              r._id === replyId ? { ...r, text: newText } : r
+              r.id === replyId ? { ...r, text: newText } : r
             ),
           }
         : c
@@ -90,31 +92,34 @@ const handleReplyUpdated = (commentId, replyId, newText) => {
 const handleReplyDeleted = (commentId, replyId) => {
   setMarkers((prev) =>
     prev.map((c) =>
-      c._id === commentId
+      c.id === commentId
         ? {
             ...c,
-            replies: c.replies.filter((r) => r._id !== replyId),
+            replies: c.replies.filter((r) => r.id !== replyId),
           }
         : c
     )
   );
 };
 
-const filteredComments = markers.filter((c) => {
-      // 1️⃣ resolved / unresolved
-      if (showResolved ? !c.isResolved : c.isResolved) {
-        return false;
-      }
 
-      // 2️⃣ no filters selected → show all
-      if (!commentFilters.length) return true;
+const filteredComments = useMemo(() => {
+  return markers.filter((c) => {
+    // 1️⃣ resolved / unresolved
+    if (showResolved ? !c.isResolved : c.isResolved) {
+      return false;
+    }
 
-      // 3️⃣ normalize backend value
-      const commentType = c.commentType ?? "everyone";
+    // 2️⃣ no filters selected → show all
+    if (!commentFilters.length) return true;
 
-      // 4️⃣ match directly against backend values
-      return commentFilters.includes(commentType);
-    });
+    // 3️⃣ normalize backend value
+    const commentType = c.commentType ?? "everyone";
+
+    // 4️⃣ match directly against backend values
+    return commentFilters.includes(commentType);
+  });
+}, [markers, showResolved, commentFilters]);
 
 
 
@@ -164,6 +169,15 @@ const handleSaveNotesSection = async (sectionId, html) => {
     setSavingSectionId(null);
   }
 };
+
+useEffect(() => {
+  console.log("Markers updated", markers);
+}, [markers]);
+
+useEffect(() => {
+  console.log("Filtered updated", filteredComments);
+}, [filteredComments]);
+
 
 
   return (
@@ -275,6 +289,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     onReplySubmit={(text) =>
                       onAddReply ? onAddReply(m.id, text) : null
                     }
+                    handleSendComment={handleSendComment}
                     onCommentUpdated={handleCommentUpdated}
                     onCommentDeleted={handleCommentDeleted}
                     onReplyUpdated={handleReplyUpdated}

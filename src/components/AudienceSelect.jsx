@@ -33,7 +33,7 @@ export default function AudienceSelect({
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
-  const OPTIONS = userAccess == constants.OWNER ? ownerOptions : userAccess == constants.MEMBER ? teamMemberOptions : collaboratorOptions;
+  const OPTIONS = userAccess == constants.OWNER ? ownerOptions : userAccess == constants.MEMBER ? teamMemberOptions : userAccess == constants.REVIEWER ? reviewerOptions : collaboratorOptions;
       
   const active = OPTIONS.find((o) => o.value == value);
 

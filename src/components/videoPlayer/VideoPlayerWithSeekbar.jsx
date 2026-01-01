@@ -22,7 +22,8 @@ export default function VideoPlayerWithSeekbar({
   activeVersionId,
   onCancelAnnotation,
   onAnnotationDraftChange,
-  markers = [],  
+  markers = [],
+  projectId
 }) {
   const annotationCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -31,7 +32,6 @@ export default function VideoPlayerWithSeekbar({
   const [isMuted, setIsMuted] = useState(false);
   const [projectDetail, setProjectDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-  const location = useLocation();
 const [ready, setReady] = useState(false);
   const [quality, setQuality] = useState("auto"); // "auto" | "480p" | "720p" | "1080p"
   const lastVolumeRef = useRef(1);
@@ -73,7 +73,7 @@ const handleToggleMute = () => {
 
 
   useEffect(() => {
-    getOneProjectApi(location.state.projectId)
+    getOneProjectApi(projectId)
       .then((res) => {
         console.log(res, "ririe");
         setProjectDetail(res.data.project);

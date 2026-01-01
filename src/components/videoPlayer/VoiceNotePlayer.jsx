@@ -3,16 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import pauseIcon from '../../assets/svgs/pause.svg';
 import playIcon from '../../assets/svgs/play.svg';
-
-function formatClockTime(t = 0) {
-  const sec = Math.floor(t % 60)
-    .toString()
-    .padStart(2, "0");
-  const min = Math.floor(t / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${min}:${sec}`;
-}
+import { formatClockTime } from "../../helpers/common";
 
 export default function VoiceNotePlayer({ src }) {
   const audioRef = useRef(null);

@@ -7,16 +7,8 @@ import speakerIcon from "../../assets/svgs/speaker.svg";
 import fullscreenIcon from "../../assets/svgs/fullscreen.svg";
 import { LoopIcon } from "../../assets/svgs/SvgComponents";
 import { MutedOutlined } from "@ant-design/icons";
+import { formatClockTime } from "../../helpers/common";
 
-function formatClockTime(t = 0) {
-  const sec = Math.floor(t % 60)
-    .toString()
-    .padStart(2, "0");
-  const min = Math.floor(t / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${min}:${sec}`;
-}
 
 const IconButton = ({ onClick, title, children, active }) => (
   <button

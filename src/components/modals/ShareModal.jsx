@@ -10,6 +10,7 @@ import RemoveAccessModal from "./RemoveAccessModal";
 import { addUserToProjectApi, removeUserFromProjectApi } from "../../services/api";
 import { constants } from "../../helpers/enum";
 import PublicLinkAccessCard from "../PublicLinkAccessCard";
+import { showSuccessToast } from "../../helpers/showToast";
 
 const ROLE_OPTIONS = [
   { value: "collaborator", label: "Collaborator" },
@@ -228,6 +229,11 @@ export default function ShareModal({ open = false, onClose, permissions, project
   const [selectedPeople, setSelectedPeople] = useState([]);
   const [removeTarget, setRemoveTarget] = useState(null);
   const [selectedEmail, setSelectedEmail] = useState(null);
+    const [passwordRequired, setPasswordRequired] = useState(false);
+
+  const handleTogglePassword = () => {
+    setPasswordRequired((prev) => !prev);
+  };
   
   const emailOptions = permissions?.map((p) => ({
     value: p.email,
@@ -257,6 +263,10 @@ export default function ShareModal({ open = false, onClose, permissions, project
     onRefresh?.();
   };
 
+  function handleCopy() {
+    showSuccessToast("Link copied!")
+    navigator.clipboard.writeText(`${window.location.origin}/video-review/${projectID}`)
+  }
 
   const handleRemove = async (email) => {
     await removeUserFromProjectApi(projectID, email);
@@ -372,10 +382,10 @@ export default function ShareModal({ open = false, onClose, permissions, project
             </button>
           </div> :
           <PublicLinkAccessCard
-            link="www.cutjamm.com/suhail/xyz project"
-            passwordRequired={false}
-            onTogglePassword={() => {}}
-            onCopy={() => navigator.clipboard.writeText("www.cutjamm.com/suhail/xyz project")}
+            link={`${window.location.origin}/video-review/${projectID.slice(0, 1)}…`}
+            passwordRequired={passwordRequired}
+            onTogglePassword={handleTogglePassword}
+            onCopy={handleCopy}
           />
         }
         {/* suggestions dropdown card */}

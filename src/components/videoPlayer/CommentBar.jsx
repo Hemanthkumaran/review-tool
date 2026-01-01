@@ -12,16 +12,9 @@ import sendIcon from "../../assets/svgs/send.svg";
 import AudienceSelect from "../AudienceSelect";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
+import { formatClockTime } from "../../helpers/common";
 
-function formatClockTime(t = 0) {
-  const sec = Math.floor(t % 60)
-    .toString()
-    .padStart(2, "0");
-  const min = Math.floor(t / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${min}:${sec}`;
-}
+
 
 /**
  * Props:
@@ -58,6 +51,7 @@ export default function CommentBar({
   const fileInputRef = useRef(null);
   const [audience, setAudience] = useState("everyone");
   
+console.log(userAccess, 'reviewer');
 
 
   useEffect(() => {

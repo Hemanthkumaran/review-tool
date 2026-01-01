@@ -54,8 +54,8 @@ export const allProjectsApi = (params) => {
   return axiosClient.get('/project/getAllProjects', { params });
 };
 
-export const getOneProjectApi = (projId) => {
-  return axiosClient.get(`/project/getOneProject?projectID=${projId}`);
+export const getOneProjectApi = (projId, params) => {
+  return axiosClient.get(`/project/getOneProject?projectID=${projId}`, { params });
 };
 
 export const getVideoUploadUrl = (projId) => {

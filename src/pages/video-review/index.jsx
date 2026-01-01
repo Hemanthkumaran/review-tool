@@ -1,22 +1,21 @@
-// VideoReview.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import VideoPlayerWithSeekbar from "../../components/videoPlayer/VideoPlayerWithSeekbar";
 import CommentBar from "../../components/videoPlayer/CommentBar";
 import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
-import ShareModal from "../../components/modals/ShareModal";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
-import { useLocation, useNavigate } from "react-router-dom";
-import { addCommentApi, addReplyApi, getOneProjectApi, getVideoUploadUrl } from "../../services/api";
+import { useNavigate, useParams } from "react-router-dom";
+import { addCommentApi, addReplyApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 import { uploadToMux } from "../../helpers/muxHelpers";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
+import { getAuthToken, getGuestIdentity, setGuestIdentity } from "../../helpers/storage.js";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
-  const location = useLocation();
   const navigate = useNavigate();
 
   const [currentTime, setCurrentTime] = useState(0);
@@ -41,6 +40,11 @@ export default function VideoReview() {
   const voiceStartTimeRef = useRef(0);
   const cancelledRef = useRef(false);
   const { userAccess } = useWorkspace();
+  const { projectId } = useParams();
+  const [error, setError] = useState("");
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [guest, setGuest] = useState(null);
+  
 
   // annotation draft (from canvas)
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
@@ -65,14 +69,47 @@ const muxStatus = activeRawVersion?.muxStatus;
     avatarUrl: "https://i.pravatar.cc/40?u=john",
   };
 
+  
+
   useEffect(() => {
-    fetchProject();
+    if (!getAuthToken()) {
+      const storedGuest = getGuestIdentity();
+      if (storedGuest) {
+        console.log(storedGuest, 'storedGuest');
+        fetchProject(storedGuest);
+      } else {
+        setLoading(false);
+        setShowGuestModal(true);
+      }
+    } else {
+      fetchProject(null);
+    }
+
     return () => {
       if (videoSrc && videoSrc.startsWith("blob:")) {
         URL.revokeObjectURL(videoSrc);
       }
     };
   }, [videoSrc]);
+
+  // useEffect(() => {
+  //   fetchProject();
+  //   return () => {
+  //     if (videoSrc && videoSrc.startsWith("blob:")) {
+  //       URL.revokeObjectURL(videoSrc);
+  //     }
+  //   };
+  // }, [videoSrc]);
+
+    const handleGuestSubmit = async ({ name, email }) => {
+      const guestData = { reviewerName: name, reviewerEmail: email };
+
+      setGuestIdentity(guestData);
+      setGuest(guestData);
+      setLoading(true);
+      setShowGuestModal(false);
+      fetchProject(guestData);
+    };
 
   useEffect(() => {
   if (!rawVersions?.length) return;
@@ -104,13 +141,20 @@ useEffect(() => {
   setMarkers(mapped);
 }, [projectDetail]);
 
-function fetchProject() {
-  getOneProjectApi(location.state.projectId).then((res) => {
+
+function fetchProject(storedGuest = null) {
+  const params = storedGuest
+    ? {
+        reviewerName: storedGuest.name,
+        reviewerEmail: storedGuest.email,
+      }
+    : {};
+
+  getOneProjectApi(projectId, params).then((res) => {
     const project = res.data.project;
 
     setProjectDetail(project);
 
-    // default → latest version (NOT first)
     const latest = project.versions?.[project.versions.length - 1];
     if (latest) {
       setActiveVersionId(latest._id);
@@ -325,8 +369,7 @@ function fetchProject() {
   };
 
   // assuming you already have these from earlier work:
-    const projectId = projectDetail?._id;
-      const activeVersion = projectDetail?.versions?.find(
+  const activeVersion = projectDetail?.versions?.find(
     (v) => v._id === activeVersionId
   );
 
@@ -350,27 +393,28 @@ function fetchProject() {
     };
 
 
-  const handleSendComment = async ({ text, images, commentType }) => {
-  pauseVideo();
+  const handleSendComment = async ({ text, images, commentType, isEdit = false, commentId = null, existingMarker = null }) => {
+    pauseVideo();
 
-  const trimmed = (text || "")?.trim();
-  const imageUrls = images || [];
+    const trimmed = (text || "")?.trim();
+    const imageUrls = images || [];
 
-  const hasAnnotation =
-    !!pendingAnnotation &&
-    !!pendingAnnotation.annotation &&
-    pendingAnnotation.annotation.strokes?.length > 0;
+    const hasAnnotation =
+      !!pendingAnnotation &&
+      !!pendingAnnotation.annotation &&
+      pendingAnnotation.annotation.strokes?.length > 0;
 
-  const hasVoice = !!pendingVoice && !!pendingVoice.url;
-  const hasTextOrImages = !!trimmed || imageUrls.length > 0;
+    const hasVoice = !!pendingVoice && !!pendingVoice.url;
+    const hasTextOrImages = !!trimmed || imageUrls.length > 0;
 
-  // nothing to send
-  if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
-    return;
-  }
+    // nothing to send
+    if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
+      return;
+    }
 
-  const baseTime =
-    (hasAnnotation && pendingAnnotation.time) ||
+const baseTime = isEdit
+  ? existingMarker.time           // 👈 reuse original timeline
+  : (hasAnnotation && pendingAnnotation.time) ||
     (hasVoice && pendingVoice.startTime) ||
     currentTime ||
     0;
@@ -397,8 +441,10 @@ function fetchProject() {
     localMarkerPayload.audioUrl = pendingVoice.url;
   }
 
-  // this is your existing helper that updates state
-  addMarker(localMarkerPayload);
+  if (!isEdit) {
+    addMarker(localMarkerPayload);
+  }
+
 
   /* ---------- 2) Build FormData for backend ---------- */
 
@@ -465,23 +511,36 @@ function fetchProject() {
     }
   }
 
-  /* ---------- 3) Send to backend ---------- */
+  
 
   try {
-    const projectID = projectDetail._id
-    // pick versionID from location or projectDetail – adjust as needed
-    const versionID = projectDetail.versions[0]._id
+  const projectID = projectDetail._id;
+  const versionID = projectDetail.versions[0]._id;
 
-    if (!projectID || !versionID) {
-      console.warn("Missing projectID or versionID for addComment");
-    } else {
-      await addCommentApi(projectID, versionID, formData);
-    }
+  if (!projectID || !versionID) {
+    console.warn("Missing projectID or versionID");
+    return;
+  }
+
+  if (isEdit) {
+    await updateCommentApi(
+      projectID,
+      versionID,
+      commentId,
+      formData
+    );
+  } else {
+    await addCommentApi(
+      projectID,
+      versionID,
+      formData
+    );
+  }
   } catch (err) {
     console.error("addComment API failed", err?.response?.data || err);
     // TODO: optionally show a toast or mark the local marker as "failed"
   } finally {
-    /* ---------- 4) Clear pending states ---------- */
+  if (!isEdit) {
     if (hasAnnotation) {
       setPendingAnnotation(null);
       setAnnotationMode(false);
@@ -490,6 +549,7 @@ function fetchProject() {
       setPendingVoice(null);
     }
   }
+}
 };
 
 
@@ -550,7 +610,12 @@ const handleNewVersionFile = async (e) => {
 
   if (loading) return <AppLoader visible={loading} message="Loading folders…" />
 
-
+  if (showGuestModal) return <GuestIdentityModal
+      open={showGuestModal}
+      error={error}
+      onClose={() => setShowGuestModal(false)}
+      onContinue={handleGuestSubmit}
+    />
 
 
   return (
@@ -594,6 +659,7 @@ const handleNewVersionFile = async (e) => {
            <div className="relative w-full h-full overflow-hidden rounded-3xl">
           <VideoPlayerWithSeekbar
             activeVersionId={activeVersionId}
+            projectId={projectId}
             src={playbackId}
             playerRef={playerRef}
             currentTime={currentTime}
@@ -613,14 +679,13 @@ const handleNewVersionFile = async (e) => {
           </div>
         ) : (
           <VideoUploadPlaceholder
-            projectId={location.state.projectId}
+            projectId={projectId}
             onVideoUploaded={handleVideoUploaded}
             muxStatus={activeVersion?.muxStatus}
             userAccess={userAccess}
           />
         )}
       </div>
-
       {/* Comment input bar */}
       <CommentBar
         currentTime={currentTime}
@@ -648,9 +713,10 @@ const handleNewVersionFile = async (e) => {
         currentTime={currentTime}
         onSeek={handleSeek}
         pauseVideo={pauseVideo}
-        projectId={location.state.projectId}
+        projectId={projectId}
         projectDetail={projectDetail}
         onAddReply={handleAddReply}
+        handleSendComment={handleSendComment}
         activeVersionId={activeVersionId}
         userAccess={userAccess}
       />

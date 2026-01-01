@@ -1,17 +1,7 @@
 // src/components/videoPlayer/CustomSeekBar.jsx
 import React, { useCallback, useState } from "react";
+import { formatClockTime } from "../../helpers/common";
 
-/* ---------- helpers ---------- */
-
-function formatClockTime(t = 0) {
-  const sec = Math.floor(t % 60)
-    .toString()
-    .padStart(2, "0");
-  const min = Math.floor(t / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${min}:${sec}`;
-}
 
 function getMuxThumbnail(playbackId, time) {
   return `https://image.mux.com/${playbackId}/thumbnail.jpg?time=${Math.floor(

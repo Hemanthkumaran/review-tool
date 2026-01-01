@@ -41,9 +41,7 @@ const router = createBrowserRouter([
   {
     path: PATHS.VIDEO_REVIEW,
     element: (
-      <ProtectedRoute>
         <VideoReview />
-      </ProtectedRoute>
     ),
   },
   { path: "*", element: <NotFound /> },

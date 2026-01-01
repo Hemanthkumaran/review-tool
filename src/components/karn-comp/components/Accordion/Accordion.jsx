@@ -54,9 +54,7 @@ export default function ProjectAccordion({ folder, getAllFolders }) {
           key={item._id}
           project={item}
           onClick={() =>
-            navigate(PATHS.VIDEO_REVIEW, {
-              state: { projectId: item._id },
-            })
+            navigate(`/video-review/${item._id}`)
           }
           onRename={(id, name) =>
             handleUpdateProject(id, { name })

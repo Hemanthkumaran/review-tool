@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getAllUserWorkspace, getWorkspaceUsers } from "../services/api";
 import { useAuth } from "./AuthContext";
+import { constants } from "../helpers/enum";
 
 const WorkspaceContext = createContext(null);
 
@@ -12,7 +13,7 @@ export const WorkspaceProvider = ({ children }) => {
   const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [workspaceUsers, setWorkspaceUsers] = useState(null);
   const [loading, setLoading] = useState(false);
-  const userAccess = activeWorkspace?.permissionType;
+  const userAccess = activeWorkspace?.permissionType == undefined ? constants.REVIEWER : activeWorkspace?.permissionType;
   
   const fetchWorkspaces = async () => {
     try {
