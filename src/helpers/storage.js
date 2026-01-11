@@ -19,3 +19,16 @@ export function getGuestIdentity() {
 export function setGuestIdentity(data) {
   localStorage.setItem(constants.GUEST_KEY, JSON.stringify(data));
 }
+
+export function clearAuth() {
+  try {
+    localStorage.removeItem(constants.AUTH_TOKEN);
+    localStorage.removeItem(constants.GUEST_KEY);
+
+    // optional: clear other session scoped values
+    localStorage.removeItem("lastProjectId");
+    localStorage.removeItem("activeVersionId");
+  } catch (e) {
+    console.error("Failed to clear auth", e);
+  }
+}

@@ -73,10 +73,8 @@ export default function CommentCard({
   };
 
   const handleSubmitReply = async () => {
-    console.log('ckck');
     
     const trimmed = replyText.trim();
-    console.log(trimmed, 'trimmed');
     
     if (!trimmed || !onReplySubmit || sending) return;
 

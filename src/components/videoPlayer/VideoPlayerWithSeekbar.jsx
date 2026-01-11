@@ -32,7 +32,7 @@ export default function VideoPlayerWithSeekbar({
   const [isMuted, setIsMuted] = useState(false);
   const [projectDetail, setProjectDetail] = useState(null);
   const [loading, setLoading] = useState(true);
-const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(false);
   const [quality, setQuality] = useState("auto"); // "auto" | "480p" | "720p" | "1080p"
   const lastVolumeRef = useRef(1);
 
@@ -85,24 +85,39 @@ const handleToggleMute = () => {
   }, []);
 
   // notify parent when there is / isn't a drawing draft
+  // useEffect(() => {
+  //   if (!annotationMode) {
+  //     onAnnotationDraftChange?.(null);
+  //     return;
+  //   }
+
+  //   const hasStrokes =
+  //     drawingAnnotation && drawingAnnotation.strokes?.length > 0;
+
+  //   if (hasStrokes) {
+  //     onAnnotationDraftChange?.({
+  //       time: currentTime,
+  //       annotation: drawingAnnotation,
+  //     });
+  //   } else {
+  //     onAnnotationDraftChange?.(null);
+  //   }
+  // }, [drawingAnnotation, annotationMode, currentTime, onAnnotationDraftChange]);
+
   useEffect(() => {
-    if (!annotationMode) {
-      onAnnotationDraftChange?.(null);
-      return;
-    }
+  if (!annotationMode) return;
 
-    const hasStrokes =
-      drawingAnnotation && drawingAnnotation.strokes?.length > 0;
+  const hasStrokes =
+    drawingAnnotation && drawingAnnotation.strokes?.length > 0;
 
-    if (hasStrokes) {
-      onAnnotationDraftChange?.({
-        time: currentTime,
-        annotation: drawingAnnotation,
-      });
-    } else {
-      onAnnotationDraftChange?.(null);
-    }
-  }, [drawingAnnotation, annotationMode, currentTime, onAnnotationDraftChange]);
+  if (hasStrokes) {
+    onAnnotationDraftChange?.({
+      time: currentTime,
+      annotation: drawingAnnotation,
+    });
+  }
+}, [drawingAnnotation, annotationMode, currentTime]);
+
 
   const addPointToStroke = (xPct, yPct) => {
     setDrawingAnnotation((prev) => {

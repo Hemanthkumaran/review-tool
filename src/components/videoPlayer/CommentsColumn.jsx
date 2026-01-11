@@ -170,15 +170,6 @@ const handleSaveNotesSection = async (sectionId, html) => {
   }
 };
 
-useEffect(() => {
-  console.log("Markers updated", markers);
-}, [markers]);
-
-useEffect(() => {
-  console.log("Filtered updated", filteredComments);
-}, [filteredComments]);
-
-
 
   return (
     <>

@@ -32,7 +32,7 @@ function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
     setActiveWorkspace,
     loading,
   } = useWorkspace();
-
+  
   return (
     <header className="flex items-center justify-between px-2 md:px-2">
       {/* LEFT: WORKSPACE */}

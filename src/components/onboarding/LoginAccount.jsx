@@ -6,10 +6,12 @@ import PrimaryButton from '../buttons/PrimaryButton';
 import { useNavigate } from 'react-router-dom';
 import { PATHS } from '../../routes/paths';
 import { signinApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 function LoginAccount({ setCurrentScreen }) {
 
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({
     "email": "",
     "password": ""
@@ -24,31 +26,36 @@ function LoginAccount({ setCurrentScreen }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-        const res = await signinApi(form);
-        console.log(res, 'res');
-        
-        const { token, user } = res.data || res;
-        if (token) {
-            localStorage.setItem("authToken", token);
-        }
-        if (user) {
-            localStorage.setItem("user", JSON.stringify(user));
-        }
-        navigate(PATHS.DASHBOARD);
-    } catch (err) {
-          const backendMsg =
-          err?.response?.data?.message || "Invalid email or password";
+  try {
+    const res = await signinApi(form);
+    const { token, user } = res.data || res;
 
-        setErrorMsg(backendMsg);
-      console.log("Signup error:", err);
-    } finally {
-      setLoading(false);
+    if (!token) {
+      throw new Error("No token received");
     }
-  };
+
+    login(token);                     // 🔑 THIS updates React auth state
+
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    // ❌ DO NOT navigate here
+    // PublicRoute will redirect automatically
+
+  } catch (err) {
+    const backendMsg =
+      err?.response?.data?.message || "Invalid email or password";
+
+    setErrorMsg(backendMsg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 
   return (

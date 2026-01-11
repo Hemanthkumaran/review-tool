@@ -5,10 +5,11 @@ import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { signupApi } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 function CreateAccount({ setCurrentScreen }) {
     
-  const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -28,21 +29,32 @@ function CreateAccount({ setCurrentScreen }) {
     setLoading(true);
 
     try {
-        const res = await signupApi(form);
-        const { token, user } = res.data || res;
-        if (token) {
-            localStorage.setItem("authToken", token);
-        }
-        if (user) {
-            localStorage.setItem("user", JSON.stringify(user));
-        }
-        setCurrentScreen("verifyAccount");
+      const res = await signupApi(form);
+      const { token, user } = res.data || res;
+
+      if (!token) {
+        throw new Error("No token returned from signup");
+      }
+
+      login(token); // 🔑 update React auth state
+
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
+      // You can keep this if your UX needs verification UI
+      setCurrentScreen("verifyAccount");
+
+      // DO NOT navigate manually
+      // PublicRoute will redirect when auth becomes true
+
     } catch (err) {
       console.log("Signup error:", err);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="w-full max-w-sm">

@@ -5,6 +5,7 @@ import logoutIcon from '../assets/svgs/logout.svg';
 import requestIcon from '../assets/svgs/request.svg';
 import settingsIcon from '../assets/svgs/settings.svg';
 import ticketIcon from '../assets/svgs/ticket.svg';
+import { logout } from "../helpers/common";
 
 export default function ProfileMenu({ onClose, onOpenSettings }) {
   const menuRef = useRef(null);
@@ -58,7 +59,7 @@ export default function ProfileMenu({ onClose, onOpenSettings }) {
         <Item label="Submit feature request" icon={<img src={requestIcon}/>} />
         <Item label="Talk to founders" icon={<img src={headsetIcon}/>} />
         <div style={{ background:"#2B2B2B", height:1 }} />
-        <Item label="Log out" icon={<img src={logoutIcon}/>} />
+        <Item onClick={logout} label="Log out" icon={<img src={logoutIcon}/>} />
       </div>
     </div>
   );

@@ -20,8 +20,6 @@ export default function CommentFilterDropdown({
   }, [onClose]);
 
   const toggle = (value) => {
-    console.log(value, 'id');
-    console.log(selected, 'selected');
     
     if (selected.includes(value)) {
       onChange(selected.filter((x) => x !== value));

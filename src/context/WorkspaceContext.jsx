@@ -24,10 +24,12 @@ export const WorkspaceProvider = ({ children }) => {
 
       setWorkspaces(list);
 
+      setActiveWorkspace(prev => prev || list[0] || null);
+
       // Set default workspace once
-      if (list.length && !activeWorkspace) {
-        setActiveWorkspace(list[0]);
-      }
+      // if (list.length && !activeWorkspace) {
+      //   setActiveWorkspace(list[0]);
+      // }
     } catch (e) {
       console.error("Failed to fetch workspaces", e);
     } finally {
@@ -58,10 +60,9 @@ export const WorkspaceProvider = ({ children }) => {
    * Fetch workspaces after auth
    * ---------------------------- */
   useEffect(() => {
-    if (!isAuthenticated) return;
-
     fetchWorkspaces();
-  }, [isAuthenticated]);
+  }, []);
+
 
   /* -----------------------------
    * Fetch members when workspace changes

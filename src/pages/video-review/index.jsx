@@ -119,13 +119,6 @@ const muxStatus = activeRawVersion?.muxStatus;
   setActiveVersionId(latest._id);
 }, [rawVersions]);
 
-useEffect(() => {
-  console.log("Active version ID:", activeVersionId);
-  console.log("Active raw version:", activeRawVersion);
-  console.log("Playback ID:", playbackId);
-}, [activeVersionId, activeRawVersion]);
-console.log(projectDetail, 'projectDetail');
-
   
 useEffect(() => {
   if (!projectDetail) {
@@ -136,7 +129,6 @@ useEffect(() => {
   
   const backendComments = version?.comments || [];
   const mapped = mapCommentsToMarkers(backendComments);
-  console.log(mapped, 'mapped');
   
   setMarkers(mapped);
 }, [projectDetail]);
@@ -551,6 +543,12 @@ const baseTime = isEdit
   }
 }
 };
+console.log("SENDING", {
+  pendingVoice,
+  pendingAnnotation,
+  hasVoice: !!pendingVoice?.url,
+  hasAnnotation: !!pendingAnnotation?.annotation?.strokes?.length
+});
 
 
 const handleNewVersionFile = async (e) => {

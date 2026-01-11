@@ -1,3 +1,5 @@
+import { clearAuth } from "./storage";
+
 export function formatClockTime(t = 0) {
   const sec = Math.floor(t % 60)
     .toString()
@@ -17,4 +19,15 @@ export function formatRelative(date) {
   if (mins < 60) return `${mins} mins ago`;
   const hours = Math.floor(mins / 60);
   return `${hours}h ago`;
+}
+
+
+export function logout() {
+  clearAuth();
+
+  // Clear in-memory state (important for React apps)
+  window.__APP_AUTH__ = null;
+
+  // Hard reload so React state, SWR cache, etc are wiped
+  window.location.replace("/"); 
 }

@@ -150,7 +150,16 @@ const handleAssignEditors = async (editors) => {
                     setIsRenaming(false);
                   }
                 }}
-                className="bg-transparent outline-none text-[18px] font-[Gilroy-SemiBold]"
+                className="
+                  w-full
+                  bg-[#0F1012]
+                  border border-[#2A2B2F]
+                  rounded-lg
+                  px-2 py-1
+                  text-white
+                  outline-none
+                  mb-3
+                "
               />
             ) : (
               <div

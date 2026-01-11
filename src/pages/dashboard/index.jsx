@@ -14,6 +14,8 @@ import ShareModal from '../../components/modals/ShareModal';
 import ProjectAccordion from '../../components/karn-comp/components/Accordion/Accordion';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
+import filterIcon from "../../assets/svgs/filter.svg";
+import ProjectFilter from '../../components/ProjectFilter';
 
 export default function DashboardPage({
   minutesUsed = 89,
@@ -28,16 +30,23 @@ export default function DashboardPage({
   const [activeTab, setActiveTab] = useState("allFolders");
   const { activeWorkspace, loading: workspaceLoading, userAccess } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
-
+  const [showFilter, setShowFilter] = useState(false);
+  const [filters, setFilters] = useState({
+    assignment: null,   // "assigned" | "unassigned" | null
+    status: []          // ["yet_to_start", "in_progress", ...]
+  });
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
-  
-useEffect(() => {
-  if (workspaceLoading) return;
-  if (!activeWorkspace?._id) return;
+  useEffect(() => {
+  console.log("filters changed", filters);
+}, [filters]);
 
-  getAllFolders();
-}, [workspaceLoading, activeWorkspace?._id]);
+  useEffect(() => {
+    if (workspaceLoading) return;
+    if (!activeWorkspace?._id) return;
+
+    getAllFolders();
+  }, [workspaceLoading, activeWorkspace?._id]);
 
 
   function handleCreate() {
@@ -129,25 +138,41 @@ useEffect(() => {
             Welcome to {activeWorkspace?.name}'s workspace
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            {userAccess == constants.OWNER && <button
-              onClick={() => setInviteModal(true)}
-              className="inline-flex items-center cursor-pointer gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
-            >
-              <InviteIcon className="h-4 w-4" />
-              <span>Invite</span>
-            </button>}
-            {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
-             <button
-              onClick={handleCreate}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
-            >
-              <PlusThin className="h-4 w-4" />
-              <span>Create folder</span>
-            </button>}
-          </div>
-        </div>
+          {activeTab == "allFolders" ? 
+            <div className="hidden md:flex items-center gap-3">
+              {userAccess == constants.OWNER && <button
+                onClick={() => setInviteModal(true)}
+                className="inline-flex items-center cursor-pointer gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
+              >
+                <InviteIcon className="h-4 w-4" />
+                <span>Invite</span>
+              </button>}
+              {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
+                <button
+                onClick={handleCreate}
+                className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
+              >
+                <PlusThin className="h-4 w-4" />
+                <span>Create folder</span>
+              </button>}
+            </div> :
+            <div className="relative">
+              <img
+                src={filterIcon}
+                className="cursor-pointer"
+                onClick={() => setShowFilter((v) => !v)}
+              />
 
+              {showFilter && (
+                <ProjectFilter
+                  filters={filters}
+                  onChange={setFilters}
+                  onClose={() => setShowFilter(false)}
+                />
+              )}
+            </div>
+          }
+        </div>
         {/* Tabs & mobile actions */}
         <div className="mt-6 flex items-center justify-between">
           {/* Segmented tabs */}

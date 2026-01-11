@@ -9,6 +9,7 @@ import AddProject from "../pages/dashboard/AddProject";
 import VideoReview from "../pages/video-review";
 import ChoosePlan from "../pages/chooseplan";
 import FreeTrialModal from "../components/modals/FreetrialModal";
+import ReviewerRoute from "./ReviewerRoute";
 
 const NotFound = () => <div className="p-8">404 - Not Found</div>;
 
@@ -41,7 +42,9 @@ const router = createBrowserRouter([
   {
     path: PATHS.VIDEO_REVIEW,
     element: (
+      <ReviewerRoute>
         <VideoReview />
+        </ReviewerRoute>
     ),
   },
   { path: "*", element: <NotFound /> },
