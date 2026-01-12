@@ -9,6 +9,7 @@ import { updateNotesApi } from "../../services/api";
 import ToggleButton from "../buttons/ToggleButton";
 import { constants } from "../../helpers/enum";
 import CommentFilterDropdown from "./CommentFilterDropdown";
+import { useEffect } from "react";
 
 export default function CommentsColumn({
   isOpen,
@@ -21,7 +22,10 @@ export default function CommentsColumn({
   activeVersionId,
   userAccess,
   setMarkers,
-  handleSendComment
+  handleSendComment,
+  updateCommentResolvedLocal,
+  updateCommentLocal,
+  deleteCommentLocal
 }) {
   const [activeTab, setActiveTab] = useState("comments");
   const NOTES_SECTIONS = [
@@ -38,9 +42,10 @@ export default function CommentsColumn({
   });
   const [notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
   const [savingSectionId, setSavingSectionId] = useState(null);
-  const [showResolved, setShowResolved] = useState(false);
+  const [showResolved, setShowResolved] = useState(true);
   const [showFilter, setShowFilter] = useState(false);
   const [commentFilters, setCommentFilters] = useState([]);
+
 
 const handleCommentUpdated = (commentId, newText) => {
   setMarkers((prev) =>
@@ -84,29 +89,21 @@ const handleReplyDeleted = (commentId, replyId) => {
     )
   );
 };
-console.log(activeVersionId, 'activeVersionIdactiveVersionIdactiveVersionId');
 
 
 const filteredComments = useMemo(() => {
-  console.log(markers, 'markers');
-  
   return markers.filter((c) => {
-    // 1️⃣ resolved / unresolved
-    if (showResolved ? !c.isResolved : c.isResolved) {
-      return false;
-    }
+    // If unresolvedOnly is ON → hide resolved
+    if (showResolved && c.isResolved) return false;
 
-    // 2️⃣ no filters selected → show all
+    // No filters → show all
     if (!commentFilters.length) return true;
 
-    // 3️⃣ normalize backend value
     const commentType = c.commentType ?? "everyone";
-
-
-    // 4️⃣ match directly against backend values
     return commentFilters.includes(commentType);
   });
 }, [markers, showResolved, commentFilters, activeVersionId]);
+
 
 
 
@@ -226,10 +223,11 @@ const handleSaveNotesSection = async (sectionId, html) => {
                   <img style={{ marginLeft:10 }} src={downloadIcon}/>
               </div>
               <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span>Unresolved</span>
+                  <span>Unresolved only</span>
                   <ToggleButton
                     checked={showResolved}
                     onChange={setShowResolved}
+                    size="sm"
                   />
                   <div className="relative">
                     <img
@@ -269,9 +267,12 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     }
                     handleSendComment={handleSendComment}
                     onCommentUpdated={handleCommentUpdated}
+                    updateCommentLocal={updateCommentLocal}
+                    deleteCommentLocal={deleteCommentLocal}
                     onCommentDeleted={handleCommentDeleted}
                     onReplyUpdated={handleReplyUpdated}
                     onReplyDeleted={handleReplyDeleted}
+                    updateCommentResolvedLocal={updateCommentResolvedLocal}
                   />
                 ))}
               </>

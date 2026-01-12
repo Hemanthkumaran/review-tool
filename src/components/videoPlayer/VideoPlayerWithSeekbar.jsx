@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import PlayerControlsBar from "./PlayerControllerBar";
 import MuxUploader from "./MuxUploader";
-import { useLocation } from "react-router-dom";
 import { getOneProjectApi } from "../../services/api";
 
 
@@ -39,38 +38,77 @@ export default function VideoPlayerWithSeekbar({
   const [volume, setVolume] = useState(1);
 
     useEffect(() => {
-    if (!playerRef.current) return;
-    playerRef.current.volume = volume;
-    playerRef.current.muted = isMuted;
-  }, [volume, isMuted]);
+      if (!playerRef.current) return;
+      playerRef.current.volume = volume;
+      playerRef.current.muted = isMuted;
+    }, [volume, isMuted]);
+
+    useEffect(() => {
+      const el = playerRef.current;
+      if (!el) return;
+
+      const handlePlay = () => onTogglePlay?.(true);
+      const handlePause = () => onTogglePlay?.(false);
+
+      el.addEventListener("play", handlePlay);
+      el.addEventListener("pause", handlePause);
+
+      return () => {
+        el.removeEventListener("play", handlePlay);
+        el.removeEventListener("pause", handlePause);
+      };
+    }, []);
+
+useEffect(() => {
+  const onKey = (e) => {
+    if (e.repeat) return; // avoid stuck key
+    if (e.key !== " ") return; // use key, not code
+
+    const el = e.target;
+    const isTyping =
+      el.tagName === "INPUT" ||
+      el.tagName === "TEXTAREA" ||
+      el.isContentEditable;
+
+    if (isTyping) return; // never interfere with inputs
+
+    e.preventDefault();
+    handleTogglePlay();
+  };
+
+  window.addEventListener("keydown", onKey, { passive: false });
+  return () => window.removeEventListener("keydown", onKey);
+}, []);
+
+
+
 
   const handleVolumeChange = (v) => {
-  setVolume(v);
+    setVolume(v);
 
-  if (v === 0) {
-    setIsMuted(true);
-  } else {
-    lastVolumeRef.current = v;
-    setIsMuted(false);
-  }
-};
-
-const handleToggleMute = () => {
-  setIsMuted((prev) => {
-    if (prev) {
-      // unmute → restore volume
-      const restore = lastVolumeRef.current || 0.5;
-      setVolume(restore);
-      return false;
+    if (v === 0) {
+      setIsMuted(true);
     } else {
-      // mute → remember volume
-      lastVolumeRef.current = volume;
-      setVolume(0);
-      return true;
+      lastVolumeRef.current = v;
+      setIsMuted(false);
     }
-  });
-};
+  };
 
+  const handleToggleMute = () => {
+    setIsMuted((prev) => {
+      if (prev) {
+        // unmute → restore volume
+        const restore = lastVolumeRef.current || 0.5;
+        setVolume(restore);
+        return false;
+      } else {
+        // mute → remember volume
+        lastVolumeRef.current = volume;
+        setVolume(0);
+        return true;
+      }
+    });
+  };
 
   useEffect(() => {
     getOneProjectApi(projectId)
@@ -84,38 +122,19 @@ const handleToggleMute = () => {
       });
   }, []);
 
-  // notify parent when there is / isn't a drawing draft
-  // useEffect(() => {
-  //   if (!annotationMode) {
-  //     onAnnotationDraftChange?.(null);
-  //     return;
-  //   }
-
-  //   const hasStrokes =
-  //     drawingAnnotation && drawingAnnotation.strokes?.length > 0;
-
-  //   if (hasStrokes) {
-  //     onAnnotationDraftChange?.({
-  //       time: currentTime,
-  //       annotation: drawingAnnotation,
-  //     });
-  //   } else {
-  //     onAnnotationDraftChange?.(null);
-  //   }
-  // }, [drawingAnnotation, annotationMode, currentTime, onAnnotationDraftChange]);
 
   useEffect(() => {
-  if (!annotationMode) return;
+    if (!annotationMode) return;
 
-  const hasStrokes =
-    drawingAnnotation && drawingAnnotation.strokes?.length > 0;
+    const hasStrokes =
+      drawingAnnotation && drawingAnnotation.strokes?.length > 0;
 
-  if (hasStrokes) {
-    onAnnotationDraftChange?.({
-      time: currentTime,
-      annotation: drawingAnnotation,
-    });
-  }
+    if (hasStrokes) {
+      onAnnotationDraftChange?.({
+        time: currentTime,
+        annotation: drawingAnnotation,
+      });
+    }
 }, [drawingAnnotation, annotationMode, currentTime]);
 
 
@@ -318,7 +337,7 @@ const muxPlayerStyle = {
                 alt=""
               />
             )}
-            <div className="w-full h-full flex items-center justify-center bg-black">
+            <div onClick={() => handleTogglePlay()} className="w-full h-full flex items-center justify-center bg-black">
             <MuxPlayer
               key={activeVersionId}
               ref={playerRef}

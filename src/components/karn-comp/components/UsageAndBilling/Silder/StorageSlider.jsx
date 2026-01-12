@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Range } from "react-range";
 import "./StorageSlider.css";
+import { useRazorpay } from "../../../../../hooks/useRazorpay";
 
 const STEP = 10;
 const MIN = 500;
@@ -8,7 +9,35 @@ const MAX = 2000;
 
 export default function StorageSlider() {
   const [values, setValues] = useState([900]); // Default mid-range
+  const { openCheckout } = useRazorpay();
+  const [loading, setLoading] = useState(false);
 
+
+  const handleUpgrade = async () => {
+    setLoading(true);
+
+    try {
+      // const order = await createUpgradeOrder(plan);
+
+      openCheckout({
+        // orderId: order.orderId,
+        // amount: order.amount,
+        // currency: order.currency,
+        // name: user.name,
+        // email: user.email,
+        // onSuccess: () => {
+        //   alert("Payment successful");
+        //   window.location.reload();
+        // }
+      });
+    } catch (e) {
+      alert(e, "Payment failed");
+    }
+
+    setLoading(false);
+  };
+
+  
   return (
     <div className="slider-card">
       <p className="slider-title">
@@ -71,7 +100,7 @@ export default function StorageSlider() {
 
         {/* Action */}
         <div className="plan-action">
-          <button className="change-btn">Change plan</button>
+          <button onClick={handleUpgrade} className="change-btn">Change plan</button>
         </div>
       </div>
     </div>

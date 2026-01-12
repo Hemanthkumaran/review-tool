@@ -57,57 +57,83 @@ export default function AddProject({
   };
 
 
-function handleCreate(name, selectedFile) {
+// function handleCreate(name, selectedFile) {
+//   setCreateLoading(true);
+
+//   const data = {
+//     folderID: location.state._id,
+//     name,
+//   };
+
+//   if (selectedFile) {
+//     data.hasFile = true;
+//   }
+
+//   createProjectApi(data)
+//     .then(async (res) => {
+//       console.log(res, "res");
+
+//       const { muxUploadURL } = res.data || {};
+
+//       if (muxUploadURL && selectedFile) {
+//         try {
+//           await uploadToMux(muxUploadURL, selectedFile, (pct) => {
+//             console.log("Mux upload progress:", pct);
+//           });
+
+//           await getAllProjects();
+//         } catch (err) {
+//           console.error("Mux upload error", err);
+//           // show toast / message if you have one
+//         } finally {
+//           setCreateLoading(false);
+//           setAddProjectOpen(false);
+//         }
+//       } else {
+//         await getAllProjects();
+//         setCreateLoading(false);
+//         setAddProjectOpen(false);
+//       }
+//     })
+//     .catch((err) => {
+//       console.log(err?.response?.data || err);
+//       setCreateLoading(false);
+//     });
+// }
+
+async function handleCreate(name, selectedFile) {
   setCreateLoading(true);
 
   const data = {
     folderID: location.state._id,
     name,
+    hasFile: !!selectedFile
   };
 
-  if (selectedFile) {
-    data.hasFile = true; // tells backend to create Mux direct upload
+  try {
+    // 1) Create project immediately
+    const res = await createProjectApi(data);
+    const { muxUploadURL } = res.data || {};
+
+    // 2) Immediately close modal and refresh grid
+    setAddProjectOpen(false);
+    setCreateLoading(false);
+    await getAllProjects();
+
+    // 3) If there is a file → upload in background
+    if (muxUploadURL && selectedFile) {
+      uploadToMux(muxUploadURL, selectedFile, (pct) => {
+        console.log("Uploading in background:", pct);
+      }).catch(err => {
+        console.error("Mux upload failed", err);
+      });
+    }
+
+  } catch (err) {
+    console.error(err?.response?.data || err);
+    setCreateLoading(false);
   }
-
-  createProjectApi(data)
-    .then(async (res) => {
-      console.log(res, "res");
-
-      const { muxUploadURL } = res.data || {};
-
-      // if backend created a mux direct upload AND we actually have a file
-      if (muxUploadURL && selectedFile) {
-        try {
-          // 1) upload video file from browser directly to Mux
-          await uploadToMux(muxUploadURL, selectedFile, (pct) => {
-            // optional: setUploadProgress(pct);
-            console.log("Mux upload progress:", pct);
-          });
-
-          // 2) after upload, you might want to inform backend or just refetch
-          //    (usually backend listens to Mux webhooks and attaches playbackId
-          //     to this project, so just re-fetch projects)
-          await getAllProjects();
-        } catch (err) {
-          console.error("Mux upload error", err);
-          // show toast / message if you have one
-        } finally {
-          setCreateLoading(false);
-          setAddProjectOpen(false);
-        }
-      } else {
-        // no file OR backend chose not to create mux upload
-        await getAllProjects();
-        setCreateLoading(false);
-        setAddProjectOpen(false);
-      }
-    })
-    .catch((err) => {
-      console.log(err?.response?.data || err);
-      setCreateLoading(false);
-    });
 }
-
 
 
   function getAllProjects() {

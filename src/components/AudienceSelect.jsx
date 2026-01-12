@@ -54,7 +54,7 @@ export default function AudienceSelect({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 px-4 py-[6px] rounded-full bg-[#111111] text-[11px] text-gray-200"
+        className="flex items-center gap-2 px-4 py-[6px] rounded-full bg-[#282A2B] text-[11px] text-gray-200"
       >
         {active?.label}
         <img src={arrowDown} className="w-3 h-3 opacity-80" />

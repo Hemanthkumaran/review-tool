@@ -14,7 +14,7 @@ import { PenIcon, TrashIcon } from "../../assets/svgs/SvgComponents";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
 
-const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
+const Folder = ({ folder, onClick, onDeleted, onRenamed, noOfProjects }) => {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // ✅ NEW
   const [isRenaming, setIsRenaming] = useState(false);
@@ -164,7 +164,7 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed }) => {
           <div className="text-box-content mt-[-10px]">
             <div className="flex items-center mr-1">
               <img src={videoIcon} width={16} height={16} className="mr-1" />
-              <span className="text-[#999]">6 Projects</span>
+              <span className="text-[#999]">{noOfProjects} Projects</span>
             </div>
 
             <img src={dot} className="mx-2" />

@@ -207,3 +207,9 @@ export const removeUserFromProjectApi = (projectID, email) => {
     { email }
   );
 };
+
+export const deleteProjectVersionApi = (projectID, versionID) => {
+  return axiosClient.delete(
+   `/project/deleteVersion?projectID=${projectID}&versionID=${versionID}`
+  );
+};

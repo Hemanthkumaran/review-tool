@@ -6,7 +6,7 @@ import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
 import { useNavigate, useParams } from "react-router-dom";
-import { addCommentApi, addReplyApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi, updateProjectApi } from "../../services/api";
+import { addCommentApi, addReplyApi, deleteProjectVersionApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi, updateProjectApi } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 import { uploadToMux } from "../../helpers/muxHelpers";
@@ -194,13 +194,10 @@ function fetchProject(storedGuest = null) {
 
 
   // called AFTER upload finishes in VideoUploadPlaceholder
-  const handleVideoUploaded = () => {
-    // playbackUrl – e.g. https://stream.mux.com/<playbackId>.m3u8
-    // playbackId   – in case you need to store/use it elsewhere
-    fetchProject()
-    // setVideoSrc(playbackUrl);
-    // setIsPlaying(false);
-    // setCurrentTime(0);
+  const handleVideoUploaded = (projectData) => {
+    console.log(projectData, 'proo');
+    
+    setProjectDetail(projectData);
   };
 
 
@@ -240,7 +237,6 @@ function fetchProject(storedGuest = null) {
     setActiveVersionId(ver._id);
   };
 
-
   const pauseVideo = () => {
     if (playerRef.current) {
       playerRef.current.pause?.();
@@ -249,10 +245,10 @@ function fetchProject(storedGuest = null) {
   };
 
   const addMarker = (partial) => {
+    const tempId = "tmp_" + Date.now();
     pauseVideo();
     const marker = {
-      id:
-        Date.now().toString(36) + Math.random().toString(36).slice(2),
+      id: tempId,
       time: partial.time ?? currentTime,
       type: "text",
       text: "",
@@ -345,6 +341,7 @@ function fetchProject(storedGuest = null) {
     if (mediaRecorderRef.current.state === "inactive") return;
     mediaRecorderRef.current.stop();
   };
+  
 
   const handleStartAnnotation = () => {
     pauseVideo();
@@ -551,18 +548,48 @@ const baseTime = isEdit
   }
 
   if (isEdit) {
-    await updateCommentApi(
+    const res = await updateCommentApi(
       projectID,
       versionID,
       commentId,
       formData
     );
+    const backendComment = res.data.comment;
+    setProjectDetail(prev => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        versions: prev.versions.map(v => {
+          if (v._id !== versionID) return v;
+          return {
+            ...v,
+            comments: [...v.comments, backendComment]
+          };
+        })
+      };
+    });
   } else {
-    await addCommentApi(
+    const res = await addCommentApi(
       projectID,
       versionID,
       formData
     );
+    const backendComment = res.data.comment;
+    setProjectDetail(prev => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        versions: prev.versions.map(v => {
+          if (v._id !== versionID) return v;
+          return {
+            ...v,
+            comments: [...v.comments, backendComment]
+          };
+        })
+      };
+    });
   }
   } catch (err) {
     console.error("addComment API failed", err?.response?.data || err);
@@ -580,6 +607,66 @@ const baseTime = isEdit
 }
 };
 
+  const deleteCommentLocal = (commentId, versionId) => {
+    setProjectDetail(prev => ({
+      ...prev,
+      versions: prev.versions.map(v => {
+        if (v._id !== versionId) return v;
+        return {
+          ...v,
+          comments: v.comments.filter(c => c._id !== commentId)
+        };
+      })
+    }));
+  };
+
+
+  const updateCommentLocal = (commentId, versionId, newText) => {
+    setProjectDetail(prev => ({
+      ...prev,
+      versions: prev.versions.map(v => {
+        if (v._id !== versionId) return v;
+        return {
+          ...v,
+          comments: v.comments.map(c =>
+            c._id === commentId ? { ...c, text: newText } : c
+          )
+        };
+      })
+    }));
+  };
+
+
+  const updateCommentResolvedLocal = (commentId, versionId, isResolved) => {
+    setProjectDetail(prev => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        versions: prev.versions.map(v => {
+          if (v._id !== versionId) return v;
+
+          return {
+            ...v,
+            comments: v.comments.map(c =>
+              c._id === commentId ? { ...c, isResolved } : c
+            )
+          };
+        })
+      };
+    });
+  };
+
+
+const handleDeleteVersion = async (version) => {
+  try {
+    await deleteProjectVersionApi(projectDetail._id, version._id);
+    fetchProject();
+  } catch (err) {
+    console.error("Delete version failed", err);
+    alert("Failed to delete version");
+  }
+};
 
 const handleNewVersionFile = async (e) => {
   const file = e.target.files?.[0];
@@ -636,7 +723,7 @@ const handleNewVersionFile = async (e) => {
   !!activeVersion?.muxPlaybackID;
 
 
-  if (loading) return <AppLoader visible={loading} message="Loading project.." />
+  if (loading) return <AppLoader visible={loading} message="Loading project..." />
 
   if (showGuestModal) return <GuestIdentityModal
       open={showGuestModal}
@@ -670,6 +757,7 @@ const handleNewVersionFile = async (e) => {
     onAddNewVersion={() => {
       fileInputRef.current?.click();
     }}
+    onDeleteVersion={handleDeleteVersion}
     userAccess={userAccess}
   />
 
@@ -750,6 +838,9 @@ const handleNewVersionFile = async (e) => {
         handleSendComment={handleSendComment}
         activeVersionId={activeVersionId}
         userAccess={userAccess}
+        updateCommentResolvedLocal={updateCommentResolvedLocal}
+        updateCommentLocal={updateCommentLocal}
+        deleteCommentLocal={deleteCommentLocal}
       />
     </div>
   </div>

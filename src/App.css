@@ -97,6 +97,11 @@
   }
 }
 
+video, mux-player {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .animate-fade-in {
   animation: fade-in 180ms ease-out;
 }

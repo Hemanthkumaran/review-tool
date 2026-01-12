@@ -37,9 +37,6 @@ export default function DashboardPage({
   });
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
-  useEffect(() => {
-  console.log("filters changed", filters);
-}, [filters]);
 
   useEffect(() => {
     if (workspaceLoading) return;
@@ -99,6 +96,7 @@ export default function DashboardPage({
           <Folder
             key={item._id}
             folder={item}
+            noOfProjects={item.projects.length}
             onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })}
             onRenamed={handleFolderUpdated}
             onDeleted={handleFolderDeleted}

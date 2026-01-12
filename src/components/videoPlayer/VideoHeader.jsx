@@ -15,7 +15,7 @@ import { AssignIcon, PenIcon, ShareIcon, TrashIcon } from '../../assets/svgs/Svg
 
 
 
-function VideoHeader({ fetchProject, handleUpdateProject, projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion, userAccess }) {
+function VideoHeader({ fetchProject, onDeleteVersion, handleUpdateProject, projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion, userAccess }) {
   
   const [open, setOpen] = useState(false);
   const [projectStatus, setProjectStatus] = useState(projectDetail.status)
@@ -141,9 +141,7 @@ const closeMoreMenu = () => setOpen(false);
                 onDownloadVersion={(v) => {
                 // call download API
                 }}
-                onDeleteVersion={(v) => {
-                // call delete API
-                }}
+                onDeleteVersion={onDeleteVersion}
             />
             {/* <div style={{ marginLeft:10 }}><VersionPill onClick={() => console.log("version pill clicked")} /></div> */}
             </div>

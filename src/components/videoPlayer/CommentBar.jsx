@@ -74,6 +74,8 @@ export default function CommentBar({
   }, [isRecording]);
 
   const handleSend = () => {
+    if (isRecording) return;
+    
     const trimmed = text.trim();
     const images = attachments.map((a) => a.url);
 
@@ -112,11 +114,14 @@ export default function CommentBar({
     });
   };
 
-  const disabledSend =
+const disabledSend =
+  isRecording || (
     !text.trim() &&
     !hasPendingVoice &&
     attachments.length === 0 &&
-    !hasPendingAnnotation;
+    !hasPendingAnnotation
+  );
+
 
   return (
     <div style={{ width: "60%", margin: "0 auto" }}>

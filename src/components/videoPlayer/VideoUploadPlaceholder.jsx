@@ -1,6 +1,6 @@
 // src/components/videoPlayer/VideoUploadPlaceholder.jsx
-import React, { useRef, useState } from "react";
-import { getVideoUploadUrl } from "../../services/api";
+import React, { useEffect, useRef, useState } from "react";
+import { getOneProjectApi, getVideoUploadUrl } from "../../services/api";
 import uploadIcon from '../../assets/svgs/upload.svg';
 import { constants } from "../../helpers/enum";
 
@@ -62,20 +62,41 @@ function uploadToMux(muxUploadURL, file, onProgress) {
   });
 }
 
-/**
- * Props:
- *  - projectId       (string)
- *  - onVideoUploaded (func)  – called after successful upload so parent can refetch project
- */
 export default function VideoUploadPlaceholder({ projectId, onVideoUploaded, muxStatus, userAccess }) {
   const inputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-
+  
   const [error, setError] = useState("");
 const showProcessing =
   !isUploading && muxStatus === "waiting";
+
+useEffect(() => {
+  if (isUploading) return;
+
+  const interval = setInterval(async () => {
+    try {
+      const res = await getOneProjectApi(projectId);
+      const project = res.data.project;
+
+      const latest = project?.versions?.[project.versions.length - 1];
+      
+      if (latest?.muxStatus === "ready") {
+        onVideoUploaded?.(project);
+        clearInterval(interval);
+      }
+    } catch (e) {
+      console.warn("Mux polling failed", e);
+    }
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [isUploading, projectId]);
+
+
+
+
 
   const openFilePicker = () => {
     if (isUploading) return;
@@ -108,7 +129,7 @@ const showProcessing =
 
       await uploadToMux(muxUploadURL, file, (pct) => setProgress(pct));
 
-      await onVideoUploaded?.();
+      // await onVideoUploaded?.();
     } catch (err) {
       console.error("Video upload failed", err);
       setError(err?.message || "Failed to upload video.");

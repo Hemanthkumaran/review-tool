@@ -14,7 +14,15 @@ function safeParseAnnotation(raw) {
  */
 export function mapCommentsToMarkers(comments = [], userLookup = {}) {
   return (comments || []).map((c) => {
-    const user = userLookup?.[c.userID] || null;
+        const user = c.userData
+      ? {
+          id: c.userData._id,
+          name: `${c.userData.firstName || ""} ${c.userData.lastName || ""}`.trim(),
+          email: c.userData.email,
+          role: "Owner", // backend can send later
+          avatarUrl: "https://i.pravatar.cc/40?u=" + c.userData._id, // dummy for now
+        }
+      : null;
 
     // images already come as signed URLs from backend.
     const images = (c.images || []).map((img) => img.url || img.signedUrl || "");

@@ -18,10 +18,13 @@ export default function CommentCard({
   projectId,
   activeVersionId,
   onCommentUpdated,
+  updateCommentLocal,
   onCommentDeleted,
   onReplyUpdated,
   onReplyDeleted,
-  handleSendComment
+  handleSendComment,
+  updateCommentResolvedLocal,
+  deleteCommentLocal
 }) {
   const {
     time,
@@ -49,11 +52,13 @@ export default function CommentCard({
   const [isHovered, setIsHovered] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  console.log(marker, 'comment');
   
   const handleToggleResolved = async () => {
     if (resolving) return;
 
     const next = !isResolved;
+    updateCommentResolvedLocal(marker.id, activeVersionId, next);
     setIsResolved(next); // optimistic
     setResolving(true);
 
@@ -185,7 +190,8 @@ export default function CommentCard({
                   <button
                     className="px-5 py-2 rounded-full bg-[#F9EF38] text-black cursor-pointer"
                     onClick={() => {
-                      onCommentUpdated(marker.id, draftText);
+                      // onCommentUpdated(marker.id, draftText);
+                      updateCommentLocal(marker.id, activeVersionId, draftText);
                       setIsEditingComment(false);
                       handleSendComment({
                         text: draftText,
@@ -276,6 +282,7 @@ export default function CommentCard({
         onConfirm={async () => {
           try {
             setDeleting(true);
+            deleteCommentLocal(marker.id, activeVersionId);
             await deleteCommentApi(projectId, activeVersionId, marker.id);
             onCommentDeleted(marker.id); // optimistic remove
             setShowDeleteModal(false);
