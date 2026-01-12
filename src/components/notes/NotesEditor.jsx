@@ -5,6 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
+import FinalLinkPopover from "../DownloadLinkPopover";
 
 /**
  * Props:
@@ -29,6 +30,10 @@ export default function NotesEditor({
 }) {
   const defaultSectionId = sections[0]?.id;
   const [activeSection, setActiveSection] = useState(defaultSectionId);
+  const [showLinkPopover, setShowLinkPopover] = useState(false);
+const [linkInitialValue, setLinkInitialValue] = useState("");
+const linkButtonRef = useRef(null);
+
   const isSwitchingRef = useRef(false);
       const {
         userAccess
@@ -171,12 +176,32 @@ export default function NotesEditor({
     editor.chain().focus().toggleBulletList().run();
   };
 
-  const addLink = () => {
-    const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("Enter link URL", previousUrl || "https://");
+  // const addLink = () => {
+  //   const previousUrl = editor.getAttributes("link").href;
+  //   const url = window.prompt("Enter link URL", previousUrl || "https://");
 
-    if (url === null) return;
-    if (url === "") {
+  //   if (url === null) return;
+  //   if (url === "") {
+  //     editor.chain().focus().extendMarkRange("link").unsetLink().run();
+  //     return;
+  //   }
+
+  //   editor
+  //     .chain()
+  //     .focus()
+  //     .extendMarkRange("link")
+  //     .setLink({ href: url })
+  //     .run();
+  // };
+
+  const openLinkPopover = () => {
+    const previousUrl = editor.getAttributes("link").href || "";
+    setLinkInitialValue(previousUrl);
+    setShowLinkPopover(true);
+  };
+
+  const handleSaveLink = async (url) => {
+    if (!url) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
@@ -187,7 +212,9 @@ export default function NotesEditor({
       .extendMarkRange("link")
       .setLink({ href: url })
       .run();
-  };
+    };
+
+
 
   const handleSave = async () => {
     if (!onSave) return;
@@ -251,7 +278,13 @@ export default function NotesEditor({
       >
         <EditorContent editor={editor} />
       </div>
-
+      <FinalLinkPopover
+        open={showLinkPopover}
+        initialValue={linkInitialValue}
+        onClose={() => setShowLinkPopover(false)}
+        onSave={handleSaveLink}
+        title="Enter link url"
+      />
       {/* toolbar footer */}
       {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
         <div className="mt-auto px-4 py-2 border-top border-white/5 flex items-center justify-between text-[11px]">
@@ -291,8 +324,9 @@ export default function NotesEditor({
             ✓
           </button>
           <button
+            ref={linkButtonRef}
             type="button"
-            onClick={addLink}
+            onClick={openLinkPopover}
             className="px-2 py-1 rounded-full hover:bg-white/5"
           >
             🔗
@@ -319,6 +353,7 @@ export default function NotesEditor({
           </div>
         )}
       </div>}
+
     </div>
   );
 }

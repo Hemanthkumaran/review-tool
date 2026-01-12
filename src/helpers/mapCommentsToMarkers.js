@@ -23,11 +23,15 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
     const audioUrl = c.voiceNote?.url || null;
 
     const annotation = safeParseAnnotation(c.annotation);
-    const baseType = annotation
-      ? "annotation"
-      : audioUrl
-      ? "voice"
-      : "text";
+const baseType =
+  annotation && audioUrl
+    ? "mixed"
+    : annotation
+    ? "annotation"
+    : audioUrl
+    ? "voice"
+    : "text";
+
 
     const replies = (c.replies || []).map((r) => ({
       id: r._id,

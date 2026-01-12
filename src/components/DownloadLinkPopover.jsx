@@ -5,6 +5,7 @@ export default function FinalLinkPopover({
   onClose,
   onSave, // async (link) => Promise
   initialValue = "",
+  title = "Add your final video link here"
 }) {
   const ref = useRef(null);
   const [link, setLink] = useState(initialValue);
@@ -40,7 +41,7 @@ export default function FinalLinkPopover({
     <div
       ref={ref}
       className="
-        absolute right-0 top-12 z-50 w-[420px]
+        absolute right-0 top-12 z-50 w-[350px]
         rounded-3xl
         bg-[#0B0B0C]
         border border-[#1F2023]
@@ -50,13 +51,13 @@ export default function FinalLinkPopover({
     >
       {/* Title */}
       <div className="text-[16px] text-gray-200 mb-4">
-        Lorem ipsum dolor sit amet
+        {title}
       </div>
 
       {/* Input */}
       <input
         type="text"
-        placeholder="paste your final video link"
+        placeholder="paste link here"
         value={link}
         onChange={(e) => setLink(e.target.value)}
         className="
@@ -79,12 +80,12 @@ export default function FinalLinkPopover({
           type="button"
           onClick={() => setLink("")}
           className="
-            px-6 py-2.5
-            rounded-full
+            px-6 py-1.5
+            rounded-full w-full
             border border-[#2A2B2E]
             bg-[#111216]
             text-gray-300
-            hover:bg-[#18191d]
+            hover:bg-[#18191d] mr-2
           "
         >
           Clear
@@ -95,7 +96,7 @@ export default function FinalLinkPopover({
           onClick={handleSave}
           disabled={!link.trim() || saving}
           className="
-            px-10 py-2.5
+            px-10 py-1.5 w-full
             rounded-full
             bg-[#FDF45C]
             text-black

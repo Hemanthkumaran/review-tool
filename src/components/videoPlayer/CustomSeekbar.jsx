@@ -116,7 +116,7 @@ export default function CustomSeekBar({
 
         {/* THUMB */}
         <div
-          className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow"
+          className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow z-[100]"
           style={{
             left: `${pct * 100}%`,
             transform: "translate(-50%, -50%)",
@@ -136,17 +136,17 @@ export default function CustomSeekBar({
             <button
               key={m.id}
               type="button"
-              className="pointer-events-auto absolute -translate-x-1/2"
+              className="pointer-events-auto absolute"
               style={{ left: `${leftPct}%` }}
               onClick={() => onSeek?.(m.time)}
             >
-              <div className="w-4 h-4 rounded-full border border-[#FEEA3B] overflow-hidden bg-black mb-[3px]">
+              <div className="w-4 h-4 rounded-full border border-[#FEEA3B] overflow-hidden bg-black mb-[6px]">
                 <img
                   src={
                     m.user?.avatarUrl ||
                     "https://i.pravatar.cc/40?u=default-marker"
                   }
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover cursor-pointer"
                 />
               </div>
               <div className="w-[2px] h-2 bg-[#27C46A]" />

@@ -116,14 +116,24 @@ const handleAssignEditors = async (editors) => {
 
   return (
     <div
-      className="relative rounded-[20px] p-2 border-1 border-[#F9EF38] bg-black cursor-pointer"
+        className="
+        relative rounded-[20px] p-2 bg-black cursor-pointer
+        border border-transparent
+        hover:border-[#F9EF38]
+        group
+        transition
+      "
       onClick={onClick}
     >
       {/* Thumbnail */}
-      <div className="rounded-2xl overflow-hidden border border-[#2A2A2A]">
-        <img loading="lazy" src={getMuxGif(project?.versions[0]?.muxPlaybackID)} alt={project.name} className="w-full" />
+      <div className="rounded-2xl overflow-hidden border border-[#2A2A2A] bg-black aspect-[16/9]">
+        <img
+          loading="lazy"
+          src={getMuxGif(project?.versions[0]?.muxPlaybackID)}
+          alt={project.name}
+          className="w-full h-full object-cover"
+        />
       </div>
-
       {/* Content */}
       <div className="px-2 pt-3">
         <div className="flex items-start justify-between">
@@ -163,7 +173,7 @@ const handleAssignEditors = async (editors) => {
               />
             ) : (
               <div
-                className="text-[18px] font-[Gilroy-SemiBold]"
+                className="text-[18px] font-[Gilroy-SemiBold] truncate max-w-[180px]"
               >
                 {project.name}
               </div>
@@ -178,6 +188,13 @@ const handleAssignEditors = async (editors) => {
               </div>
             </div>
           </div>
+          <div
+            className="
+              opacity-0
+              group-hover:opacity-100
+              transition
+            "
+          >
           {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && 
             <ProjectMoreMenu
               userAccess={userAccess}
@@ -186,8 +203,9 @@ const handleAssignEditors = async (editors) => {
               onOpenAssign={() => setOpenAssign(true)}
               openShare={() => setOpenShare(true)}
             />}
+            </div>
         </div>
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center gap-2 mt-3 mb-1">
         {/* existing avatars here */}
         <AssignedEditorsRow
           permissions={project.permissions}
@@ -207,6 +225,8 @@ const handleAssignEditors = async (editors) => {
         <StatusDropdown
           value={project.status}
           onChange={(status) => onStatusChange?.(project._id, status)}
+          py={1}
+          bgColor="#000000"
         />
       </div>
       <ShareModal 

@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
-import Switch from "react-switch";
+import { useMemo, useState } from "react";
 
 import SegmentedTabs from "../SegmentedTabs";
 import CommentCard from "./comment/CommentCard";
@@ -10,22 +9,6 @@ import { updateNotesApi } from "../../services/api";
 import ToggleButton from "../buttons/ToggleButton";
 import { constants } from "../../helpers/enum";
 import CommentFilterDropdown from "./CommentFilterDropdown";
-
-const COMMENT_FILTER_OPTIONS = [
-  {
-    label: "Team",
-    value: "team only",
-  },
-  {
-    label: "Reviewer",
-    value: "reviewer only",
-  },
-  {
-    label: "Client",
-    value: "everyone",
-  },
-];
-
 
 export default function CommentsColumn({
   isOpen,
@@ -101,9 +84,12 @@ const handleReplyDeleted = (commentId, replyId) => {
     )
   );
 };
+console.log(activeVersionId, 'activeVersionIdactiveVersionIdactiveVersionId');
 
 
 const filteredComments = useMemo(() => {
+  console.log(markers, 'markers');
+  
   return markers.filter((c) => {
     // 1️⃣ resolved / unresolved
     if (showResolved ? !c.isResolved : c.isResolved) {
@@ -116,10 +102,11 @@ const filteredComments = useMemo(() => {
     // 3️⃣ normalize backend value
     const commentType = c.commentType ?? "everyone";
 
+
     // 4️⃣ match directly against backend values
     return commentFilters.includes(commentType);
   });
-}, [markers, showResolved, commentFilters]);
+}, [markers, showResolved, commentFilters, activeVersionId]);
 
 
 

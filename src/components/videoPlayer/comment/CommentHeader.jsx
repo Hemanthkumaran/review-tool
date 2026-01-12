@@ -6,7 +6,7 @@ export default function CommentHeader({
   createdAt,
   isResolved,
   resolving,
-  onGo,
+  // onGo,
   onToggleResolved,
 }) {
   return (
@@ -14,7 +14,7 @@ export default function CommentHeader({
       {/* Left */}
       <div className="flex items-center gap-2 text-[14px]">
         <span
-          onClick={onGo}
+          // onClick={onGo}
           className="text-[#F9F046] cursor-pointer"
         >
           {formatClockTime(time)}

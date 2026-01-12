@@ -92,7 +92,7 @@ export default function AssignEditorsModal({
         {/* Header */}
         <div className="px-7 pt-6 pb-3">
           <h2 className="text-[18px] font-medium">
-            Assign editors
+            Assign member
           </h2>
           <p className="text-[13px] text-[#A1A1A1] mt-1">
             Select one or more editors who should work on this
@@ -185,7 +185,7 @@ export default function AssignEditorsModal({
         {/* People with access */}
         <div className="px-7 mt-4">
           <h4 className="text-sm mb-3 text-white/80">
-            People with access
+            People assigned to this project
           </h4>
           <div className="space-y-3">
             {projectAccess.map((p) => {

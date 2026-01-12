@@ -6,6 +6,7 @@ import manageVersion from '../assets/svgs/manage-version.svg';
 import downloadIcon from '../assets/svgs/download-icon.svg';
 import trashIcon from '../assets/svgs/trash-icon.svg';
 import { constants } from "../helpers/enum";
+import { getMuxGif } from "../helpers/muxHelpers";
 
 // Small helpers --------------------------------------------------
 
@@ -32,24 +33,12 @@ function formatDuration(sec) {
   return `${m}:${s} min`;
 }
 
-// Types expected for each version:
-// {
-//   _id: string
-//   name?: string          // filename / label
-//   createdAt?: string
-//   durationSeconds?: number
-//   thumbnailUrl?: string
-//   label?: string         // "v1", "v2", ...
-// }
-
-// Main component --------------------------------------------------
 
 export default function VersionSwitcher({
   versions = [],
   currentVersionId,
   onSelectVersion,
   onAddNewVersion,
-  onUploadNewVersion,
   onDownloadVersion,
   onDeleteVersion,
   userAccess
@@ -213,7 +202,7 @@ export default function VersionSwitcher({
           onSelectVersion={(v) => {
             onSelectVersion && onSelectVersion(v);
           }}
-          onUploadNewVersion={onUploadNewVersion}
+          onAddNewVersion={onAddNewVersion}
           onDownloadVersion={onDownloadVersion}
           onDeleteVersion={onDeleteVersion}
           userAccess={userAccess}
@@ -230,14 +219,20 @@ function ManageVersionsModal({
   currentVersionId,
   onClose,
   onSelectVersion,
-  onUploadNewVersion,
+  onAddNewVersion,
   onDownloadVersion,
   onDeleteVersion,
   userAccess
 }) {
+
+  const sortedVersions = [...versions].sort((a, b) => {
+  return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+});
+
+
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-[600px] max-h-[80vh] bg-[#050506] rounded-[28px] border border-[#26262A] shadow-2xl flex flex-col overflow-hidden">
+    <div onClick={onClose} className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 ">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-[600px] max-h-[80vh] bg-[#050506] rounded-[28px] border border-[#26262A] shadow-2xl flex flex-col overflow-hidden">
         {/* header */}
         <div className="px-7 pt-6 pb-4 flex items-start justify-between">
           <div>
@@ -248,28 +243,16 @@ function ManageVersionsModal({
               The last uploaded video will be the default version visible in the player. You can delete any old versions to save storage or hide from reviewers.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-[#111215] flex items-center justify-center hover:bg-white/10"
-          >
-            <svg
-              viewBox="0 0 16 16"
-              className="w-4 h-4"
-              stroke="#ffffff"
-              strokeWidth="1.4"
-            >
-              <path d="M4 4L12 12" />
-              <path d="M12 4L4 12" />
-            </svg>
-          </button>
         </div>
 
         {/* list */}
-        <div className="px-7 pb-4 flex-1 overflow-y-auto">
+        <div 
+          className="px-7 pb-4 overflow-y-auto"
+          style={{ maxHeight: 260 }}
+        >
           <div className="space-y-5">
-            {versions.map((v, idx) => {
-              const label = v.label || `v${idx + 1}`;
+            {sortedVersions.map((v, idx) => {
+              const label = `v${sortedVersions.length - idx}`;
               const duration = formatDuration(v.durationSeconds);
               const dateText = formatDateTime(v.createdAt);
               const meta = [dateText, duration].filter(Boolean).join(" • ");
@@ -284,9 +267,9 @@ function ManageVersionsModal({
                     {label}
                   </div>
                   <div className="w-[96px] h-[64px] rounded-xl overflow-hidden bg-black/40 flex-shrink-0">
-                    {v.thumbnailUrl ? (
+                    {v._raw?.muxPlaybackID ? (
                       <img
-                        src={v.thumbnailUrl}
+                        src={getMuxGif(v._raw?.muxPlaybackID)}
                         alt={v.name || label}
                         className="w-full h-full object-cover"
                       />
@@ -347,9 +330,10 @@ function ManageVersionsModal({
                   {userAccess !== constants.REVIEWER && 
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
                       onDeleteVersion && onDeleteVersion(v)
-                    }
+                      onClose()
+                    }}
                     className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded-full"
                   >
                     <img className='cursor-pointer' src={trashIcon}/>
@@ -372,7 +356,10 @@ function ManageVersionsModal({
           </button>
           <button
             type="button"
-            onClick={() => onUploadNewVersion && onUploadNewVersion()}
+            onClick={() => {
+              onClose();
+              onAddNewVersion && onAddNewVersion();
+            }}
             className="cursor-pointer flex-[1.2] px-6 py-3 rounded-full bg-[#FEEA3B] text-black text-[14px] font-[Gilroy-Medium] hover:bg-[#f7e22c]"
           >
             Upload new version

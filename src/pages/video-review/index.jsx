@@ -6,7 +6,7 @@ import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
 import { useNavigate, useParams } from "react-router-dom";
-import { addCommentApi, addReplyApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi } from "../../services/api";
+import { addCommentApi, addReplyApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi, updateProjectApi } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 import { uploadToMux } from "../../helpers/muxHelpers";
@@ -44,6 +44,7 @@ export default function VideoReview() {
   const [error, setError] = useState("");
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guest, setGuest] = useState(null);
+  const commentInputRef = useRef(null);
   
 
   // annotation draft (from canvas)
@@ -119,6 +120,27 @@ const muxStatus = activeRawVersion?.muxStatus;
   setActiveVersionId(latest._id);
 }, [rawVersions]);
 
+useEffect(() => {
+  const handler = (e) => {
+    // Don't steal focus if user is typing
+    const tag = document.activeElement?.tagName;
+    const isTyping =
+      tag === "INPUT" ||
+      tag === "TEXTAREA" ||
+      document.activeElement?.isContentEditable;
+
+    if (isTyping) return;
+
+    if (e.key.toLowerCase() === "c") {
+      e.preventDefault();
+      commentInputRef.current?.focus();
+    }
+  };
+
+  window.addEventListener("keydown", handler);
+  return () => window.removeEventListener("keydown", handler);
+}, []);
+
   
 useEffect(() => {
   if (!projectDetail) {
@@ -126,12 +148,23 @@ useEffect(() => {
     return;
   }
   const version = projectDetail.versions?.find((v) => v._id === activeVersionId)
+  console.log(version, 'version');
   
   const backendComments = version?.comments || [];
   const mapped = mapCommentsToMarkers(backendComments);
   
   setMarkers(mapped);
-}, [projectDetail]);
+}, [projectDetail, activeVersionId]);
+
+const handleUpdateProject = async (id, payload) => {
+  try {
+    await updateProjectApi(id, payload);
+    fetchProject();
+  } catch (err) {
+    console.error("Update failed", err);
+  }
+};
+
 
 
 function fetchProject(storedGuest = null) {
@@ -415,9 +448,12 @@ const baseTime = isEdit
 
   // decide marker type for your local timeline
   let markerType = "text";
-  if (hasAnnotation && hasVoice) markerType = "annotation";
+  if (hasAnnotation && hasVoice) markerType = "mixed";
   else if (hasAnnotation) markerType = "annotation";
   else if (hasVoice) markerType = "voice";
+
+
+  
 
   const localMarkerPayload = {
     time: baseTime,
@@ -507,7 +543,7 @@ const baseTime = isEdit
 
   try {
   const projectID = projectDetail._id;
-  const versionID = projectDetail.versions[0]._id;
+  const versionID = activeVersionId;
 
   if (!projectID || !versionID) {
     console.warn("Missing projectID or versionID");
@@ -543,12 +579,6 @@ const baseTime = isEdit
   }
 }
 };
-console.log("SENDING", {
-  pendingVoice,
-  pendingAnnotation,
-  hasVoice: !!pendingVoice?.url,
-  hasAnnotation: !!pendingAnnotation?.annotation?.strokes?.length
-});
 
 
 const handleNewVersionFile = async (e) => {
@@ -606,7 +636,7 @@ const handleNewVersionFile = async (e) => {
   !!activeVersion?.muxPlaybackID;
 
 
-  if (loading) return <AppLoader visible={loading} message="Loading folders…" />
+  if (loading) return <AppLoader visible={loading} message="Loading project.." />
 
   if (showGuestModal) return <GuestIdentityModal
       open={showGuestModal}
@@ -631,10 +661,12 @@ const handleNewVersionFile = async (e) => {
 
   <VideoHeader
     goBack={() => navigate(-1)}
+    fetchProject={fetchProject}
     projectDetail={projectDetail}
     versions={versionsForSwitcher}
     activeVersionId={activeVersionId}
     onChangeVersion={handleChangeVersion}
+    handleUpdateProject={handleUpdateProject}
     onAddNewVersion={() => {
       fileInputRef.current?.click();
     }}
@@ -698,6 +730,7 @@ const handleNewVersionFile = async (e) => {
         onStartAnnotation={handleStartAnnotation}
         onCancelAnnotation={handleCancelAnnotation}
         pauseVideo={pauseVideo}
+        commentInputRef={commentInputRef}
       />
     </div>
 

@@ -1,24 +1,70 @@
 import DownloadMenuButton from '../Buttons/DownloadMenuBtn'
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import VersionSwitcher from '../VersionSwitcher';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ProjectStatusDropdown from '../ProjectStatus';
 import { constants } from '../../helpers/enum';
 import StatusDropdown from '../StatusDropdown';
-import { updateProjectApi } from '../../services/api';
+import { deleteProjectApi, updateProjectApi } from '../../services/api';
+import AssignEditorsModal from '../modals/AssignEditorsModal';
+import ShareModal from '../modals/ShareModal';
+import DeleteConfirmModal from '../modals/DeleteConfirmationModal';
+import { useWorkspace } from '../../context/WorkspaceContext';
+import { AssignIcon, PenIcon, ShareIcon, TrashIcon } from '../../assets/svgs/SvgComponents';
 
 
 
 
-function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion, userAccess }) {
+function VideoHeader({ fetchProject, handleUpdateProject, projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion, userAccess }) {
   
   const [open, setOpen] = useState(false);
   const [projectStatus, setProjectStatus] = useState(projectDetail.status)
-  console.log(projectStatus, 'ldkjsf');
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [name, setName] = useState(projectDetail.name);
+  const [openAssign, setOpenAssign] = useState(false);
+  const [openShare, setOpenShare] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const menuRef = useRef(null);
+  const { workspaceUsers } = useWorkspace();
+
+const closeMoreMenu = () => setOpen(false);
+
+  useEffect(() => {
+  if (!open) return;
+
+  const handler = (e) => {
+    if (menuRef.current && !menuRef.current.contains(e.target)) {
+      setOpen(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handler);
+  return () => document.removeEventListener("mousedown", handler);
+}, [open]);
+
   
   const handleItemClick = (id) => {
     setOpen(false);
+
+    if (id === "rename") {
+      setName(projectDetail.name);
+      setIsRenaming(true);
+    }
+
+    if (id === "assign") {
+      setOpenAssign(true);
+    }
+
+    if (id === "share") {
+      setOpenShare(true);
+    }
+
+    if (id === "delete") {
+      setShowDelete(true);
+    }
   };
+
+
 
   function getMenutItems() {
     const menuItems = [
@@ -30,7 +76,7 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
     }
 
     if (userAccess == constants.OWNER) {
-      menuItems.push({ id: "delete", label: "Delete", icon: "trash" }, { id: "assign", label: "Assign", icon: "share" });
+      menuItems.push({ id: "delete", label: "Delete", icon: "trash" }, { id: "assign", label: "Assign", icon: "assign" });
     }
 
     return menuItems;
@@ -53,18 +99,45 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
             <img onClick={goBack} style={{ height:20, width:20, cursor:'pointer' }} src={LeftArrow} />
             <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
             <div className="flex items-center">
-            <div style={{ fontFamily:"Gilroy-Light" }}>
-                {projectDetail.name}{" "}
-            </div>
+              <div className="min-w-0 max-w-[220px]">
+                {isRenaming ? (
+                  <input
+                    autoFocus
+                    value={name}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => setName(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    onBlur={() => {
+                      if (name.trim() && name !== projectDetail.name) {
+                        handleUpdateProject(projectDetail._id, { name: name.trim() });
+                      }
+                      setIsRenaming(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
+                      if (e.key === "Escape") {
+                        setName(projectDetail.name);
+                        setIsRenaming(false);
+                      }
+                    }}
+                    className="bg-[#0F1012] border border-[#2A2B2F] rounded-lg px-2 py-1 text-white outline-none"
+                  />
+                ) : (
+                  <div
+                    className="text-[18px] font-[Gilroy-SemiBold] truncate"
+                    title={projectDetail.name}
+                  >
+                    {projectDetail.name}
+                  </div>
+                )}
+              </div>
+
             <VersionSwitcher
                 versions={versions}
                 currentVersionId={activeVersionId}
                 onSelectVersion={(v) => onChangeVersion(v)}
                 onAddNewVersion={onAddNewVersion}
                 userAccess={userAccess}
-                onUploadNewVersion={() => {
-                // same upload flow from inside the modal
-                }}
                 onDownloadVersion={(v) => {
                 // call download API
                 }}
@@ -88,9 +161,11 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
               <StatusDropdown
                 value={projectStatus}
                 onChange={(status) => onStatusChange?.(projectDetail._id, status)}
+                py={2}
+                mt={1}
               />
               {userAccess !== constants.REVIEWER && <div style={{ margin:"0 10px" }}>
-                <DownloadMenuButton projectDetail={projectDetail} onAction={() => null} />
+                <DownloadMenuButton projectDetail={projectDetail} onAction={closeMoreMenu}/>
               </div>}
             <div className="relative">
             {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && <button
@@ -111,6 +186,7 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
             </button>}
             {open && (
               <div
+                ref={menuRef}
                 className="
                   absolute right-0 top-full mt-2
                   w-40
@@ -147,6 +223,36 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
             )}
           </div>
         </div>
+        <AssignEditorsModal
+          open={openAssign}
+          onClose={() => setOpenAssign(false)}
+          permissions={workspaceUsers?.permissions}
+          projectAccess={projectDetail?.permissions}
+          projectID={projectDetail._id}
+          onRefresh={fetchProject}
+        />
+
+        <ShareModal
+          open={openShare}
+          onClose={() => setOpenShare(false)}
+          permissions={workspaceUsers?.permissions}
+          projectAccess={projectDetail?.permissions}
+          projectID={projectDetail._id}
+          onRefresh={fetchProject}
+        />
+
+        <DeleteConfirmModal
+          open={showDelete}
+          onOpenChange={setShowDelete}
+          title="Delete this project?"
+          description="The project and all its versions and comments will be removed permanently."
+          confirmText="DELETE"
+          confirmLabel="Delete permanently"
+          onConfirm={async () => {
+            await deleteProjectApi(projectDetail._id);
+            goBack(); // return to project list
+          }}
+        />
     </div>
   )
 }
@@ -154,47 +260,14 @@ function VideoHeader({ projectDetail, goBack, versions, onChangeVersion, activeV
 // simple inline icons to match the design
 function getIcon(type) {
   switch (type) {
+    case "assign":
+      return <AssignIcon color="#FFF" />
     case "edit":
-      return (
-        <svg
-          className="w-4 h-4 opacity-80"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        >
-          <path d="M4 13.5L4.5 11l7-7 2.5 2.5-7 7L4 13.5z" />
-          <path d="M11.5 4.5l2.5 2.5" />
-        </svg>
-      );
+      return <PenIcon color="#FFF" />
     case "share":
-      return (
-        <svg
-          className="w-4 h-4 opacity-80"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        >
-          <path d="M7 10l3-3 3 3" />
-          <path d="M10 7v9" />
-          <path d="M5 16h10" />
-        </svg>
-      );
+      return <ShareIcon color="#FFF" />
     case "trash":
-      return (
-        <svg
-          className="w-4 h-4 opacity-80"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        >
-          <path d="M7 4h6" />
-          <path d="M5 5h10l-1 11H6L5 5z" />
-          <path d="M8 8v6M12 8v6" />
-        </svg>
-      );
+      return <TrashIcon color="#FFF" />
     default:
       return null;
   }

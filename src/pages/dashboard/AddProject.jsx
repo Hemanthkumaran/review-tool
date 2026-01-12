@@ -131,7 +131,7 @@ function handleCreate(name, selectedFile) {
     })
   }
 
-  if (loading) return <AppLoader visible={loading} message="Loading folders…" />
+  if (loading) return <AppLoader visible={loading} message="Loading projects..." />
 
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">

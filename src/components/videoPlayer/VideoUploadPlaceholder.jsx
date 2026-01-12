@@ -71,6 +71,8 @@ export default function VideoUploadPlaceholder({ projectId, onVideoUploaded, mux
   const inputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
   const [error, setError] = useState("");
 const showProcessing =
   !isUploading && muxStatus === "waiting";
@@ -84,8 +86,14 @@ const showProcessing =
     inputRef.current?.click();
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    e.target.value = "";
+  };
+
+
+  const handleFile = async (file) => {
     if (!file) return;
 
     setError("");
@@ -93,36 +101,55 @@ const showProcessing =
     setProgress(0);
 
     try {
-      // 1) get Mux direct upload URL from backend
       const res = await getVideoUploadUrl(projectId);
       const { muxUploadURL } = res.data || {};
 
-      if (!muxUploadURL) {
-        throw new Error("No muxUploadURL returned from backend");
-      }
+      if (!muxUploadURL) throw new Error("No muxUploadURL returned");
 
-      // 2) upload to Mux with progress
       await uploadToMux(muxUploadURL, file, (pct) => setProgress(pct));
 
-      // 3) notify parent so it can refetch project / playbackId
-      if (typeof onVideoUploaded === "function") {
-        await onVideoUploaded();
-      }
+      await onVideoUploaded?.();
     } catch (err) {
       console.error("Video upload failed", err);
-      setError(err?.message || "Failed to upload video. Please try again.");
+      setError(err?.message || "Failed to upload video.");
     } finally {
       setIsUploading(false);
       setProgress(0);
-      e.target.value = ""; // reset file input
     }
   };
+
 
   return (
     <>
       {/* Outer video frame – blue border, full width, rounded corners */}
       <div
-        className="relative w-full h-[460px] rounded-3xl bg-[#050608] overflow-hidden"
+        className={`relative w-full h-[460px] rounded-3xl overflow-hidden
+          ${isDragging ? "ring-2 ring-[#FEEA3B] bg-[#0f1208]" : "bg-[#050608]"}
+        `}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          if (userAccess !== constants.REVIEWER) setIsDragging(true);
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (userAccess !== constants.REVIEWER) setIsDragging(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+          if (userAccess === constants.REVIEWER) return;
+
+          const file = e.dataTransfer.files?.[0];
+          if (file && file.type.startsWith("video/")) {
+            handleFile(file);
+          } else {
+            setError("Please drop a video file");
+          }
+        }}
       >
         {/* Inner dark panel */}
         <div className="absolute inset-[3px] rounded-[22px] bg-[#18191b] flex items-center justify-center">
@@ -154,7 +181,7 @@ const showProcessing =
             style={{ fontFamily: "Gilroy-Light" }}
             className="cursor-pointer text-[14px] text-[#BFBFBF] underline underline-offset-[3px] decoration-gray-500 hover:text-gray-100 hover:decoration-gray-300"
           >
-            Click to upload
+            {isDragging ? "Drop your video here" : "Click to upload"}
           </span>
           {error && (
             <span className="mt-1 text-[11px] text-red-400 max-w-xs text-center">

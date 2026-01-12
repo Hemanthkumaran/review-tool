@@ -98,7 +98,7 @@ export default function CommentCard({
   };
 
   return (
-    <div className="group/comment relative  bg-[#050506] rounded-2xl border border-black px-4 py-3 mb-3 last:mb-0 text-[13px]">
+    <div onClick={onGo} className="cursor-pointer group/comment relative  bg-[#050506] rounded-2xl border border-black px-4 py-3 mb-3 last:mb-0 text-[13px]">
       <CommentHeader
         time={time}
         index={index}
@@ -204,8 +204,7 @@ export default function CommentCard({
             </>
           )}
         </div>
-
-        {type === "voice" && audioUrl && (
+        {(type === "voice" || type === "mixed") && audioUrl && (
           <div className="mt-1">
             <span className="block mb-1 text-[11px] text-gray-400">
               Voice note
@@ -213,7 +212,6 @@ export default function CommentCard({
             <VoiceNotePlayer src={audioUrl}/>
           </div>
         )}
-
         {/* images row */}
         {images.length > 0 && (
           <div className="flex flex-wrap gap-3 mt-1">

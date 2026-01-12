@@ -328,9 +328,6 @@ const muxPlayerStyle = {
               playbackId={src}
               controls={false}
               style={muxPlayerStyle}
-              // className={`absolute inset-0 transition-opacity duration-200 ${
-              //   ready ? "opacity-100" : "opacity-0"
-              // }`}
               className="max-h-full max-w-full object-contain"
               onTimeUpdate={onTimeUpdate}
               onLoadedMetadata={(e) => {
@@ -339,21 +336,7 @@ const muxPlayerStyle = {
               }}
               maxResolution={quality === "auto" ? undefined : quality}
             />
-</div>
-          {/* <MuxPlayer
-            key={activeVersionId}  
-            ref={playerRef}
-            autoPlay={false}
-            playsInline
-            streamType="on-demand"
-            playbackId={src}
-            controls={false}
-            style={muxPlayerStyle}
-            onTimeUpdate={onTimeUpdate}
-            onLoadedMetadata={onLoadedMetadata}
-            maxResolution={quality === "auto" ? undefined : quality}
-          /> */}
-
+          </div>
           <div
             className={`absolute inset-0 ${
               annotationMode ? "" : "pointer-events-none"

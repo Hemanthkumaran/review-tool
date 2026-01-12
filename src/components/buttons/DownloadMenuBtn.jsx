@@ -35,13 +35,16 @@ export default function DownloadMenuButton({ onAction, projectDetail }) {
       <button
         type="button"
         onMouseDown={(e) => e.stopPropagation()} 
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          setOpen((prev) => !prev)
+          onAction()
+        }}
         className="
           inline-flex items-center gap-2
           cursor-pointer
           rounded-full
           bg-[#F9EF38]
-          px-4 py-2.5
+          px-4 py-2
           text-sm font-medium
           text-black
           shadow-[0_2px_4px_rgba(0,0,0,0.25)]
@@ -50,7 +53,7 @@ export default function DownloadMenuButton({ onAction, projectDetail }) {
           transition-colors
         "
       >
-        <span style={{ fontFamily:'Gilroy-Light'}}>Download original</span>
+        <span style={{ fontFamily:'Gilroy-Light'}}>Add final video link</span>
 
         {/* chevron */}
         <svg

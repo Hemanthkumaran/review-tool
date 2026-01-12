@@ -39,7 +39,8 @@ export default function CommentBar({
   onCancelVoice,
   onStartAnnotation,
   onCancelAnnotation,
-  pauseVideo
+  pauseVideo,
+  commentInputRef
 }) {
   const {
     userAccess
@@ -50,8 +51,6 @@ export default function CommentBar({
   const [attachments, setAttachments] = useState([]); // [{ url, name }]
   const fileInputRef = useRef(null);
   const [audience, setAudience] = useState("everyone");
-  
-console.log(userAccess, 'reviewer');
 
 
   useEffect(() => {
@@ -123,6 +122,7 @@ console.log(userAccess, 'reviewer');
     <div style={{ width: "60%", margin: "0 auto" }}>
       {/* text input */}
       <input
+        ref={commentInputRef}
         style={{ borderBottomRightRadius: 0, borderBottomLeftRadius: 0 }}
         className="bg-[#101213] rounded-2xl border border-[#1F1F21] px-4 py-3 w-full outline-none placeholder-[#58595A] text-sm"
         placeholder="Enter your comments here..."

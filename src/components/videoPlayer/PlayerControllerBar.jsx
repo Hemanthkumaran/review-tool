@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import CustomSeekBar from "./CustomSeekbar";
 import playIcon from "../../assets/svgs/play.svg";
@@ -49,7 +49,8 @@ export default function PlayerControlsBar({
 }) {
   const [qualityMenuOpen, setQualityMenuOpen] = useState(false);
   const [volumeOpen, setVolumeOpen] = useState(false);
-
+  const qualityRef = useRef(null);
+  const qualityButtonRef = useRef(null);
   const QUALITY_OPTIONS = [
     { value: "auto", label: "Auto" },
     { value: "480p", label: "480p" },
@@ -63,10 +64,26 @@ export default function PlayerControlsBar({
   };
 
   useEffect(() => {
-  const close = () => setVolumeOpen(false);
-  document.addEventListener("mousedown", close);
-  return () => document.removeEventListener("mousedown", close);
-}, []);
+    const close = () => setVolumeOpen(false);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (
+        qualityMenuOpen &&
+        !qualityRef.current?.contains(e.target) &&
+        !qualityButtonRef.current?.contains(e.target)
+      ) {
+        setQualityMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [qualityMenuOpen]);
+
 
 
   return (
@@ -91,13 +108,13 @@ export default function PlayerControlsBar({
             <PlayIcon playing={isPlaying} />
           </IconButton>
 
-          <IconButton
+          {/* <IconButton
             onClick={onToggleLoop}
             title="Loop"
             active={isLooping}
           >
             <LoopIcon color={isLooping ? "#FEEA3B" : "#fff"} />
-          </IconButton>
+          </IconButton> */}
 <div className="relative">
   {/* Volume button */}
   <IconButton
@@ -157,6 +174,7 @@ export default function PlayerControlsBar({
         <div className="flex items-center gap-4 relative">
           {/* Quality selector */}
           <button
+            ref={qualityButtonRef}
             type="button"
             onClick={() => setQualityMenuOpen((o) => !o)}
             className="px-3 py-[4px] cursor-pointer rounded-full bg-[#101114] text-[12px] text-gray-100 flex items-center gap-1 border border-white/5 hover:border-white/30"
@@ -167,7 +185,7 @@ export default function PlayerControlsBar({
           </button>
 
           {qualityMenuOpen && (
-            <div className="absolute right-0 bottom-9 w-28 rounded-xl bg-[#050507]/95 border border-white/10 shadow-lg py-1 z-40">
+            <div ref={qualityRef} className="absolute right-0 bottom-9 w-28 rounded-xl bg-[#050507]/95 border border-white/10 shadow-lg py-1 z-40">
               {QUALITY_OPTIONS.map((q) => (
                 <button
                   key={q.value}
