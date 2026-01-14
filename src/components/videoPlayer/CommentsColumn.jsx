@@ -42,7 +42,7 @@ export default function CommentsColumn({
   });
   const [notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
   const [savingSectionId, setSavingSectionId] = useState(null);
-  const [showResolved, setShowResolved] = useState(true);
+  const [showResolved, setShowResolved] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [commentFilters, setCommentFilters] = useState([]);
 
