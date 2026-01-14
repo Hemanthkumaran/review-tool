@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { getAllUserWorkspace, getWorkspaceUsers } from "../services/api";
 import { useAuth } from "./AuthContext";
 import { constants } from "../helpers/enum";
@@ -15,6 +16,11 @@ export const WorkspaceProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const userAccess = activeWorkspace?.permissionType == undefined ? constants.REVIEWER : activeWorkspace?.permissionType;
   
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const workspaceIdFromUrl = searchParams.get("ws");
+
   const fetchWorkspaces = async () => {
     try {
       setLoading(true);
@@ -24,12 +30,25 @@ export const WorkspaceProvider = ({ children }) => {
 
       setWorkspaces(list);
 
-      setActiveWorkspace(prev => prev || list[0] || null);
+      // setActiveWorkspace(prev => prev || list[0] || null);
+      let next = null;
 
-      // Set default workspace once
-      // if (list.length && !activeWorkspace) {
-      //   setActiveWorkspace(list[0]);
-      // }
+      // 1) Try URL
+      if (workspaceIdFromUrl) {
+        next = list.find(w => w._id === workspaceIdFromUrl);
+      }
+
+      // 2) Fallback to first workspace
+      if (!next) next = list[0] || null;
+
+      setActiveWorkspace(next);
+
+      // 3) If URL missing or invalid → fix it
+      if (next && next._id !== workspaceIdFromUrl) {
+        const params = new URLSearchParams(searchParams);
+        params.set("ws", next._id);
+        setSearchParams(params, { replace: true });
+      }
     } catch (e) {
       console.error("Failed to fetch workspaces", e);
     } finally {
@@ -73,12 +92,31 @@ export const WorkspaceProvider = ({ children }) => {
     fetchWorkspaceUsers(activeWorkspace._id);
   }, [activeWorkspace?._id]);
 
+  useEffect(() => {
+    if (!workspaces.length) return;
+    if (!workspaceIdFromUrl) return;
+
+    const found = workspaces.find(w => w._id === workspaceIdFromUrl);
+    if (found && found._id !== activeWorkspace?._id) {
+      setActiveWorkspace(found);
+    }
+  }, [workspaceIdFromUrl, workspaces]);
+
+
   return (
     <WorkspaceContext.Provider
       value={{
         workspaces,
         activeWorkspace,
-        setActiveWorkspace,
+        setActiveWorkspace: (ws) => {
+          setActiveWorkspace(ws);
+
+          if (ws?._id) {
+            const params = new URLSearchParams(searchParams);
+            params.set("ws", ws._id);
+            setSearchParams(params);
+          }
+        },
         workspaceUsers,
         loading,
         refreshWorkspace: fetchWorkspaces,

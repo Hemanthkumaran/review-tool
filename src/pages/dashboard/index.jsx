@@ -97,7 +97,8 @@ export default function DashboardPage({
             key={item._id}
             folder={item}
             noOfProjects={item.projects.length}
-            onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })}
+            // onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })}
+            onClick={() => navigate(`${PATHS.ADD_PROJECT}?folder=${item._id}&folderName=${item.name}`)}
             onRenamed={handleFolderUpdated}
             onDeleted={handleFolderDeleted}
           />

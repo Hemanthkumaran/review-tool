@@ -4,7 +4,7 @@ import CreateFolderModal from '../../components/modals/CreateFolderModal';
 import cutjamm from '../../assets/svgs/cutjamm.svg';
 import ProjectFolder from '../../components/ProjectFolder';
 import Folder from '../../components/Folder/Folder';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { PATHS } from '../../routes/paths';
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import AddProjectModal from '../../components/modals/AddProjectModal';
@@ -30,13 +30,27 @@ export default function AddProject({
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
   const location = useLocation();
+  const [params] = useSearchParams();
+  const folderId = params.get("folder");
+  const folderName = params.get("folderName");
   const { activeWorkspace, loading: workspaceLoading, userAccess } = useWorkspace();
   
     useEffect(() => {
-    if (activeWorkspace !== null) {
-      getAllProjects();
-    }
-  }, [activeWorkspace]);
+      if (activeWorkspace !== null) {
+        getAllProjects();
+      }
+    }, [activeWorkspace]);
+
+// useEffect(() => {
+//   if (workspaceLoading) return;
+//   if (!activeWorkspace?._id) return;
+//   if (!location.state?._id) return;
+
+//   getAllProjects();
+// }, [workspaceLoading, activeWorkspace?._id, location.state?._id]);
+
+
+
 
   const handleUpdateProject = async (id, payload) => {
     try {
@@ -137,14 +151,14 @@ async function handleCreate(name, selectedFile) {
 
 
   function getAllProjects() {
-
     const params = {
       sortField: 'createdAt',
       sortOrder: 'desc',
-      folderID: location.state._id,
+      folderID: folderId,
       workspaceID: activeWorkspace._id
     };
-
+    console.log(params, 'params');
+    
     allProjectsApi(params)
     .then(res => {
       console.log(res, 'all projects');
@@ -177,7 +191,7 @@ async function handleCreate(name, selectedFile) {
             <div style={{ fontFamily:"Gilroy-Light", color:"#fff" }}>
               <span onClick={() => navigate(-1)} style={{ color:"#9C9C9C", cursor:'pointer' }}>
                 All Folders {" "}</span> / {" "}
-                <span>{location.state.name}</span>
+                <span>{folderName}</span>
             </div>
             <div style={{ backgroundColor:"#1F1E0C", padding:"2px 13px", borderRadius:14, fontSize:14, marginLeft:5 }}>{allProjects.length}</div>
             </div>
