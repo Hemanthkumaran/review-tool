@@ -213,3 +213,12 @@ export const deleteProjectVersionApi = (projectID, versionID) => {
    `/project/deleteVersion?projectID=${projectID}&versionID=${versionID}`
   );
 };
+
+export const startTrialApi = (workspaceID, payload) =>
+  axiosClient.post(`/billing/startTrial?workspaceID=${workspaceID}`, payload);
+
+export const getWorkspacePlanApi = (workspaceID) =>
+  axiosClient.get(`/billing/getWorkspacePlanDetails?workspaceID=${workspaceID}`);
+
+export const createPaymentOrderApi = (workspaceID, payload) =>
+  axiosClient.post(`/billing/createPaymentOrder?workspaceID=${workspaceID}`, payload);

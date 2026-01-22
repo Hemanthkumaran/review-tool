@@ -3,9 +3,8 @@
   background: #101010;
   border: 1px solid #222;
   border-radius: 20px;
-  padding: 26px 32px;
+  padding: 16px 24px;
   color: white;
-  font-family: "Inter", sans-serif;
 }
 
 /* ----- Top Row ----- */
@@ -23,7 +22,7 @@
 
 .sub-plan-label {
   font-size: 18px;
-  opacity: 0.85;
+  font-family: 'Gilroy-Medium';
 }
 
 .sub-plan-name {
@@ -32,9 +31,9 @@
 }
 
 .sub-status-pill {
-  background: #00382b;
-  color: #21c58b;
-  border: 1px solid #175941;
+  background: #152320;
+  color: #24B491;
+  border: 1px solid #184037;
   padding: 4px 13px;
   border-radius: 14px;
   font-size: 13px;
@@ -48,14 +47,14 @@
 
 .sub-end-label {
   font-size: 16px;
-  opacity: 0.75;
+  color: #898989;
 }
 
 .sub-end-pill {
-  background: #262626;
-  padding: 6px 16px;
+  background: #2B2B2B;
+  padding: 4px 10px;
   border-radius: 999px;
-  font-size: 15px;
+  font-size: 14px;
   color: #f2f2f2;
 }
 
@@ -74,8 +73,8 @@
 }
 
 .sub-circle {
-  width: 75px;
-  height: 75px;
+  width: 45px;
+  height: 45px;
 }
 
 .sub-minutes-text {
@@ -84,14 +83,13 @@
 }
 
 .sub-minutes-remaining {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 18px;
+  font-family: 'Gilroy-Medium';
 }
 
 .sub-minutes-used {
-  margin-top: 3px;
-  font-size: 15px;
-  opacity: 0.7;
+  font-size: 12px;
+  color: #C4C4C4;
 }
 
 .sub-price {
@@ -99,13 +97,13 @@
 }
 
 .sub-price-amount {
-  font-size: 28px;
-  font-weight: 600;
+  font-size: 18px;
+  font-family: 'Gilroy-Bold';
 }
 
 .sub-price-caption {
-  font-size: 15px;
-  opacity: 0.7;
+  font-size: 12px;
+  color: #C4C4C4;
 }
 
 /* ----- Dividers ----- */

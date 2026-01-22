@@ -5,7 +5,7 @@ import cutjamm from '../../assets/svgs/cutjamm.svg';
 import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
 import { useNavigate } from 'react-router-dom';
-import { allFoldersApi, createFolderApi } from '../../services/api';
+import { allFoldersApi, createFolderApi, getWorkspacePlanApi, startTrialApi } from '../../services/api';
 import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
 import DashboardHeader from '../../components/DashboardHeader';
@@ -16,6 +16,8 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 import filterIcon from "../../assets/svgs/filter.svg";
 import ProjectFilter from '../../components/ProjectFilter';
+import ChoosePlanModal from '../chooseplan';
+import FreeTrialModal from '../../components/modals/FreetrialModal';
 
 export default function DashboardPage({
   minutesUsed = 89,
@@ -28,9 +30,10 @@ export default function DashboardPage({
   const [inviteModal, setInviteModal] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
-  const { activeWorkspace, loading: workspaceLoading, userAccess } = useWorkspace();
+  const { activeWorkspace, loading: workspaceLoading, userAccess, requiresPlan, billingLoading } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
+  const [open, setOpen] = useState(true);
   const [filters, setFilters] = useState({
     assignment: null,   // "assigned" | "unassigned" | null
     status: []          // ["yet_to_start", "in_progress", ...]
@@ -41,7 +44,6 @@ export default function DashboardPage({
   useEffect(() => {
     if (workspaceLoading) return;
     if (!activeWorkspace?._id) return;
-
     getAllFolders();
   }, [workspaceLoading, activeWorkspace?._id]);
 
@@ -61,7 +63,17 @@ export default function DashboardPage({
 
 
   function getAllFolders() {
+    // startTrialApi( activeWorkspace?._id,   {
+    //     // valid("freelancer","team","team_plus")
+    //     "activePlan": "team",
+    //     // valid("monthly","annual")
+    //     "interval": "monthly"
+    //   })
+    // .then(res => console.log(res, 'dkskdjdjsjd'))
+
     setFoldersLoading(true);
+    getWorkspacePlanApi(activeWorkspace?._id).then(res => console.log(res, 'workspace plan'))
+
     allFoldersApi("createdAt", "desc", activeWorkspace._id)
       .then((res) => {
         setAllFolders(res.data.folderArray);
@@ -113,13 +125,13 @@ export default function DashboardPage({
   }
 
 
-  if (workspaceLoading) {
-    return <AppLoader visible message="Loading workspace…" />;
+  if (workspaceLoading || foldersLoading || billingLoading) {
+    return <AppLoader visible message="Loading..." />;
   }
 
-  if (foldersLoading) {
-    return <AppLoader visible message="Loading folders…" />;
-  }
+  // if (foldersLoading) {
+  //   return <AppLoader visible message="Loading folders…" />;
+  // }
 
 
   return (
@@ -216,6 +228,8 @@ export default function DashboardPage({
         handleCreate={handleCreate}
         loading={createLoading}
       />
+      {/* <ChoosePlanModal open={open} /> */}
+      {/* <FreeTrialModal open /> */}
     </div>
   );
 }

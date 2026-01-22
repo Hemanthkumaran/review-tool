@@ -15,10 +15,10 @@ import Modal from "react-modal";
 import close from "../../assets/icons/close.svg";
 
 const tabs = [
-  { id: "profile", label: "Profile info", icon: profile },
-  { id: "workspace", label: "Workspace Settings", icon: workspace },
+  { id: "profile", label: "Profile", icon: profile },
+  { id: "workspace", label: "Workspace", icon: workspace },
   { id: "users", label: "Users", icon: users },
-  { id: "usage", label: "Usage", icon: usage },
+  { id: "usage", label: "Storage Management", icon: usage },
   { id: "billing", label: "Billing", icon: billing },
 ];
 

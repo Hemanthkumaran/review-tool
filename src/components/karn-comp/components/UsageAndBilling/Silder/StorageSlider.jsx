@@ -1,108 +1,237 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { Range } from "react-range";
-import "./StorageSlider.css";
 import { useRazorpay } from "../../../../../hooks/useRazorpay";
+import { createPaymentOrderApi } from "../../../../../services/api";
+import { useWorkspace } from "../../../../../context/WorkspaceContext";
+import AppLoader from "../../../../common/AppLoader";
+import ConfirmPlanModal from "../../../../modals/ConfirmPlanModal";
+import "./StorageSlider.css";
 
 const STEP = 10;
-const MIN = 500;
+const MIN = 100;
 const MAX = 2000;
 
 export default function StorageSlider() {
-  const [values, setValues] = useState([900]); // Default mid-range
   const { openCheckout } = useRazorpay();
+  const { activeWorkspace, workspacePlan, billingLoading } = useWorkspace();
+
+  const [values, setValues] = useState([MIN]);
   const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const subscription = workspacePlan?.subscription;
+  
+  const baseStorage = subscription?.baseStorageMinutes ?? MIN;
+  const additionalStorage = subscription?.additionalStorageMinutes ?? 0;
+  const currentTotalStorage = baseStorage + additionalStorage;
+
+  const costPerMinute = workspacePlan?.costPerMinute;
+  const basePlanCost = baseStorage * costPerMinute;
+  const currentAdditionalCost = additionalStorage * costPerMinute;
+  const currentMonthlyTotal = basePlanCost + currentAdditionalCost;
+
+  const selectedStorage = values[0];
+
+  // Prevent sliding below baseStorage (500 min)
+  const safeValue = Math.max(selectedStorage, baseStorage);
+
+  // Increase / decrease intent
+  const increaseMinutes = Math.max(0, selectedStorage - currentTotalStorage);
+  const decreaseMinutes = Math.max(0, currentTotalStorage - selectedStorage);
+  const selectedAdditionalMinutes =  additionalStorage + increaseMinutes - decreaseMinutes;
+
+  const safeSelectedAdditionalMinutes = Math.max(0, selectedAdditionalMinutes);
+  
+  // Pricing (only charge for increase)
+  const extraCost = increaseMinutes * costPerMinute;
+  const selectedAdditionalCost = safeSelectedAdditionalMinutes * costPerMinute;
+
+  const newMonthlyTotal = basePlanCost + selectedAdditionalCost;
+
+  const currentPercent = ((currentTotalStorage - MIN) / (MAX - MIN)) * 100;
+  const selectedPercent = ((selectedStorage - MIN) / (MAX - MIN)) * 100;
+
+  useEffect(() => {
+    if (!subscription) return;
+    setValues([currentTotalStorage]);
+  }, [currentTotalStorage, subscription]);
 
 
   const handleUpgrade = async () => {
+    if (!activeWorkspace?._id || increaseMinutes === 0) return;
+
     setLoading(true);
 
     try {
-      // const order = await createUpgradeOrder(plan);
+      const res = await createPaymentOrderApi(activeWorkspace._id, {
+        activePlan: workspacePlan.subscription.activePlan,
+        interval: workspacePlan.subscription.interval,
+        additionalStorageMinutes: increaseMinutes,
+        purpose: "upgrade",
+      });
+
+      const order = res.data.razorpay;
 
       openCheckout({
-        // orderId: order.orderId,
-        // amount: order.amount,
-        // currency: order.currency,
-        // name: user.name,
-        // email: user.email,
-        // onSuccess: () => {
-        //   alert("Payment successful");
-        //   window.location.reload();
-        // }
+        orderId: order.orderID,
+        amount: order.amount,
+        currency: order.currency,
+        name: activeWorkspace.name,
+        onSuccess: () => window.location.reload(),
       });
     } catch (e) {
-      alert(e, "Payment failed");
+      alert("Payment failed");
     }
 
     setLoading(false);
   };
 
-  
-  return (
-    <div className="slider-card">
-      <p className="slider-title">
-        Adjust your total storage. Changes will apply on your next billing date.
-      </p>
+  if (billingLoading) return <AppLoader />;
 
+  return (
+    <div style={{ fontFamily:'Gilroy-Regular' }} className="slider-card">
+      <div style={{ fontFamily:'Gilroy-Regular', fontSize:14 }} className="slider-title">
+        Use the slider to increase/decrease your storage limit.
+      </div>
       <Range
         step={STEP}
         min={MIN}
         max={MAX}
-        values={values}
-        onChange={(vals) => setValues(vals)}
-        renderTrack={({ props, children }) => (
-          <div {...props} className="slider-track" style={props.style}>
+        values={[safeValue]}
+        onChange={(vals) => {
+          // Prevent going below base storage (500 min)
+          const next = Math.max(vals[0], baseStorage);
+          setValues([next]);
+        }}
+        renderTrack={({ props, children }) => {
+          const { ref, style, ...rest } = props;
+          return (
             <div
-              className="slider-track-filled"
-              style={{ width: `${((values[0] - MIN) / (MAX - MIN)) * 100}%` }}
-            />
-            <div className="slider-track-empty" />
-            {children}
-          </div>
+              ref={ref}
+              {...rest}
+              style={{ ...style, height: 10, position: "relative" }}
+              className="slider-track"
+            >
+              {/* Grey base background */}
+              <div className="slider-track-base" />
+              
+              {/* YELLOW: Current total storage (base + additional = 900 min) */}
+              <div
+                className="slider-track-default"
+                style={{ width: `${currentPercent}%` }}
+              />
+              
+              {/* GREEN: Increase beyond current total (900+ min) */}
+              {selectedStorage > currentTotalStorage && (
+                <div
+                  className="slider-track-upgrade"
+                  style={{
+                    left: `${currentPercent}%`,
+                    width: `${selectedPercent - currentPercent}%`,
+                  }}
+                />
+              )}
+              
+              {/* RED: Decrease from current total (below 900 min) */}
+              {selectedStorage < currentTotalStorage && (
+                <div
+                  className="slider-track-downgrade"
+                  style={{
+                    left: `${selectedPercent}%`,
+                    width: `${currentPercent - selectedPercent}%`,
+                  }}
+                />
+              )}
+
+              {children}
+            </div>
+          );
+        }}
+        renderThumb={({ props }) => (
+          <div {...props} className="slider-thumb" />
         )}
-        renderThumb={({ props }) => <div {...props} className="slider-thumb" />}
       />
 
       <div className="slider-labels">
-        <span>{MIN} min</span>
+        <span>{selectedStorage} min</span>
         <span>{MAX} min</span>
       </div>
-        {/* plan wrapper */}
+
       <div className="plan-wrapper">
         <div className="plan-card">
-          {/* Header */}
           <div className="plan-row header">
             <span>Total storage</span>
-            <span className="strong">900 min</span>
+            <span style={{ fontFamily:'Gilroy-SemiBold' }}>{selectedStorage} min</span>
           </div>
 
           <div className="divider" />
 
-          {/* Details */}
           <div className="plan-row">
-            <span>Base plan (500 min)</span>
-            <span>$25</span>
+            <span>Base plan storage ({baseStorage} min)</span>
+            <span>${basePlanCost}</span>
           </div>
 
+          {/* Show current additional storage */}
           <div className="plan-row">
-            <span>Additional storage (400 min)</span>
-            <span>$20</span>
+            <span>Current additional storage ({additionalStorage} min)</span>
+            <span>${(currentAdditionalCost).toFixed(2)}</span>
           </div>
+
+          {/* Show increase if selected */}
+          {increaseMinutes > 0 && (
+            <div className="plan-row">
+              <span>Additional storage (+{increaseMinutes} min)</span>
+              <span>+${extraCost.toFixed(2)}</span>
+            </div>
+          )}
+
+          {/* Show decrease warning */}
+            {decreaseMinutes > 0 && (
+              <div className="plan-row" style={{ color: "#ff4d4f" }}>
+                <span>Storage decrease ({decreaseMinutes} min)</span>
+                <span>
+                  -${(decreaseMinutes * costPerMinute).toFixed(2)}
+                </span>
+              </div>
+            )}
 
           <div className="divider" />
 
-          {/* Total */}
           <div className="plan-row total">
-            <span>New monthly total</span>
-            <span className="highlight">$45</span>
+            <span>Your {subscription?.interval} total</span>
+            <span className="highlight">
+              ${newMonthlyTotal.toFixed(2)}
+            </span>
           </div>
         </div>
 
-        {/* Action */}
         <div className="plan-action">
-          <button onClick={handleUpgrade} className="change-btn">Change plan</button>
+          <button
+            disabled={loading}
+            onClick={() => setShowConfirm(true)}
+            className="change-btn"
+            style={{ fontFamily:'Gilroy-SemiBold' }}
+          >
+             Change plan
+          </button>
         </div>
       </div>
+
+      <ConfirmPlanModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        workspacePlan={workspacePlan}
+        onConfirm={handleUpgrade}
+        currentStorage={currentTotalStorage}
+        basePlanStorage={baseStorage}
+        basePlanCost={basePlanCost}
+        newAdditionalStorage={increaseMinutes}
+        newAdditonalCost={extraCost}
+        newMonthlyTotal={newMonthlyTotal}
+        additionalStorage={additionalStorage}
+        currentAdditionalCost={currentAdditionalCost}
+        currentMonthlyTotal={currentMonthlyTotal}
+      />
     </div>
   );
 }

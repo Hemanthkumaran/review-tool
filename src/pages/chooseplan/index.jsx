@@ -1,41 +1,85 @@
 import React, { useState } from "react";
+import Modal from "react-modal";
 import ToggleButton from "../../components/buttons/ToggleButton";
 import FreeTrialModal from "../../components/modals/FreetrialModal";
 
-export default function ChoosePlan() {
+const modalStyles = {
+  overlay: {
+    backgroundColor: "rgba(0,0,0,0.6)",
+    backdropFilter: "blur(6px)",
+    zIndex: 50,
+  },
+  content: {
+    inset: "50% auto auto 50%",
+    transform: "translate(-50%, -50%)",
+    padding: 0,
+    border: "none",
+    background: "transparent",
+    overflow: "visible",
+    maxWidth: "1100px",
+    width: "100%",
+  },
+};
+
+export default function ChoosePlanModal({ open, onClose }) {
   const [isAnnual, setIsAnnual] = useState(false);
 
-  const priceTeam = isAnnual ? 25 : 250;   // example: $250/yr
-  const priceAgency = isAnnual ? 50 : 500; // example: $500/yr
+  const priceTeam = isAnnual ? 25 : 250;
+  const priceAgency = isAnnual ? 50 : 500;
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4">
-      <div className="">
+    <Modal
+      isOpen={open}
+      onRequestClose={onClose}
+      style={modalStyles}
+      shouldCloseOnOverlayClick
+      shouldCloseOnEsc
+    >
+      <div className="relative min-h-[80vh] w-full p-6 bg-[#0f0f0f] rounded-[28px]">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-white/60 hover:text-white"
+        >
+          ✕
+        </button>
+
         <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-black/10" />
+
+        {/* Header */}
         <div className="text-center">
-          <h1 style={{ fontFamily:'Gilroy-SemiBold', fontSize:24 }}>
+          <h1 style={{ fontFamily: "Gilroy-SemiBold", fontSize: 24 }}>
             Choose how you'd like to start
           </h1>
-          <p style={{ fontSize:12 }}>
+          <p style={{ fontSize: 12 }}>
             Try any plan for 7 days with no card required.
           </p>
         </div>
-        <div className="flex items-center flex-end w-full justify-end">
-          <div style={{ fontFamily:'Gilroy-Light', color:"#A1A1A1", marginRight:10 }}>Annual</div>
+
+        {/* Toggle */}
+        <div className="flex items-center justify-end mt-6">
+          <div
+            style={{
+              fontFamily: "Gilroy-Light",
+              color: "#A1A1A1",
+              marginRight: 10,
+            }}
+          >
+            Annual
+          </div>
           <ToggleButton
             checked={isAnnual}
-            onChange={() => setIsAnnual(prev => !prev)}
+            onChange={() => setIsAnnual((prev) => !prev)}
             size="sm"
           />
         </div>
 
-        {/* Cards */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6">
+        {/* Pricing cards */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <PricingCard
             title="Freelancer"
             price={priceTeam}
             period={isAnnual ? "year" : "month"}
-            description="Everythign in Team, but :"
             features={[
               { text: "1 user", enabled: true },
               { text: "100 mins of storage + Storage addons", enabled: true },
@@ -43,11 +87,11 @@ export default function ChoosePlan() {
             buttonLabel="Start free trial"
             highlight={false}
           />
+
           <PricingCard
             title="Team"
             price={priceAgency}
             period={isAnnual ? "year" : "month"}
-            description="What's included :"
             features={[
               { text: "Upto 5 team members", enabled: true },
               { text: "500 mins of storage + Storage addons", enabled: true },
@@ -59,13 +103,13 @@ export default function ChoosePlan() {
               { text: "Version management", enabled: true },
             ]}
             buttonLabel="Start free trial"
-            highlight={true}
+            highlight
           />
+
           <PricingCard
             title="Team Plus"
             price={priceAgency}
             period={isAnnual ? "year" : "month"}
-            description="Everythign in Team, but :"
             features={[
               { text: "Upto 10 team members", enabled: true },
               { text: "Unlimited Collaborators ( Freelancers )", enabled: true },
@@ -73,18 +117,24 @@ export default function ChoosePlan() {
               { text: "Custom UI branding (Paid addon)", enabled: true },
             ]}
             buttonLabel="Start free trial"
-            highlight={true}
+            highlight
           />
         </div>
-        {/* Footer line */}
-        <div className="flex items-center justify-center mt-6" style={{ fontSize:12 }}>
-          <span style={{ fontFamily:'Gilroy-Bold', marginRight:3}}>Note:{" "}</span>{" "}Billing details will be requested after 7 days.
+
+        {/* Footer note */}
+        <div className="flex justify-center mt-6 text-xs">
+          <span style={{ fontFamily: "Gilroy-Bold", marginRight: 4 }}>
+            Note:
+          </span>
+          Billing details will be requested after 7 days.
         </div>
+
+        {/* <FreeTrialModal open /> */}
       </div>
-              <FreeTrialModal open={true}/>
-    </div>
+    </Modal>
   );
 }
+
 
 function PricingCard({ title, price, period, features, buttonLabel, highlight }) {
   return (

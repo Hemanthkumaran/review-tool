@@ -2,9 +2,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
+    font-family: 'Gilroy-SemiBold';
 }
 
 .subscription-header{
@@ -18,7 +19,7 @@
 }
 
 .billing-footer{
-    font-size: 24px;
+    /* font-size: 24px; */
     font-weight: 600;
     margin-bottom: 12px;
 }

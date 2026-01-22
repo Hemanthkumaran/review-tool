@@ -21,7 +21,7 @@
   width: 100%;
   display: flex;
 
-  background: #0b0b0c;
+  background: #262626;
   border-radius: 32px;
   border: 1px solid #1e1f22;
   box-shadow: 0 40px 120px rgba(0, 0, 0, 0.8);
@@ -52,6 +52,7 @@
 .sidebar {
   width: 260px;
   padding: 24px 0;
+  background: #1C1C1C;
   border-right: 1px solid #2d2d2d;
   display: flex;
   flex-direction: column;
@@ -103,6 +104,7 @@
   height: 100%;
   padding: 20px;
   overflow-y: auto;
+  background-color: #131313;
 }
 
 

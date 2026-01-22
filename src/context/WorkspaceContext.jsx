@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
-import { getAllUserWorkspace, getWorkspaceUsers } from "../services/api";
+import { getAllUserWorkspace, getWorkspacePlanApi, getWorkspaceUsers } from "../services/api";
 import { useAuth } from "./AuthContext";
 import { constants } from "../helpers/enum";
 
@@ -14,12 +14,64 @@ export const WorkspaceProvider = ({ children }) => {
   const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [workspaceUsers, setWorkspaceUsers] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const [workspacePlan, setWorkspacePlan] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [requiresPlan, setRequiresPlan] = useState(false);
+
+
   const userAccess = activeWorkspace?.permissionType == undefined ? constants.REVIEWER : activeWorkspace?.permissionType;
   
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   const workspaceIdFromUrl = searchParams.get("ws");
+
+const fetchWorkspacePlan = async (workspaceId) => {
+  if (!workspaceId) return;
+
+  try {
+    setBillingLoading(true);
+
+    const res = await getWorkspacePlanApi(workspaceId);
+    const subscription = res?.data?.subscription || null;
+
+    setWorkspacePlan(res.data);
+
+    let hasAccess = false;
+
+    if (subscription) {
+      const now = Date.now();
+
+      // 1️⃣ Active paid subscription
+      if (
+        subscription.status === "active" &&
+        subscription.subscriptionEndAt &&
+        new Date(subscription.subscriptionEndAt).getTime() > now
+      ) {
+        hasAccess = true;
+      }
+
+      // 2️⃣ Trial period (trial started but subscription not ended yet)
+      else if (
+        subscription.trialUsedAt &&
+        subscription.subscriptionStartAt &&
+        new Date(subscription.subscriptionStartAt).getTime() > now
+      ) {
+        hasAccess = true;
+      }
+    }
+
+    setRequiresPlan(!hasAccess);
+  } catch (err) {
+    console.error("Failed to fetch plan", err);
+    setRequiresPlan(true); // safest default
+  } finally {
+    setBillingLoading(false);
+  }
+};
+
+
 
   const fetchWorkspaces = async () => {
     try {
@@ -88,7 +140,7 @@ export const WorkspaceProvider = ({ children }) => {
    * ---------------------------- */
   useEffect(() => {
     if (!activeWorkspace?._id) return;
-
+    fetchWorkspacePlan(activeWorkspace._id);
     fetchWorkspaceUsers(activeWorkspace._id);
   }, [activeWorkspace?._id]);
 
@@ -110,7 +162,6 @@ export const WorkspaceProvider = ({ children }) => {
         activeWorkspace,
         setActiveWorkspace: (ws) => {
           setActiveWorkspace(ws);
-
           if (ws?._id) {
             const params = new URLSearchParams(searchParams);
             params.set("ws", ws._id);
@@ -121,7 +172,11 @@ export const WorkspaceProvider = ({ children }) => {
         loading,
         refreshWorkspace: fetchWorkspaces,
         fetchWorkspaceUsers,
-        userAccess
+        userAccess,  
+        workspacePlan,
+        requiresPlan,
+        billingLoading,
+        refreshWorkspacePlan: fetchWorkspacePlan,
       }}
     >
       {children}

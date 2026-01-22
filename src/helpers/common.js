@@ -1,14 +1,19 @@
 import { clearAuth } from "./storage";
 
-// export function formatClockTime(t = 0) {
-//   const sec = Math.floor(t % 60)
-//     .toString()
-//     .padStart(2, "0");
-//   const min = Math.floor(t / 60)
-//     .toString()
-//     .padStart(2, "0");
-//   return `${min}:${sec}`;
-// }
+export const DateFormat = (value) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  const formatted = date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  return formatted;
+};
+
 export function formatClockTime(t = 0) {
   if (!Number.isFinite(t)) t = 0;
 

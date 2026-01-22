@@ -1,30 +1,61 @@
 export function useRazorpay() {
-  const openCheckout = ({ orderId, amount, currency, name, email, onSuccess }) => {
+  const openCheckout = ({
+    orderId,
+    amount,
+    currency,
+    name,
+    email,
+    workspaceId,
+    purpose = "upgrade",
+    onSuccess,
+    onFailure,
+  }) => {
+    if (!window.Razorpay) {
+      alert("Razorpay SDK not loaded");
+      return;
+    }
+
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY,
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID, // ✅ KEY ID only
       amount,
       currency,
-      name: "Cutjamm",
-      description: "Storage upgrade",
+      name: "CutJamm",
+      description: "Workspace upgrade",
       order_id: orderId,
+
       prefill: {
         name,
-        email
+        email,
       },
+
+      notes: {
+        workspaceID: workspaceId,
+        purpose,
+      },
+
       theme: {
-        color: "#FEEA3B"
+        color: "#FEEA3B",
       },
-      handler: function (response) {
-        onSuccess(response);
+
+      handler(response) {
+        // payment success
+        onSuccess?.(response);
       },
+
       modal: {
         ondismiss() {
-          console.log("Payment closed");
-        }
-      }
+          console.log("Payment closed by user");
+        },
+      },
     };
 
     const razor = new window.Razorpay(options);
+
+    razor.on("payment.failed", function (response) {
+      console.error("Payment failed", response);
+      onFailure?.(response);
+    });
+
     razor.open();
   };
 

@@ -2,7 +2,7 @@
   background: #0f0f0f;
   border: 1px solid #2a2a2a;
   border-radius: 20px;
-  padding: 24px 32px;
+  padding: 14px 22px;
   color: white;
   font-family: "Inter", sans-serif;
   width: inherit;
@@ -11,38 +11,57 @@
 .slider-title {
   font-size: 18px;
   opacity: 0.85;
-  margin-bottom: 26px;
+  margin-bottom: 18px;
 }
-
-/* Whole track container */
+/* Track container */
 .slider-track {
-  height: 10px;
-  border-radius: 6px;
-  background: transparent;
-  position: relative;
   width: 100%;
-  display: flex;
+  height: 10px;
+  position: relative;
 }
 
-/* Yellow filled track */
-.slider-track-filled {
-  background: #ffe94a;
-  height: 10px;
-  border-radius: 6px 0 0 6px;
+/* Gray base */
+.slider-track-base {
+  position: absolute;
+  inset: 0;
+  background: #2B2B2B;
+  border-radius: 6px;
 }
 
-/* Gray unfilled track */
-.slider-track-empty {
-  background: #3a3a3a;
-  height: 10px;
-  flex: 1;
+.slider-track-downgrade {
+  position: absolute;
+  top: 1.5px;
+  height: 7px;
+  background: #531D1D;
   border-radius: 0 6px 6px 0;
 }
 
+
+
+/* Yellow default */
+.slider-track-default {
+  position: absolute;
+  left: 0;
+  top: 1.5px;
+  height: 7px;
+  background: #ffe94a;
+  border-radius: 6px;
+}
+
+/* Green upgrade */
+.slider-track-upgrade {
+  position: absolute;
+  top: 1.5px;
+  height: 7px;
+  background: #1B4220;
+  border-radius: 0 6px 6px 0;
+}
+
+
 /* Thumb */
 .slider-thumb {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   background: white;
   border-radius: 50%;
   top: 0px;
@@ -52,10 +71,10 @@
 }
 
 .slider-labels {
-  margin-top: 18px;
+  margin-top: 10px;
   display: flex;
   justify-content: space-between;
-  font-size: 16px;
+  font-size: 12px;
   opacity: 0.85;
 }
 
@@ -63,7 +82,6 @@
 .plan-wrapper {
   background: #0b0b0b;
   padding-top: 24px;
-  font-family: Inter, system-ui, sans-serif;
   color: #fff;
 }
 
@@ -78,7 +96,7 @@
     ),
     rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 22px 24px;
+  padding: 5px 16px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
