@@ -1,19 +1,24 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { FaPen } from "react-icons/fa";
 import "./EditableAvatar.css";
 import EditIcon from "../../assets/icons/edit.svg"
 
-const EditableAvatar = () => {
-  const [image, setImage] = useState(null);
+const EditableAvatar = ({ imageUrl, onImageSelect }) => {
+  const [preview, setPreview] = useState(imageUrl || null);
+
+  useEffect(() => {
+    setPreview(imageUrl);
+  }, [imageUrl]);
 
   const onDrop = useCallback((acceptedFiles) => {
     const file = acceptedFiles[0];
     if (file) {
-      const preview = URL.createObjectURL(file);
-      setImage(preview);
+      const localPreview = URL.createObjectURL(file);
+      setPreview(localPreview);
+      onImageSelect(file);
     }
-  }, []);
+  }, [onImageSelect]);
 
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
@@ -29,18 +34,14 @@ const EditableAvatar = () => {
 
       <img
         src={
-          image || "https://via.placeholder.com/300x300.png?text=Upload+Image"
+          preview ||
+          "https://via.placeholder.com/300x300.png?text=Upload+Image"
         }
         alt="Avatar"
         className="avatar-image"
       />
 
-      <button
-        type="button"
-        className="edit-btn"
-        onClick={open}
-        aria-label="Edit image"
-      >
+      <button type="button" className="edit-btn" onClick={open}>
         <img height="24px" width="20px" src={EditIcon} alt="" />
       </button>
     </div>

@@ -12,7 +12,7 @@ import { allProjectsApi, createProjectApi, deleteProjectApi, updateProjectApi } 
 import DashboardHeader from '../../components/DashboardHeader';
 import AppLoader from '../../components/common/AppLoader';
 import ShareModal from '../../components/modals/ShareModal';
-import { uploadToMux } from '../../helpers/muxHelpers';
+import { getVideoDuration, uploadToMux } from '../../helpers/muxHelpers';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 
@@ -70,84 +70,48 @@ export default function AddProject({
     }
   };
 
+  async function handleCreate(name, selectedFile) {
+    setCreateLoading(true);
 
-// function handleCreate(name, selectedFile) {
-//   setCreateLoading(true);
+    let duration = null;
 
-//   const data = {
-//     folderID: location.state._id,
-//     name,
-//   };
+    try {
+      if (selectedFile) {
+        duration = await getVideoDuration(selectedFile);
+        console.log("Video duration:", duration, folderId);
+      }
 
-//   if (selectedFile) {
-//     data.hasFile = true;
-//   }
+      const data = {
+        folderID: folderId,
+        name,
+        hasFile: !!selectedFile,
+        videoDuration: duration
+      };
+      console.log(data, 'data')
+      // 1) Create project immediately
+      const res = await createProjectApi(data);
+      const { muxUploadURL } = res.data || {};
 
-//   createProjectApi(data)
-//     .then(async (res) => {
-//       console.log(res, "res");
+      // 2) Close modal + refresh
+      setAddProjectOpen(false);
+      setCreateLoading(false);
+      await getAllProjects();
 
-//       const { muxUploadURL } = res.data || {};
+      // 3) Upload in background
+      if (muxUploadURL && selectedFile) {
+        uploadToMux(muxUploadURL, selectedFile, pct => {
+          console.log("Uploading in background:", pct);
+        }).catch(err => {
+          console.error("Mux upload failed", err);
+        });
+      }
 
-//       if (muxUploadURL && selectedFile) {
-//         try {
-//           await uploadToMux(muxUploadURL, selectedFile, (pct) => {
-//             console.log("Mux upload progress:", pct);
-//           });
-
-//           await getAllProjects();
-//         } catch (err) {
-//           console.error("Mux upload error", err);
-//           // show toast / message if you have one
-//         } finally {
-//           setCreateLoading(false);
-//           setAddProjectOpen(false);
-//         }
-//       } else {
-//         await getAllProjects();
-//         setCreateLoading(false);
-//         setAddProjectOpen(false);
-//       }
-//     })
-//     .catch((err) => {
-//       console.log(err?.response?.data || err);
-//       setCreateLoading(false);
-//     });
-// }
-
-async function handleCreate(name, selectedFile) {
-  setCreateLoading(true);
-
-  const data = {
-    folderID: location.state._id,
-    name,
-    hasFile: !!selectedFile
-  };
-
-  try {
-    // 1) Create project immediately
-    const res = await createProjectApi(data);
-    const { muxUploadURL } = res.data || {};
-
-    // 2) Immediately close modal and refresh grid
-    setAddProjectOpen(false);
-    setCreateLoading(false);
-    await getAllProjects();
-
-    // 3) If there is a file → upload in background
-    if (muxUploadURL && selectedFile) {
-      uploadToMux(muxUploadURL, selectedFile, (pct) => {
-        console.log("Uploading in background:", pct);
-      }).catch(err => {
-        console.error("Mux upload failed", err);
-      });
+    } catch (err) {
+      console.error(err);
+      setCreateLoading(false);
     }
-
-  } catch (err) {
-    console.error(err?.response?.data || err);
-    setCreateLoading(false);
   }
-}
+
 
 
   function getAllProjects() {

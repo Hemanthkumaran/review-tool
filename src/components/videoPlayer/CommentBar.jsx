@@ -13,6 +13,7 @@ import AudienceSelect from "../AudienceSelect";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
 import { formatClockTime } from "../../helpers/common";
+import Spinner from "../common/Spinner";
 
 
 
@@ -40,6 +41,7 @@ export default function CommentBar({
   onStartAnnotation,
   onCancelAnnotation,
   pauseVideo,
+  sendingComment,
   commentInputRef
 }) {
   const {
@@ -115,13 +117,13 @@ export default function CommentBar({
   };
 
 const disabledSend =
+sendingComment || 
   isRecording || (
     !text.trim() &&
     !hasPendingVoice &&
     attachments.length === 0 &&
     !hasPendingAnnotation
   );
-
 
   return (
     <div style={{ width: "60%", margin: "0 auto" }}>
@@ -315,7 +317,7 @@ const disabledSend =
             title="Add comment at current time"
             disabled={disabledSend}
           >
-            <img src={sendIcon} />
+            {sendingComment ? <Spinner size={16} color="#000" /> : <img src={sendIcon} />}
           </button>
         </div>
       </div>

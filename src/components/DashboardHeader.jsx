@@ -6,6 +6,7 @@ import ProfileMenu from "./ProfileMenu";
 import WorkspaceDropdown from "./WorkspaceDropdown";
 import SettingsModal from "./karn-comp/Layout/Settings/SettingsModal";
 import { useWorkspace } from "../context/WorkspaceContext";
+import { useUser } from "../context/UserContext";
 
 function Plus({ className = "" }) {
   return (
@@ -25,13 +26,16 @@ function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
   const [openWorkspace, setOpenWorkspace] = useState(false);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [createLoading] = useState(false);
-
+  const { user, profileLoading } = useUser();
+  console.log(user, profileLoading, 'user, profileLoading');
+  
   const {
     workspaces,
     activeWorkspace,
     setActiveWorkspace,
     loading,
   } = useWorkspace();
+  console.log(activeWorkspace, 'dfljfsskjj');
   
   return (
     <header className="flex items-center justify-between px-2 md:px-2">
@@ -41,7 +45,7 @@ function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
           onClick={() => setOpenWorkspace((v) => !v)}
           className="flex items-center gap-3 rounded-full bg-[#151618] border border-[#101213] px-3 py-2 cursor-pointer"
         >
-          <img src={ownerLogo} />
+          <img style={{ height:40, width:40, borderRadius:40 }} src={activeWorkspace?.logo?.url ?? ownerLogo} />
           <span className="text-sm md:text-base font-medium">
             {loading ? "Loading..." : activeWorkspace?.name}
           </span>
@@ -127,11 +131,13 @@ function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
               }}
             >
               <button className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#151618] border border-[#232427] mr-3">
+                {profileLoading ?
+                <div className="h-9 w-9 rounded-full bg-[#151618] object-cover"/> :
                 <img
-                  src="https://i.pravatar.cc/80?img=32"
+                  src={user?.profileImage?.url ?? "https://i.pravatar.cc/80?img=32"}
                   alt="User"
                   className="h-9 w-9 rounded-full object-cover"
-                />
+                />}
               </button>
               <img src={arrowDown} />
             </div>

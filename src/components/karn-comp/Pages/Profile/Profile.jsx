@@ -1,59 +1,133 @@
+import React, { useEffect, useState } from "react";
 import OutlineInput from "../../../textInputs/OutlineInput";
 import EditableAvatar from "../../components/EditAvatar/EditableAvatar";
 import Button from "../../../UI/Button";
 import "./Profile.css";
+import { updateUserProfileApi } from "../../../../services/api";
+import { useUser } from "../../../../context/UserContext";
 
 const Profile = () => {
+  const { user, refreshUserProfile } = useUser();
+
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    setForm({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
+    });
+
+    setAvatarUrl(user.profileImage?.url || null);
+  }, [user]);
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+
+      const formData = new FormData();
+      formData.append("firstName", form.firstName);
+      formData.append("lastName", form.lastName);
+
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
+
+      await updateUserProfileApi(formData);
+
+      // 🔥 refresh global user state
+      await refreshUserProfile();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+   const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  if (!user) return null;
+
   return (
     <div>
       <div className="flex justify-between content-center">
-        <div className="text-2xl font-bold pb-4 text-[#ffffff]">Profile</div>
+        <div style={{ fontFamily:'Gilroy-SemiBold', fontSize:18, }}>
+          Profile settings
+        </div>
       </div>
-      <div>Lorem ipsum dolor sit amet ,te eos molestiae debitis.</div>
+      <div style={{ color:"#BFBFBF", fontSize:14, fontFamily:'Gilroy-Light', marginTop:5 }}>Adjust your display picture, name, and password from here.</div>
       <br />
 
-      <EditableAvatar />
+      <EditableAvatar
+        imageUrl={avatarUrl}
+        onImageSelect={setImageFile}
+      />
       <br />
 
       <div className="profile-form">
-        <div className="row">
+        <div className="flex mb-4">
           <OutlineInput
-            label="Name "
+            label="Name"
             placeholder="John"
             name="firstName"
+            value={form.firstName}
+            onChange={handleChange}
             styles={{ borderColor: "#2B2B2B" }}
           />
           <OutlineInput
             label=""
             placeholder="Wick"
             name="lastName"
-            styles={{ borderColor: "#2B2B2B" }}
+            value={form.lastName}
+            onChange={handleChange}
+            styles={{ borderColor: "#2B2B2B", marginLeft:25 }}
           />
         </div>
 
-        {/* Email */}
         <OutlineInput
           label="Email"
-          placeholder="johnwick@gmail.com"
+          // placeholder="johnwick@gmail.com"
           name="email"
-          styles={{ borderColor: "#2B2B2B", width: "80%", padding: "20px" }}
+          value={form.email}
+          disabled
+          styles={{
+            borderColor: "#2B2B2B",
+            width: "70%",
+            padding: "20px",
+          }}
         />
       </div>
+
       <br />
       <div className="h-line"></div>
       <br />
+
       <div>
         <div className="mb-4 text-[#ffffff]">Change Password</div>
         <div>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit
-          <a className="text-yellow-300 " href="#">
+          Set a new password for your account anytime.
+          <a  className="text-yellow-300" href="#">
             {" "}
-            Click here
+            Update password
           </a>
         </div>
       </div>
+
       <br />
       <br />
+
       <div className="flex justify-end">
         <Button
           width="120px"
@@ -65,11 +139,13 @@ const Profile = () => {
         />
         <Button
           width="120px"
-          content="Save"
+          content={loading ? "Saving..." : "Save"}
           bgColor="yellow"
           textColor="black"
           border="2px solid #2a2a2a"
           marginRight="24px"
+          onClick={handleSave}
+          disabled={loading}
         />
       </div>
     </div>

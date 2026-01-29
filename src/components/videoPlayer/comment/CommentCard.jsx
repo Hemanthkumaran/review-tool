@@ -36,11 +36,13 @@ export default function CommentCard({
     user,
     replies = [],
   } = marker;
+  console.log(marker, 'mmm');
   
   const name = user?.name ?? "John";
   const role = user?.role ?? "Owner";
   const avatar = user?.avatarUrl ?? "https://i.pravatar.cc/32?u=john";
-
+  console.log(avatar, 'avatar', user?.avatarUrl);
+  
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);

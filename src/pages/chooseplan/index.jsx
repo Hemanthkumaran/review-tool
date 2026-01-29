@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Modal from "react-modal";
 import ToggleButton from "../../components/buttons/ToggleButton";
 import FreeTrialModal from "../../components/modals/FreetrialModal";
+import { useWorkspace } from "../../context/WorkspaceContext";
+import { startTrialApi } from "../../services/api";
 
 const modalStyles = {
   overlay: {
@@ -22,10 +24,37 @@ const modalStyles = {
 };
 
 export default function ChoosePlanModal({ open, onClose }) {
+    const { activeWorkspace, refreshWorkspacePlan } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState(null);
+
 
   const priceTeam = isAnnual ? 25 : 250;
   const priceAgency = isAnnual ? 50 : 500;
+
+  const handleStartTrial = async (planKey) => {
+  if (!activeWorkspace?._id) return;
+
+  try {
+    setLoadingPlan(planKey);
+
+    await startTrialApi(activeWorkspace._id, {
+      activePlan: planKey,                  // "freelancer" | "team" | "team_plus"
+      interval: isAnnual ? "yearly" : "monthly",
+    });
+
+    // 🔁 refresh billing state
+    await refreshWorkspacePlan(activeWorkspace._id);
+
+    onClose();
+  } catch (err) {
+    console.error("Failed to start trial", err);
+  } finally {
+    setLoadingPlan(null);
+  }
+};
+
+
 
   return (
     <Modal
@@ -85,6 +114,7 @@ export default function ChoosePlanModal({ open, onClose }) {
               { text: "100 mins of storage + Storage addons", enabled: true },
             ]}
             buttonLabel="Start free trial"
+            onClick={() => handleStartTrial("freelancer")}
             highlight={false}
           />
 
@@ -103,6 +133,7 @@ export default function ChoosePlanModal({ open, onClose }) {
               { text: "Version management", enabled: true },
             ]}
             buttonLabel="Start free trial"
+            onClick={() => handleStartTrial("team")}
             highlight
           />
 
@@ -116,6 +147,7 @@ export default function ChoosePlanModal({ open, onClose }) {
               { text: "1000 mins of storage + Storage addons", enabled: true },
               { text: "Custom UI branding (Paid addon)", enabled: true },
             ]}
+            onClick={() => handleStartTrial("team_plus")}
             buttonLabel="Start free trial"
             highlight
           />
@@ -136,7 +168,14 @@ export default function ChoosePlanModal({ open, onClose }) {
 }
 
 
-function PricingCard({ title, price, period, features, buttonLabel, highlight }) {
+function PricingCard({   title,
+  price,
+  period,
+  features,
+  buttonLabel,
+  highlight,
+  onClick,
+  loading, }) {
   return (
     <div className="relative">
       {/* Card */}
@@ -170,12 +209,13 @@ function PricingCard({ title, price, period, features, buttonLabel, highlight })
           {/* Button */}
             <div className="mt-10 mt-auto flex justify-center ">
               <button
-                className={`w-full sm:w-auto px-8 py-3 rounded-full font-medium transition cursor-pointer
-                  ${highlight
-                    ? "bg-[#F9EF38] text-black hover:opacity-90"
-                    : "bg-[#F9EF38] text-black hover:opacity-90"}`}
+                disabled={loading}
+                onClick={onClick}
+                className={`w-full sm:w-auto px-8 py-3 rounded-full font-medium transition
+                  ${loading ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
+                  bg-[#F9EF38] text-black hover:opacity-90`}
               >
-                {buttonLabel}
+                {loading ? "Starting..." : buttonLabel}
               </button>
             </div>
         </div>

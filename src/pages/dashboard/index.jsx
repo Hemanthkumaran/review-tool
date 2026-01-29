@@ -40,6 +40,15 @@ export default function DashboardPage({
   });
   const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  console.log(requiresPlan, 'requiresPlan');
+  
+  // 🔥 auto-open when no plan
+  useEffect(() => {
+    if (!billingLoading && requiresPlan) {
+      // setShowPlanModal(true);
+    }
+  }, [requiresPlan, billingLoading]);
 
   useEffect(() => {
     if (workspaceLoading) return;
@@ -228,7 +237,10 @@ export default function DashboardPage({
         handleCreate={handleCreate}
         loading={createLoading}
       />
-      {/* <ChoosePlanModal open={open} /> */}
+      <ChoosePlanModal
+        open={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+      />
       {/* <FreeTrialModal open /> */}
     </div>
   );

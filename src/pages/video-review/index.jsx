@@ -29,6 +29,7 @@ export default function VideoReview() {
   // const [videoFile, setVideoFile] = useState(null);
 
   const [markers, setMarkers] = useState([]);
+  const [sendingComment, setSendingComment] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
   const [activeVersionId, setActiveVersionId] = useState(null);
 
@@ -416,6 +417,7 @@ function fetchProject(storedGuest = null) {
 
 
   const handleSendComment = async ({ text, images, commentType, isEdit = false, commentId = null, existingMarker = null }) => {
+    setSendingComment(true);
     pauseVideo();
 
     const trimmed = (text || "")?.trim();
@@ -434,42 +436,12 @@ function fetchProject(storedGuest = null) {
       return;
     }
 
-const baseTime = isEdit
-  ? existingMarker.time           // 👈 reuse original timeline
-  : (hasAnnotation && pendingAnnotation.time) ||
-    (hasVoice && pendingVoice.startTime) ||
-    currentTime ||
-    0;
-
-  /* ---------- 1) Update local UI immediately (add marker) ---------- */
-
-  // decide marker type for your local timeline
-  let markerType = "text";
-  if (hasAnnotation && hasVoice) markerType = "mixed";
-  else if (hasAnnotation) markerType = "annotation";
-  else if (hasVoice) markerType = "voice";
-
-
-  
-
-  const localMarkerPayload = {
-    time: baseTime,
-    type: markerType,
-    text: trimmed || "",
-    images: imageUrls,
-  };
-
-  if (hasAnnotation) {
-    localMarkerPayload.annotation = pendingAnnotation.annotation;
-  }
-  if (hasVoice) {
-    localMarkerPayload.audioUrl = pendingVoice.url;
-  }
-
-  if (!isEdit) {
-    addMarker(localMarkerPayload);
-  }
-
+  const baseTime = isEdit
+    ? existingMarker.time           // 👈 reuse original timeline
+    : (hasAnnotation && pendingAnnotation.time) ||
+      (hasVoice && pendingVoice.startTime) ||
+      currentTime ||
+      0;
 
   /* ---------- 2) Build FormData for backend ---------- */
 
@@ -569,6 +541,7 @@ const baseTime = isEdit
         })
       };
     });
+    setSendingComment(false);
   } else {
     const res = await addCommentApi(
       projectID,
@@ -590,8 +563,10 @@ const baseTime = isEdit
         })
       };
     });
+    setSendingComment(false);
   }
   } catch (err) {
+    setSendingComment(false);
     console.error("addComment API failed", err?.response?.data || err);
     // TODO: optionally show a toast or mark the local marker as "failed"
   } finally {
@@ -819,6 +794,7 @@ const handleNewVersionFile = async (e) => {
         onCancelAnnotation={handleCancelAnnotation}
         pauseVideo={pauseVideo}
         commentInputRef={commentInputRef}
+        sendingComment={sendingComment}
       />
     </div>
 

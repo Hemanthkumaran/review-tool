@@ -1,9 +1,9 @@
 import React from 'react'
 
-function OutlineInput({ label, placeholder, type = "text", value, onChange, name, styles }) {
+function OutlineInput({ label, placeholder, type = "text", value="", onChange, name, styles }) {
   return (
     <div>
-        {label.length ?
+        {label?.length ?
         <label className="block text-sm font-medium mb-2 text-left">
             {label}
         </label> : <div style={{ marginTop:28 }}/>}

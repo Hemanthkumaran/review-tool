@@ -72,6 +72,12 @@ export default function ConfirmPlanModal({
           </div>
           <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
             <div>
+              <span style={{ textTransform:'capitalize'}}>{`Current Additional Storage Cost (${additionalStorage}  mins)`} </span>
+            </div>
+            <div>{`$ ${currentAdditionalCost}/mo`}</div>
+          </div>
+          <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
+            <div>
               <span style={{ textTransform:'capitalize'}}>{`Additional Storage Cost (${newAdditionalStorage}  mins)`} </span>
             </div>
             <div>{`$ ${newAdditonalCost}/mo`}</div>

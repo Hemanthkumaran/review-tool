@@ -8,44 +8,53 @@ function safeParseAnnotation(raw) {
   }
 }
 
-/**
- * comments: array from backend (version.comments)
- * userLookup: optional map { userId: { name, role, avatarUrl } }
- */
 export function mapCommentsToMarkers(comments = [], userLookup = {}) {
   return (comments || []).map((c) => {
-        const user = c.userData
+    const user = c.userData
       ? {
           id: c.userData._id,
           name: `${c.userData.firstName || ""} ${c.userData.lastName || ""}`.trim(),
-          email: c.userData.email,
-          role: "Owner", // backend can send later
-          avatarUrl: "https://i.pravatar.cc/40?u=" + c.userData._id, // dummy for now
+          email: c.userData.email || "",
+          role: c.userData.role || "Owner", // 🔥 backend-ready
+          avatarUrl:
+            c.userData.profileImage?.url ||
+            null, // 🔥 real S3 image, fallback handled by UI
         }
       : null;
 
-    // images already come as signed URLs from backend.
-    const images = (c.images || []).map((img) => img.url || img.signedUrl || "");
+    // Images (already signed URLs)
+    const images = (c.images || []).map(
+      (img) => img?.url || img?.signedUrl || ""
+    );
 
-    // voice note as signed URL
+    // Voice note (signed URL)
     const audioUrl = c.voiceNote?.url || null;
 
     const annotation = safeParseAnnotation(c.annotation);
-const baseType =
-  annotation && audioUrl
-    ? "mixed"
-    : annotation
-    ? "annotation"
-    : audioUrl
-    ? "voice"
-    : "text";
 
+    const baseType =
+      annotation && audioUrl
+        ? "mixed"
+        : annotation
+        ? "annotation"
+        : audioUrl
+        ? "voice"
+        : "text";
 
     const replies = (c.replies || []).map((r) => ({
       id: r._id,
       text: r.text || "",
       createdAt: r.createdAt ? new Date(r.createdAt) : null,
-      user: userLookup?.[r.userID] || null,
+      user:
+        userLookup?.[r.userID]
+          ? {
+              ...userLookup[r.userID],
+              avatarUrl:
+                userLookup[r.userID]?.profileImage?.url ||
+                userLookup[r.userID]?.avatarUrl ||
+                null,
+            }
+          : null,
     }));
 
     return {
@@ -61,8 +70,7 @@ const baseType =
       user,
       replies,
       isResolved: !!c.isResolved,
-      // keep raw comment if you ever need more fields
-      _raw: c,
+      _raw: c, // keep raw
     };
   });
 }

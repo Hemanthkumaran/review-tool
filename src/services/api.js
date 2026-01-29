@@ -222,3 +222,24 @@ export const getWorkspacePlanApi = (workspaceID) =>
 
 export const createPaymentOrderApi = (workspaceID, payload) =>
   axiosClient.post(`/billing/createPaymentOrder?workspaceID=${workspaceID}`, payload);
+
+export const updateUserProfileApi = (payload) =>
+  axiosClient.patch("/user/updateUserProfile", payload, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  export const getUserProfileApi = () =>
+  axiosClient.get("/user/getUserProfile");
+
+  export const updateWorkspaceApi = (workspaceID, payload) =>
+  axiosClient.patch(
+    `/user/updateWorkspace?workspaceID=${workspaceID}`,
+    payload,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
