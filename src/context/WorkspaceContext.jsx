@@ -78,6 +78,8 @@ const fetchWorkspacePlan = async (workspaceId) => {
       setLoading(true);
 
       const res = await getAllUserWorkspace();
+      console.log(res, 'i got refreshed');
+      
       const list = res.data.workspaceArray || [];
 
       setWorkspaces(list);

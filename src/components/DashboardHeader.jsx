@@ -5,8 +5,7 @@ import ownerLogo from "../assets/svgs/owner.svg";
 import ProfileMenu from "./ProfileMenu";
 import WorkspaceDropdown from "./WorkspaceDropdown";
 import SettingsModal from "./karn-comp/Layout/Settings/SettingsModal";
-import { useWorkspace } from "../context/WorkspaceContext";
-import { useUser } from "../context/UserContext";
+import { constants } from "../helpers/enum";
 
 function Plus({ className = "" }) {
   return (
@@ -21,21 +20,24 @@ function Plus({ className = "" }) {
   );
 }
 
-function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
+function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setActiveWorkspace, subscription }) {
+
   const [openProfile, setOpenProfile] = useState(false);
   const [openWorkspace, setOpenWorkspace] = useState(false);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [createLoading] = useState(false);
-  const { user, profileLoading } = useUser();
-  console.log(user, profileLoading, 'user, profileLoading');
-  
-  const {
-    workspaces,
-    activeWorkspace,
-    setActiveWorkspace,
-    loading,
-  } = useWorkspace();
-  console.log(activeWorkspace, 'dfljfsskjj');
+
+  const minutesCap =
+  subscription?.baseStorageMinutes +
+  subscription?.additionalStorageMinutes;
+const minutesUsed = Math.ceil(subscription?.storageMinutesUsed);
+console.log(subscription, 'subscription', minutesUsed);
+
+const usagePercent = minutesCap
+  ? Math.min(100, (minutesUsed / minutesCap) * 100)
+  : 0;
+
+  console.log(userAccess, 'userAccessuserAccess');
   
   return (
     <header className="flex items-center justify-between px-2 md:px-2">
@@ -47,7 +49,7 @@ function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
         >
           <img style={{ height:40, width:40, borderRadius:40 }} src={activeWorkspace?.logo?.url ?? ownerLogo} />
           <span className="text-sm md:text-base font-medium">
-            {loading ? "Loading..." : activeWorkspace?.name}
+            {activeWorkspace?.name}
           </span>
 
           <span
@@ -72,26 +74,25 @@ function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
         )}
       </div>
 
-      {/* RIGHT CLUSTER */}
       <div className="flex items-center gap-3 md:gap-4">
-        {/* Usage pill */}
+
         <div className="hidden sm:flex items-center gap-3 rounded-full bg-[#070707] border border-[#101213] px-3 py-2">
-          <div className="text-xs text-[#BFBFBF] min-w-[84px]">
+         
+          {userAccess == constants.OWNER && <div className="text-xs text-[#BFBFBF] min-w-[84px]">
             {minutesUsed} / {minutesCap} mins
             <div className="h-1 w-28 mt-1 rounded-full bg-[#1E1F22] overflow-hidden">
               <div
                 className="h-full bg-[#820000] rounded-full"
-                style={{ width: `${usagePct}%` }}
+                style={{ width: `${usagePercent}%` }}
               />
             </div>
-          </div>
+            </div>}
 
           <button className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#1E1F22] hover:bg-[#24262A]">
             <Plus className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Profile */}
         <div
           className="flex items-center justify-between"
           style={{
@@ -131,13 +132,12 @@ function DashboardHeader({ minutesUsed, minutesCap, usagePct }) {
               }}
             >
               <button className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#151618] border border-[#232427] mr-3">
-                {profileLoading ?
-                <div className="h-9 w-9 rounded-full bg-[#151618] object-cover"/> :
+                <div className="h-9 w-9 rounded-full bg-[#151618] object-cover"/>
                 <img
                   src={user?.profileImage?.url ?? "https://i.pravatar.cc/80?img=32"}
                   alt="User"
                   className="h-9 w-9 rounded-full object-cover"
-                />}
+                />
               </button>
               <img src={arrowDown} />
             </div>

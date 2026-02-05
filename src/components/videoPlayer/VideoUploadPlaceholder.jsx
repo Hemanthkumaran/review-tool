@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { getOneProjectApi, getVideoUploadUrl } from "../../services/api";
 import uploadIcon from '../../assets/svgs/upload.svg';
 import { constants } from "../../helpers/enum";
+import { getVideoDuration } from "../../helpers/muxHelpers";
 
 
 function UploadFrameLoader({ progress = 0, label = "Uploading" }) {
@@ -122,7 +123,8 @@ useEffect(() => {
     setProgress(0);
 
     try {
-      const res = await getVideoUploadUrl(projectId);
+      const duration = await getVideoDuration(file);
+      const res = await getVideoUploadUrl(projectId, duration);
       const { muxUploadURL } = res.data || {};
 
       if (!muxUploadURL) throw new Error("No muxUploadURL returned");
@@ -131,8 +133,8 @@ useEffect(() => {
 
       // await onVideoUploaded?.();
     } catch (err) {
-      console.error("Video upload failed", err);
-      setError(err?.message || "Failed to upload video.");
+      console.error("Video upload failed", err.response);
+      // setError(err.response.error || "Failed to upload video.");
     } finally {
       setIsUploading(false);
       setProgress(0);

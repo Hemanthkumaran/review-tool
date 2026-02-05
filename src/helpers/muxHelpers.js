@@ -52,7 +52,9 @@ export function getVideoDuration(file) {
 
     video.onloadedmetadata = () => {
       URL.revokeObjectURL(video.src);
-      resolve(video.duration); // duration in seconds
+
+      const durationInMinutes = video.duration / 60;
+      resolve(durationInMinutes); // minutes (float)
     };
 
     video.onerror = () => {
@@ -62,3 +64,4 @@ export function getVideoDuration(file) {
     video.src = URL.createObjectURL(file);
   });
 }
+

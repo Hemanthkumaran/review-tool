@@ -105,6 +105,8 @@ const handleDrop = (e) => {
     handleCreate(projectName.trim(), selectedFile);
   };
 
+  // const disableCreate = !projectName.length || selectedFile == null;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -178,7 +180,7 @@ const handleDrop = (e) => {
       fontSize: 14,
     }}
   >
-    Upload project file (Optional)
+    Upload project file
   </div>
 
   {/* hidden file input */}

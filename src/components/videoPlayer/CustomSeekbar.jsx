@@ -133,13 +133,17 @@ export default function CustomSeekBar({
             : 0;
 
           return (
-            <button
-              key={m.id}
-              type="button"
-              className="pointer-events-auto absolute"
-              style={{ left: `${leftPct}%` }}
-              onClick={() => onSeek?.(m.time)}
-            >
+              <button
+                key={m.id}
+                type="button"
+                className="pointer-events-auto absolute flex flex-col items-center"
+                style={{
+                  left: `${leftPct}%`,
+                  transform: "translateX(-50%)",
+                }}
+                onClick={() => onSeek?.(m.time)}
+              >
+
               <div className="w-4 h-4 rounded-full border border-[#FEEA3B] overflow-hidden bg-black mb-[6px]">
                 <img
                   src={
@@ -164,7 +168,7 @@ export default function CustomSeekBar({
           <div className="w-[160px] rounded-lg overflow-hidden bg-black shadow-xl">
             <img
               src={getMuxThumbnail(playbackId, hoverTime)}
-              className="w-full h-auto"
+              className="w-full h-20"
             />
             <div className="text-[11px] text-center text-white py-1 bg-black/70">
               {formatClockTime(hoverTime)}

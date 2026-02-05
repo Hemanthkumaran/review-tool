@@ -64,6 +64,7 @@ const closeMoreMenu = () => setOpen(false);
     }
   };
 
+console.log(userAccess, 'userAccess');
 
 
   function getMenutItems() {

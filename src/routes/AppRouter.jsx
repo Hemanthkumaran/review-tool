@@ -1,15 +1,14 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import PublicRoute from "./PublicRoute";
+import ReviewerRoute from "./ReviewerRoute";
 import { PATHS } from "./paths";
 
 import CreateAccount from "../pages/onboarding";
-import Dashboard from "../pages/dashboard";
-import AddProject from "../pages/dashboard/AddProject";
 import VideoReview from "../pages/video-review";
-import ChoosePlan from "../pages/chooseplan";
-import FreeTrialModal from "../components/modals/FreetrialModal";
-import ReviewerRoute from "./ReviewerRoute";
+import DashboardLayout from "../components/dashboard/DashboardLayout";
+import WelcomeWorkspace from "../pages/dashboard/WelcomeWorkspace";
+import AddProject from "../pages/dashboard/AddProject";
 
 const NotFound = () => <div className="p-8">404 - Not Found</div>;
 
@@ -22,31 +21,35 @@ const router = createBrowserRouter([
       </PublicRoute>
     ),
   },
+
   {
     path: PATHS.DASHBOARD,
     element: (
       <ProtectedRoute>
-        <Dashboard />
-        {/* <ChoosePlan/> */}
+        <DashboardLayout />
       </ProtectedRoute>
     ),
+    children: [
+      {
+        index: true,
+        element: <WelcomeWorkspace />,
+      },
+      {
+        path: PATHS.ADD_PROJECT,
+        element: <AddProject />,
+      },
+    ],
   },
-  {
-    path: PATHS.ADD_PROJECT,
-    element: (
-      <ProtectedRoute>
-        <AddProject />
-      </ProtectedRoute>
-    ),
-  },
+
   {
     path: PATHS.VIDEO_REVIEW,
     element: (
       <ReviewerRoute>
         <VideoReview />
-        </ReviewerRoute>
+      </ReviewerRoute>
     ),
   },
+
   { path: "*", element: <NotFound /> },
 ]);
 

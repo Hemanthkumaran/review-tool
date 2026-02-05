@@ -9,7 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { addCommentApi, addReplyApi, deleteProjectVersionApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi, updateProjectApi } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
-import { uploadToMux } from "../../helpers/muxHelpers";
+import { getVideoDuration, uploadToMux } from "../../helpers/muxHelpers";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
 import { getAuthToken, getGuestIdentity, setGuestIdentity } from "../../helpers/storage.js";
@@ -652,7 +652,8 @@ const handleNewVersionFile = async (e) => {
     setIsUploading(true);
     setUploadPct(0);
 
-    const uploadRes = await getVideoUploadUrl(projectId);
+    const duration = await getVideoDuration(file);
+    const uploadRes = await getVideoUploadUrl(projectId, duration);
     const { muxUploadURL } = uploadRes.data;
 
     await uploadToMux(muxUploadURL, file, (pct) => {

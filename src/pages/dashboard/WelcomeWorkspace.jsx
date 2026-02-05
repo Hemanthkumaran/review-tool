@@ -5,23 +5,19 @@ import cutjamm from '../../assets/svgs/cutjamm.svg';
 import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
 import { useNavigate } from 'react-router-dom';
-import { allFoldersApi, createFolderApi, getWorkspacePlanApi, startTrialApi } from '../../services/api';
+import { allFoldersApi, createFolderApi, getWorkspacePlanApi } from '../../services/api';
 import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
-import DashboardHeader from '../../components/DashboardHeader';
-import AppLoader from '../../components/common/AppLoader';
-import ShareModal from '../../components/modals/ShareModal';
 import ProjectAccordion from '../../components/karn-comp/components/Accordion/Accordion';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 import filterIcon from "../../assets/svgs/filter.svg";
 import ProjectFilter from '../../components/ProjectFilter';
-import ChoosePlanModal from '../chooseplan';
 import FreeTrialModal from '../../components/modals/FreetrialModal';
+import ChoosePlanModal from '../../pages/chooseplan';
+import Spinner from '../../components/common/Spinner';
 
-export default function DashboardPage({
-  minutesUsed = 89,
-  minutesCap = 500,
+export default function WelcomeWorkspace({
   onCreateFolder = () => {},
 }) {
 
@@ -33,12 +29,10 @@ export default function DashboardPage({
   const { activeWorkspace, loading: workspaceLoading, userAccess, requiresPlan, billingLoading } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
-  const [open, setOpen] = useState(true);
   const [filters, setFilters] = useState({
     assignment: null,   // "assigned" | "unassigned" | null
     status: []          // ["yet_to_start", "in_progress", ...]
   });
-  const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
   const [showPlanModal, setShowPlanModal] = useState(false);
   console.log(requiresPlan, 'requiresPlan');
@@ -118,7 +112,6 @@ export default function DashboardPage({
             key={item._id}
             folder={item}
             noOfProjects={item.projects.length}
-            // onClick={() => navigate(PATHS.ADD_PROJECT, { state: item })}
             onClick={() => navigate(`${PATHS.ADD_PROJECT}?folder=${item._id}&folderName=${item.name}`)}
             onRenamed={handleFolderUpdated}
             onDeleted={handleFolderDeleted}
@@ -133,31 +126,21 @@ export default function DashboardPage({
     }
   }
 
+  const isDoneLoading = workspaceLoading || foldersLoading || billingLoading;
 
-  if (workspaceLoading || foldersLoading || billingLoading) {
-    return <AppLoader visible message="Loading..." />;
+  if (isDoneLoading) {
+    return <div className='flex items-center justify-center mt-30'>
+        <Spinner size={46} color="#F9EF38" />
+    </div>
   }
-
-  // if (foldersLoading) {
-  //   return <AppLoader visible message="Loading folders…" />;
-  // }
-
 
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
-      <DashboardHeader
-        minutesUsed={minutesUsed}
-        minutesCap={minutesCap}
-        usagePct={usagePct}
-      />
-      {/* Page content */}
       <main className="px-6 md:px-8">
-        {/* Title row */}
         <div className="mt-8 flex items-center justify-between">
           <div style={{ fontFamily:"Gilroy-SemiBold", fontSize:24 }}>
             Welcome to {activeWorkspace?.name}'s workspace
           </div>
-
           {activeTab == "allFolders" ? 
             <div className="hidden md:flex items-center gap-3">
               {userAccess == constants.OWNER && <button
@@ -182,7 +165,6 @@ export default function DashboardPage({
                 className="cursor-pointer"
                 onClick={() => setShowFilter((v) => !v)}
               />
-
               {showFilter && (
                 <ProjectFilter
                   filters={filters}
@@ -193,9 +175,7 @@ export default function DashboardPage({
             </div>
           }
         </div>
-        {/* Tabs & mobile actions */}
         <div className="mt-6 flex items-center justify-between">
-          {/* Segmented tabs */}
             { userAccess != constants.REVIEWER && <div style={{ width:250 }} className="mt-2">
               <SegmentedTabs
                 options={[
@@ -206,7 +186,6 @@ export default function DashboardPage({
                 onChange={setActiveTab}
               />
             </div>}
-          {/* Mobile actions */}
           <div className="md:hidden flex items-center gap-2">
             <button
               className="inline-flex items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-3 py-2 hover:bg-[#1A1B1E]"
@@ -225,7 +204,6 @@ export default function DashboardPage({
         </div>
         {getActiveContent()}
       </main>
-      {/* Bottom-right watermark */}
       <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>

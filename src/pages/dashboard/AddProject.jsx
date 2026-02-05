@@ -15,6 +15,7 @@ import ShareModal from '../../components/modals/ShareModal';
 import { getVideoDuration, uploadToMux } from '../../helpers/muxHelpers';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
+import Spinner from '../../components/common/Spinner';
 
 export default function AddProject({
   minutesUsed = 89,
@@ -33,7 +34,7 @@ export default function AddProject({
   const [params] = useSearchParams();
   const folderId = params.get("folder");
   const folderName = params.get("folderName");
-  const { activeWorkspace, loading: workspaceLoading, userAccess } = useWorkspace();
+  const { activeWorkspace, loading: workspaceLoading, userAccess, refreshWorkspacePlan } = useWorkspace();
   
     useEffect(() => {
       if (activeWorkspace !== null) {
@@ -65,6 +66,7 @@ export default function AddProject({
     try {
       await deleteProjectApi(id);
       getAllProjects();
+      refreshWorkspacePlan(activeWorkspace._id);
     } catch (err) {
       console.error("Delete failed", err);
     }
@@ -76,17 +78,19 @@ export default function AddProject({
     let duration = null;
 
     try {
-      if (selectedFile) {
-        duration = await getVideoDuration(selectedFile);
-        console.log("Video duration:", duration, folderId);
-      }
-
       const data = {
         folderID: folderId,
         name,
         hasFile: !!selectedFile,
-        videoDuration: duration
+        // videoDuration: duration
       };
+
+      if (selectedFile) {
+        duration = await getVideoDuration(selectedFile);
+        data['videoDuration'] = duration;
+        console.log("Video duration:", duration, folderId);
+      }
+
       console.log(data, 'data')
       // 1) Create project immediately
       const res = await createProjectApi(data);
@@ -95,6 +99,7 @@ export default function AddProject({
       // 2) Close modal + refresh
       setAddProjectOpen(false);
       setCreateLoading(false);
+      refreshWorkspacePlan(activeWorkspace._id);
       await getAllProjects();
 
       // 3) Upload in background
@@ -108,6 +113,7 @@ export default function AddProject({
 
     } catch (err) {
       console.error(err);
+      alert(err.response.data.error)
       setCreateLoading(false);
     }
   }
@@ -135,15 +141,15 @@ export default function AddProject({
     })
   }
 
-  if (loading) return <AppLoader visible={loading} message="Loading projects..." />
+  
+  if (loading) {
+    return <div className='flex items-center justify-center mt-30'>
+        <Spinner size={46} color="#F9EF38" />
+    </div>
+  }
 
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
-      <DashboardHeader
-        minutesUsed={minutesUsed}
-        minutesCap={minutesCap}
-        usagePct={usagePct}
-      />
       {/* Page content */}
       <main className="px-6 md:px-8">
         {/* Title row */}

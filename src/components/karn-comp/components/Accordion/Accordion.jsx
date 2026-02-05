@@ -1,34 +1,33 @@
 import * as Accordion from "@radix-ui/react-accordion";
 import "./AccordionStyles.css";
-import ACard from "./Acard";
 import { useNavigate } from "react-router-dom";
-import { PATHS } from "../../../../routes/paths";
 import { deleteProjectApi, updateProjectApi } from "../../../../services/api";
 import ProjectFolder from "../../../ProjectFolder";
+import { useWorkspace } from "../../../../context/WorkspaceContext";
 
 export default function ProjectAccordion({ folder, getAllFolders }) {
 
   const navigate = useNavigate();
-  console.log(folder);
+    const {
+      activeWorkspace
+    } = useWorkspace();
+  const handleUpdateProject = async (id, payload) => {
+    try {
+      await updateProjectApi(id, payload);
+      getAllFolders();
+    } catch (err) {
+      console.error("Update failed", err);
+    }
+  };
 
-  
-    const handleUpdateProject = async (id, payload) => {
-      try {
-        await updateProjectApi(id, payload);
-        getAllFolders();
-      } catch (err) {
-        console.error("Update failed", err);
-      }
-    };
-  
-    const handleDeleteProject = async (id) => {
-      try {
-        await deleteProjectApi(id);
-        getAllFolders();
-      } catch (err) {
-        console.error("Delete failed", err);
-      }
-    };
+  const handleDeleteProject = async (id) => {
+    try {
+      await deleteProjectApi(id);
+      getAllFolders();
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
     
   return (
     <Accordion.Root type="multiple" className="accordion-root">
@@ -54,7 +53,7 @@ export default function ProjectAccordion({ folder, getAllFolders }) {
           key={item._id}
           project={item}
           onClick={() =>
-            navigate(`/video-review/${item._id}`)
+            navigate(`/video-review/${item._id}?ws=${activeWorkspace?._id}`)
           }
           onRename={(id, name) =>
             handleUpdateProject(id, { name })
