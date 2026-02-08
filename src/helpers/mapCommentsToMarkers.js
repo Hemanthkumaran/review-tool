@@ -41,12 +41,17 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
         ? "voice"
         : "text";
 
-    const replies = (c.replies || []).map((r) => ({
-      id: r._id,
-      text: r.text || "",
-      createdAt: r.createdAt ? new Date(r.createdAt) : null,
-      user:
-        userLookup?.[r.userID]
+    const replies = (c.replies || []).map((r) => {
+      const replyUser =
+        r.userData
+          ? {
+              id: r.userData._id,
+              name: `${r.userData.firstName || ""} ${r.userData.lastName || ""}`.trim(),
+              email: r.userData.email || "",
+              role: r.userData.role || "Owner",
+              avatarUrl: r.userData.profileImage?.url || null,
+            }
+          : userLookup?.[r.userID]
           ? {
               ...userLookup[r.userID],
               avatarUrl:
@@ -54,8 +59,15 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
                 userLookup[r.userID]?.avatarUrl ||
                 null,
             }
-          : null,
-    }));
+          : null;
+
+      return {
+        id: r._id,
+        text: r.text || "",
+        createdAt: r.createdAt ? new Date(r.createdAt) : null,
+        user: replyUser,
+      };
+    });
 
     return {
       id: c._id,

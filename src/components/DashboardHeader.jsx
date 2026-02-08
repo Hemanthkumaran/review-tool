@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import bellIcon from "../assets/svgs/bell.svg";
 import arrowDown from "../assets/svgs/arrow-down.svg";
 import ownerLogo from "../assets/svgs/owner.svg";
@@ -26,7 +26,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const [openWorkspace, setOpenWorkspace] = useState(false);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [createLoading] = useState(false);
-
+const profileBtnRef = useRef(null);
   const minutesCap =
   subscription?.baseStorageMinutes +
   subscription?.additionalStorageMinutes;
@@ -117,6 +117,7 @@ const usagePercent = minutesCap
           {/* PROFILE CLICK (FIXED – NO FLICKER) */}
           <div
             className="relative cursor-pointer"
+            ref={profileBtnRef}
             onClick={(e) => {
               e.stopPropagation();
               setOpenProfile((prev) => !prev);
@@ -146,6 +147,7 @@ const usagePercent = minutesCap
               <ProfileMenu
                 onClose={() => setOpenProfile(false)}
                 onOpenSettings={() => setCreateModalOpen(true)}
+                triggerRef={profileBtnRef}
               />
             )}
           </div>

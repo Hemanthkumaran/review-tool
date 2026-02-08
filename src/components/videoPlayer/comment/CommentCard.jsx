@@ -8,6 +8,7 @@ import CommentHeader from "./CommentHeader";
 import CommentUserCard from "./CommentUserCard";
 import ReplyInput from "./ReplyInput";
 import DeleteCommentModal from "../../modals/DeleteCommentModal";
+import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
 
 
 export default function CommentCard({
@@ -41,7 +42,6 @@ export default function CommentCard({
   const name = user?.name ?? "John";
   const role = user?.role ?? "Owner";
   const avatar = user?.avatarUrl ?? "https://i.pravatar.cc/32?u=john";
-  console.log(avatar, 'avatar', user?.avatarUrl);
   
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -152,14 +152,14 @@ export default function CommentCard({
                             setIsEditingComment(true);
                           }}
                         >
-                        Edit
+                        <PenIcon color="#666666"/>
                       </button>
 
                       <button
                         className="hover:text-white cursor-pointer"
                         onClick={() => setShowDeleteModal(true)}
                       >
-                        Delete
+                        <TrashIcon color="#666666"/>
                       </button>
                     </div>
                   )}

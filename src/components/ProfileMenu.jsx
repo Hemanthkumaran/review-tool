@@ -7,17 +7,23 @@ import settingsIcon from '../assets/svgs/settings.svg';
 import ticketIcon from '../assets/svgs/ticket.svg';
 import { logout } from "../helpers/common";
 
-export default function ProfileMenu({ onClose, onOpenSettings }) {
+export default function ProfileMenu({ onClose, onOpenSettings, triggerRef }) {
   const menuRef = useRef(null);
 
-  // click outside
   useEffect(() => {
     const handler = (e) => {
-      if (!menuRef.current?.contains(e.target)) onClose();
+      if (
+        menuRef.current?.contains(e.target) ||
+        triggerRef?.current?.contains(e.target)
+      ) {
+        return;
+      }
+      onClose();
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [onClose]);
+
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, [onClose, triggerRef]);
 
   const Item = ({ icon, label, danger, onClick }) => (
     <button

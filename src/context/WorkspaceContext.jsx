@@ -1,14 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { getAllUserWorkspace, getWorkspacePlanApi, getWorkspaceUsers } from "../services/api";
-import { useAuth } from "./AuthContext";
 import { constants } from "../helpers/enum";
 
 const WorkspaceContext = createContext(null);
 
 export const WorkspaceProvider = ({ children }) => {
-  const auth = useAuth(); // 🔑 do NOT destructure immediately
-  const isAuthenticated = auth?.isAuthenticated;
 
   const [workspaces, setWorkspaces] = useState([]);
   const [activeWorkspace, setActiveWorkspace] = useState(null);
@@ -17,14 +14,11 @@ export const WorkspaceProvider = ({ children }) => {
 
   const [workspacePlan, setWorkspacePlan] = useState(null);
   const [billingLoading, setBillingLoading] = useState(false);
-  const [requiresPlan, setRequiresPlan] = useState(false);
 
 
   const userAccess = activeWorkspace?.permissionType == undefined ? constants.REVIEWER : activeWorkspace?.permissionType;
   
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const location = useLocation();
   const workspaceIdFromUrl = searchParams.get("ws");
 
 const fetchWorkspacePlan = async (workspaceId) => {
@@ -34,38 +28,11 @@ const fetchWorkspacePlan = async (workspaceId) => {
     setBillingLoading(true);
 
     const res = await getWorkspacePlanApi(workspaceId);
-    const subscription = res?.data?.subscription || null;
 
     setWorkspacePlan(res.data);
 
-    let hasAccess = false;
-
-    if (subscription) {
-      const now = Date.now();
-
-      // 1️⃣ Active paid subscription
-      if (
-        subscription.status === "active" &&
-        subscription.subscriptionEndAt &&
-        new Date(subscription.subscriptionEndAt).getTime() > now
-      ) {
-        hasAccess = true;
-      }
-
-      // 2️⃣ Trial period (trial started but subscription not ended yet)
-      else if (
-        subscription.trialUsedAt &&
-        subscription.subscriptionStartAt &&
-        new Date(subscription.subscriptionStartAt).getTime() > now
-      ) {
-        hasAccess = true;
-      }
-    }
-
-    setRequiresPlan(!hasAccess);
   } catch (err) {
     console.error("Failed to fetch plan", err);
-    setRequiresPlan(true); // safest default
   } finally {
     setBillingLoading(false);
   }
@@ -176,7 +143,6 @@ const fetchWorkspacePlan = async (workspaceId) => {
         fetchWorkspaceUsers,
         userAccess,  
         workspacePlan,
-        requiresPlan,
         billingLoading,
         refreshWorkspacePlan: fetchWorkspacePlan,
       }}

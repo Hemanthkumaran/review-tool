@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import SegmentedTabs from "../SegmentedTabs";
 import CommentCard from "./comment/CommentCard";
@@ -45,7 +45,7 @@ export default function CommentsColumn({
   const [showResolved, setShowResolved] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [commentFilters, setCommentFilters] = useState([]);
-
+  const filterBtnRef = useRef(null);
 
 const handleCommentUpdated = (commentId, newText) => {
   setMarkers((prev) =>
@@ -229,21 +229,23 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     onChange={setShowResolved}
                     size="sm"
                   />
-                  <div className="relative">
-                    <img
-                      src={filterIcon}
-                      className="cursor-pointer"
-                      onClick={() => setShowFilter((v) => !v)}
-                    />
+                <div className="relative">
+                  <img
+                    ref={filterBtnRef}
+                    src={filterIcon}
+                    className="cursor-pointer"
+                    onClick={() => setShowFilter((v) => !v)}
+                  />
 
-                    {showFilter && (
-                      <CommentFilterDropdown
-                        selected={commentFilters}
-                        onChange={setCommentFilters}
-                        onClose={() => setShowFilter(false)}
-                      />
-                    )}
-                  </div>
+                  {showFilter && (
+                    <CommentFilterDropdown
+                      selected={commentFilters}
+                      onChange={setCommentFilters}
+                      onClose={() => setShowFilter(false)}
+                      triggerRef={filterBtnRef}
+                    />
+                  )}
+                </div>
               </div>
             </div> : null }
             {activeTab === "comments" ? (

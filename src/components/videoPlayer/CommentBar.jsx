@@ -16,7 +16,6 @@ import { formatClockTime } from "../../helpers/common";
 import Spinner from "../common/Spinner";
 
 
-
 /**
  * Props:
  *  - currentTime

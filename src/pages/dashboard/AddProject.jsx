@@ -213,7 +213,7 @@ export default function AddProject({
               project={item}
               fetchGetAllProjs={getAllProjects}
               onClick={() =>
-                navigate(`/video-review/${item._id}`)
+                navigate(`/video-review/${item._id}?ws=${activeWorkspace?._id}`)
               }
               onRename={(id, name) =>
                 handleUpdateProject(id, { name })

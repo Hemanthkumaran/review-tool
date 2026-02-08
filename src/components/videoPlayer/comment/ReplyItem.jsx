@@ -2,6 +2,7 @@ import { useState } from "react";
 import { deleteReplyApi, updateReplyApi } from "../../../services/api";
 import ReplyInput from "./ReplyInput";
 import { formatRelative } from "../../../helpers/common";
+import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
 
 export default function ReplyItem({
   reply,
@@ -20,7 +21,8 @@ export default function ReplyItem({
   const [draftText, setDraftText] = useState(reply.text);
   const [isHovered, setIsHovered] = useState(false);
   const [showReplyBox, setShowReplyBox] = useState(false);
-
+  console.log(reply, 'reply');
+  
   return (
     <>
       <div
@@ -79,17 +81,17 @@ export default function ReplyItem({
                 {isHovered && (
                   <div className="flex gap-4 text-gray-400 text-xs">
                     <button
-                      className="hover:text-white"
+                      className="hover:text-white cursor-pointer"
                       onClick={() => {
                         setDraftText(reply.text);
                         setIsEditing(true);
                       }}
                     >
-                      Edit
+                      <PenIcon color="#666666"/>
                     </button>
 
                     <button
-                      className="hover:text-white"
+                      className="hover:text-white cursor-pointer"
                       onClick={async () => {
                         await deleteReplyApi(
                           projectId,
@@ -100,7 +102,7 @@ export default function ReplyItem({
                         onReplyDeleted(commentId, reply.id);
                       }}
                     >
-                      Delete
+                      <TrashIcon color="#666666"/>
                     </button>
                   </div>
                 )}

@@ -16,6 +16,7 @@ import ProjectFilter from '../../components/ProjectFilter';
 import FreeTrialModal from '../../components/modals/FreetrialModal';
 import ChoosePlanModal from '../../pages/chooseplan';
 import Spinner from '../../components/common/Spinner';
+import ShareModal from '../../components/modals/ShareModal';
 
 export default function WelcomeWorkspace({
   onCreateFolder = () => {},
@@ -24,9 +25,10 @@ export default function WelcomeWorkspace({
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [allFolders, setAllFolders] = useState([]);
   const [inviteModal, setInviteModal] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
-  const { activeWorkspace, loading: workspaceLoading, userAccess, requiresPlan, billingLoading } = useWorkspace();
+  const { activeWorkspace, loading: workspaceLoading, userAccess, billingLoading } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState({
@@ -34,15 +36,6 @@ export default function WelcomeWorkspace({
     status: []          // ["yet_to_start", "in_progress", ...]
   });
   const navigate = useNavigate();
-  const [showPlanModal, setShowPlanModal] = useState(false);
-  console.log(requiresPlan, 'requiresPlan');
-  
-  // 🔥 auto-open when no plan
-  useEffect(() => {
-    if (!billingLoading && requiresPlan) {
-      // setShowPlanModal(true);
-    }
-  }, [requiresPlan, billingLoading]);
 
   useEffect(() => {
     if (workspaceLoading) return;
@@ -66,19 +59,12 @@ export default function WelcomeWorkspace({
 
 
   function getAllFolders() {
-    // startTrialApi( activeWorkspace?._id,   {
-    //     // valid("freelancer","team","team_plus")
-    //     "activePlan": "team",
-    //     // valid("monthly","annual")
-    //     "interval": "monthly"
-    //   })
-    // .then(res => console.log(res, 'dkskdjdjsjd'))
-
     setFoldersLoading(true);
     getWorkspacePlanApi(activeWorkspace?._id).then(res => console.log(res, 'workspace plan'))
-
     allFoldersApi("createdAt", "desc", activeWorkspace._id)
       .then((res) => {
+        const isActive = res.data.subscriptionStatus === 'active';
+        setSubscriptionStatus(isActive);
         setAllFolders(res.data.folderArray);
       })
       .catch((err) => {
@@ -88,8 +74,7 @@ export default function WelcomeWorkspace({
         setFoldersLoading(false);
       });
   }
-
-
+  
   function handleFolderUpdated(folderId, newName) {
     setAllFolders((prev) =>
       prev.map((f) =>
@@ -112,7 +97,7 @@ export default function WelcomeWorkspace({
             key={item._id}
             folder={item}
             noOfProjects={item.projects.length}
-            onClick={() => navigate(`${PATHS.ADD_PROJECT}?folder=${item._id}&folderName=${item.name}`)}
+            onClick={() => navigate(`${PATHS.ADD_PROJECT}?ws=${activeWorkspace?._id}&folder=${item._id}&folderName=${item.name}`)}
             onRenamed={handleFolderUpdated}
             onDeleted={handleFolderDeleted}
           />
@@ -208,7 +193,7 @@ export default function WelcomeWorkspace({
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
-      {/* {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null} */}
+      {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null}
       <CreateFolderModal
         isOpen={isCreateModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -216,10 +201,9 @@ export default function WelcomeWorkspace({
         loading={createLoading}
       />
       <ChoosePlanModal
-        open={showPlanModal}
-        onClose={() => setShowPlanModal(false)}
+        open={!subscriptionStatus}
+        onClose={getAllFolders}
       />
-      {/* <FreeTrialModal open /> */}
     </div>
   );
 }

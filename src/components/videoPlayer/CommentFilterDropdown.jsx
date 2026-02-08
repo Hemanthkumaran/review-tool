@@ -5,19 +5,24 @@ export default function CommentFilterDropdown({
   selected = [],
   onChange,
   onClose,
+   triggerRef,
 }) {
   const ref = useRef(null);
 
-  // close on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) {
-        onClose();
+      if (
+        ref.current?.contains(e.target) ||
+        triggerRef?.current?.contains(e.target)
+      ) {
+        return;
       }
+      onClose();
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [onClose]);
+
+    document.addEventListener("pointerdown", handler);
+    return () => document.removeEventListener("pointerdown", handler);
+  }, [onClose, triggerRef]);
 
   const toggle = (value) => {
     

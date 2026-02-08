@@ -24,7 +24,7 @@ const modalStyles = {
 };
 
 export default function ChoosePlanModal({ open, onClose }) {
-    const { activeWorkspace, refreshWorkspacePlan } = useWorkspace();
+  const { activeWorkspace, refreshWorkspacePlan } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
 
@@ -39,14 +39,12 @@ export default function ChoosePlanModal({ open, onClose }) {
     setLoadingPlan(planKey);
 
     await startTrialApi(activeWorkspace._id, {
-      activePlan: planKey,                  // "freelancer" | "team" | "team_plus"
+      activePlan: planKey,
       interval: isAnnual ? "yearly" : "monthly",
     });
-
-    // 🔁 refresh billing state
+    onClose();
     await refreshWorkspacePlan(activeWorkspace._id);
 
-    onClose();
   } catch (err) {
     console.error("Failed to start trial", err);
   } finally {
