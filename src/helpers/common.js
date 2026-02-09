@@ -63,10 +63,6 @@ export function formatRelative(date) {
 
 export function logout() {
   clearAuth();
-
-  // Clear in-memory state (important for React apps)
   window.__APP_AUTH__ = null;
-
-  // Hard reload so React state, SWR cache, etc are wiped
   window.location.replace("/"); 
 }

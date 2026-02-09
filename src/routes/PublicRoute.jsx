@@ -3,12 +3,11 @@ import { PATHS } from "./paths";
 import { useAuth } from "../context/AuthContext";
 
 export default function PublicRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isOnboarded, isLoading } = useAuth();
 
   if (isLoading) return null;
 
-  // if already logged in → go to dashboard
-  if (isAuthenticated) {
+  if (isAuthenticated && isOnboarded) {
     return <Navigate to={PATHS.DASHBOARD} replace />;
   }
 

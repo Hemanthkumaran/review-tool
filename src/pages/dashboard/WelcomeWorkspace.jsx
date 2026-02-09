@@ -13,10 +13,10 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 import filterIcon from "../../assets/svgs/filter.svg";
 import ProjectFilter from '../../components/ProjectFilter';
-import FreeTrialModal from '../../components/modals/FreetrialModal';
 import ChoosePlanModal from '../../pages/chooseplan';
 import Spinner from '../../components/common/Spinner';
 import ShareModal from '../../components/modals/ShareModal';
+import SubscriptionModal from '../../components/modals/SubscriptionModal';
 
 export default function WelcomeWorkspace({
   onCreateFolder = () => {},
@@ -25,12 +25,14 @@ export default function WelcomeWorkspace({
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [allFolders, setAllFolders] = useState([]);
   const [inviteModal, setInviteModal] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState(null);
+  const [freeTrialUsed, setFreeTrialUsed] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
   const { activeWorkspace, loading: workspaceLoading, userAccess, billingLoading } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
+  const [chosenPlan, setChosenPlan] = useState(null);
   const [filters, setFilters] = useState({
     assignment: null,   // "assigned" | "unassigned" | null
     status: []          // ["yet_to_start", "in_progress", ...]
@@ -57,14 +59,15 @@ export default function WelcomeWorkspace({
     })
   }
 
-
+  
   function getAllFolders() {
     setFoldersLoading(true);
     getWorkspacePlanApi(activeWorkspace?._id).then(res => console.log(res, 'workspace plan'))
     allFoldersApi("createdAt", "desc", activeWorkspace._id)
       .then((res) => {
         const isActive = res.data.subscriptionStatus === 'active';
-        setSubscriptionStatus(isActive);
+        setIsSubscriptionActive(isActive);
+        setFreeTrialUsed(res.data.trialUsed);
         setAllFolders(res.data.folderArray);
       })
       .catch((err) => {
@@ -201,9 +204,18 @@ export default function WelcomeWorkspace({
         loading={createLoading}
       />
       <ChoosePlanModal
-        open={!subscriptionStatus}
+        open={(!freeTrialUsed || (freeTrialUsed && isSubscriptionActive))}
         onClose={getAllFolders}
+        setChosenPlan={(v) => setChosenPlan(v)}
+        buttonLabel={!freeTrialUsed ? "Start free trial" : "Upgrade"}
       />
+      {chosenPlan != null && <SubscriptionModal 
+        open={true}
+        title={`Welcome to your ${chosenPlan} trial`}
+        onBtnClick={() => setChosenPlan("")}
+        subtitle='Your free trial is active. Feel free to try every feature and see what works best for you.'
+        buttonTitle='Go to dashboard'
+      />}
     </div>
   );
 }

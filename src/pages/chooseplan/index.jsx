@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
 import ToggleButton from "../../components/buttons/ToggleButton";
-import FreeTrialModal from "../../components/modals/FreetrialModal";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { startTrialApi } from "../../services/api";
+import SubscriptionModal from "../../components/modals/SubscriptionModal";
 
 const modalStyles = {
   overlay: {
@@ -23,7 +23,7 @@ const modalStyles = {
   },
 };
 
-export default function ChoosePlanModal({ open, onClose }) {
+export default function ChoosePlanModal({ open, onClose, setChosenPlan, buttonLabel }) {
   const { activeWorkspace, refreshWorkspacePlan } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
@@ -33,25 +33,24 @@ export default function ChoosePlanModal({ open, onClose }) {
   const priceAgency = isAnnual ? 50 : 500;
 
   const handleStartTrial = async (planKey) => {
-  if (!activeWorkspace?._id) return;
+    if (!activeWorkspace?._id) return;
 
-  try {
-    setLoadingPlan(planKey);
+    try {
+      setLoadingPlan(planKey);
+      await startTrialApi(activeWorkspace._id, {
+        activePlan: planKey,
+        interval: isAnnual ? "yearly" : "monthly",
+      });
+      setChosenPlan(planKey);
+      onClose();
+      await refreshWorkspacePlan(activeWorkspace._id);
 
-    await startTrialApi(activeWorkspace._id, {
-      activePlan: planKey,
-      interval: isAnnual ? "yearly" : "monthly",
-    });
-    onClose();
-    await refreshWorkspacePlan(activeWorkspace._id);
-
-  } catch (err) {
-    console.error("Failed to start trial", err);
-  } finally {
-    setLoadingPlan(null);
-  }
-};
-
+    } catch (err) {
+      console.error("Failed to start trial", err);
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
 
   return (
@@ -111,7 +110,7 @@ export default function ChoosePlanModal({ open, onClose }) {
               { text: "1 user", enabled: true },
               { text: "100 mins of storage + Storage addons", enabled: true },
             ]}
-            buttonLabel="Start free trial"
+            buttonLabel={buttonLabel}
             onClick={() => handleStartTrial("freelancer")}
             highlight={false}
           />
@@ -130,7 +129,7 @@ export default function ChoosePlanModal({ open, onClose }) {
               { text: "Internal notes", enabled: true },
               { text: "Version management", enabled: true },
             ]}
-            buttonLabel="Start free trial"
+            buttonLabel={buttonLabel}
             onClick={() => handleStartTrial("team")}
             highlight
           />
@@ -146,7 +145,7 @@ export default function ChoosePlanModal({ open, onClose }) {
               { text: "Custom UI branding (Paid addon)", enabled: true },
             ]}
             onClick={() => handleStartTrial("team_plus")}
-            buttonLabel="Start free trial"
+            buttonLabel={buttonLabel}
             highlight
           />
         </div>
@@ -158,8 +157,6 @@ export default function ChoosePlanModal({ open, onClose }) {
           </span>
           Billing details will be requested after 7 days.
         </div>
-
-        {/* <FreeTrialModal open /> */}
       </div>
     </Modal>
   );

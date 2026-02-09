@@ -37,7 +37,7 @@ function LoginAccount({ setCurrentScreen }) {
       throw new Error("No token received");
     }
 
-    login(token);                     // 🔑 THIS updates React auth state
+    login(token, { onboarded: true });
 
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));

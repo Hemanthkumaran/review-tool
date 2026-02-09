@@ -35,8 +35,7 @@ function CreateAccount({ setCurrentScreen }) {
       if (!token) {
         throw new Error("No token returned from signup");
       }
-
-      login(token); // 🔑 update React auth state
+      login(token, { onboarded: false });
 
       if (user) {
         localStorage.setItem("user", JSON.stringify(user));

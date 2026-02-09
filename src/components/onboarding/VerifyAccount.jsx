@@ -40,7 +40,7 @@ function VerifyAccount({ setCurrentScreen }) {
       await emailVerificationApi({ emailVerificationOTP: code })
 
       // If you already have a token from signup, go straight to dashboard.
-      const token = localStorage.getItem('authToken')
+      const token = localStorage.getItem('authToken');
       if (token) {
         setCurrentScreen('buildWorkspace')
       } else {

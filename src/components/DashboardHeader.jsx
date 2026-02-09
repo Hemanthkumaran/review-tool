@@ -31,13 +31,16 @@ const profileBtnRef = useRef(null);
   subscription?.baseStorageMinutes +
   subscription?.additionalStorageMinutes;
 const minutesUsed = Math.ceil(subscription?.storageMinutesUsed);
-console.log(subscription, 'subscription', minutesUsed);
 
+  console.log(user, 'u');
+  
 const usagePercent = minutesCap
   ? Math.min(100, (minutesUsed / minutesCap) * 100)
   : 0;
 
-  console.log(userAccess, 'userAccessuserAccess');
+  const getInitials = (firstName = "", lastName = "") =>
+  `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
+
   
   return (
     <header className="flex items-center justify-between px-2 md:px-2">
@@ -133,12 +136,14 @@ const usagePercent = minutesCap
               }}
             >
               <button className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#151618] border border-[#232427] mr-3">
-                <div className="h-9 w-9 rounded-full bg-[#151618] object-cover"/>
-                <img
-                  src={user?.profileImage?.url ?? "https://i.pravatar.cc/80?img=32"}
-                  alt="User"
-                  className="h-9 w-9 rounded-full object-cover"
-                />
+                {user?.profileImage?.url ?
+                  <img
+                    src={user?.profileImage?.url}
+                    alt="User"
+                    className="h-9 w-9 rounded-full object-cover"
+                  /> : 
+                    <div>{getInitials(user?.firstName, user?.lastName)}</div>
+                  }
               </button>
               <img src={arrowDown} />
             </div>

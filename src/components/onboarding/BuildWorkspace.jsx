@@ -30,7 +30,6 @@ function BuildWorkspace() {
 
       const workspace = res?.data?.workspace || res?.workspace || { name: trimmed };
       localStorage.setItem('workspace', JSON.stringify(workspace));
-
       navigate(PATHS.DASHBOARD);
     } catch (err) {
       const msg = err?.response?.data?.message || 'Failed to create workspace. Please try again.';

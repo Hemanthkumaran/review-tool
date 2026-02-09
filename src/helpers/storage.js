@@ -22,12 +22,7 @@ export function setGuestIdentity(data) {
 
 export function clearAuth() {
   try {
-    localStorage.removeItem(constants.AUTH_TOKEN);
-    localStorage.removeItem(constants.GUEST_KEY);
-
-    // optional: clear other session scoped values
-    localStorage.removeItem("lastProjectId");
-    localStorage.removeItem("activeVersionId");
+    localStorage.clear();
   } catch (e) {
     console.error("Failed to clear auth", e);
   }
