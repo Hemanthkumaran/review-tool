@@ -19,7 +19,6 @@ const WorkspaceSettings = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoUrl, setLogoUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  console.log(activeWorkspace, 'activeWorkspace');
   
   // 🔁 Prefill data
   useEffect(() => {

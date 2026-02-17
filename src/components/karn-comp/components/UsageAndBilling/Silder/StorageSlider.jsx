@@ -63,20 +63,12 @@ export default function StorageSlider() {
     setLoading(true);
 
     try {
-      console.log({
-        activePlan: workspacePlan.subscription.activePlan,
-        interval: workspacePlan.subscription.interval,
-        additionalStorageMinutes: increaseMinutes,
-        purpose: "upgrade",
-      }, 'test');
-      
       const res = await createPaymentOrderApi(activeWorkspace._id, {
         activePlan: workspacePlan.subscription.activePlan,
         interval: workspacePlan.subscription.interval,
         additionalStorageMinutes: increaseMinutes,
         purpose: "upgrade",
       });
-      console.log(res, 'razorpay order');
       
       const order = res.data.razorpay;
 

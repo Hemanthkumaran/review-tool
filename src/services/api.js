@@ -37,9 +37,38 @@ export const createFolderApi = (data) => {
   return axiosClient.post(`/folder/createFolder`, data);
 };
 
-export const allFoldersApi = (sortBy = 'createdAt', sortOrder = 'desc', workspaceID) => {
-  return axiosClient.get(`/folder/getAllFolders?sortField=${sortBy}&sortOrder=${sortOrder}&workspaceID=${workspaceID}`);
+// export const allFoldersApi = (sortBy = 'createdAt', sortOrder = 'desc', workspaceID) => {
+//   return axiosClient.get(`/folder/getAllFolders?sortField=${sortBy}&sortOrder=${sortOrder}&workspaceID=${workspaceID}`);
+// };
+
+export const allFoldersApi = (
+  sortBy = "createdAt",
+  sortOrder = "desc",
+  workspaceID,
+  filters = {}
+) => {
+
+  // ⭐ assigned filter
+  let assigned = [];
+
+  if (filters.assignment === "assigned") assigned = [true];
+  else if (filters.assignment === "unassigned") assigned = [false];
+
+  // ⭐ status filter
+  const status = filters.status?.length
+    ? filters.status.map(s => s.replaceAll("_", " "))
+    : [];
+
+  return axiosClient.post(
+    `/folder/getAllFolders?sortField=${sortBy}&sortOrder=${sortOrder}&workspaceID=${workspaceID}`,
+    {
+      assigned,
+      status,
+    }
+  );
 };
+
+
 
 export const getOneFolderApi = (folderId) => {
   return axiosClient.get(`/folder/getOneFolder?folderID=${folderId}`);
@@ -62,9 +91,26 @@ export const getVideoUploadUrl = (projId, videoDuration) => {
   return axiosClient.get(`/project/getUploadVideoLink?projectID=${projId}&videoDuration=${videoDuration}`);
 };
 
-export const addCommentApi = (projectID, versionID, formData) => {
+export const addCommentApi = (
+  projectID,
+  versionID,
+  formData,
+  reviewer = null
+) => {
+
+  const params = new URLSearchParams({
+    projectID,
+    versionID,
+  });
+
+  // ⭐ add reviewer params only if reviewer exists
+  if (reviewer?.reviewerEmail && reviewer?.reviewerName) {
+    params.append("reviewerEmail", reviewer.reviewerEmail);
+    params.append("reviewerName", reviewer.reviewerName);
+  }
+
   return axiosClient.post(
-    `/project/addComment?projectID=${projectID}&versionID=${versionID}`,
+    `/project/addComment?${params.toString()}`,
     formData,
     {
       headers: {
@@ -74,17 +120,45 @@ export const addCommentApi = (projectID, versionID, formData) => {
   );
 };
 
+
 export async function updateNotesApi(projectID, data) {
   const res = await axiosClient.patch(`/project/updateNotes?projectID=${projectID}`, data);
   return res.data;
 }
 
-export const addReplyApi = (projectId, versionId, commentId, payload) => {
+// export const addReplyApi = (projectId, versionId, commentId, payload) => {
+//   return axiosClient.patch(
+//     `/project/addReply?projectID=${projectId}&versionID=${versionId}&commentID=${commentId}`,
+//     payload
+//   );
+// };
+
+export const addReplyApi = (
+  projectId,
+  versionId,
+  commentId,
+  payload,
+  reviewer = null
+) => {
+
+  const params = new URLSearchParams({
+    projectID: projectId,
+    versionID: versionId,
+    commentID: commentId,
+  });
+
+  // ⭐ append reviewer only if exists
+  if (reviewer?.reviewerEmail && reviewer?.reviewerName) {
+    params.append("reviewerEmail", reviewer.reviewerEmail);
+    params.append("reviewerName", reviewer.reviewerName);
+  }
+
   return axiosClient.patch(
-    `/project/addReply?projectID=${projectId}&versionID=${versionId}&commentID=${commentId}`,
+    `/project/addReply?${params.toString()}`,
     payload
   );
 };
+
 
 export const resolveCommentApi = (projectId, versionId, commentId, payload) => {
   return axiosClient.patch(

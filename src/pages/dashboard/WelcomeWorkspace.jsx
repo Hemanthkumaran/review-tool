@@ -4,7 +4,7 @@ import CreateFolderModal from '../../components/modals/CreateFolderModal';
 import cutjamm from '../../assets/svgs/cutjamm.svg';
 import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { allFoldersApi, createFolderApi, getWorkspacePlanApi } from '../../services/api';
 import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
@@ -17,6 +17,8 @@ import ChoosePlanModal from '../../pages/chooseplan';
 import Spinner from '../../components/common/Spinner';
 import ShareModal from '../../components/modals/ShareModal';
 import SubscriptionModal from '../../components/modals/SubscriptionModal';
+import { ResumeSubIcon } from '../../assets/svgs/SvgComponents';
+import SettingsModal from '../../components/karn-comp/Layout/Settings/SettingsModal';
 
 export default function WelcomeWorkspace({
   onCreateFolder = () => {},
@@ -24,7 +26,7 @@ export default function WelcomeWorkspace({
 
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [allFolders, setAllFolders] = useState([]);
-  const [inviteModal, setInviteModal] = useState(false);
+  const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(null);
   const [freeTrialUsed, setFreeTrialUsed] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
@@ -37,13 +39,17 @@ export default function WelcomeWorkspace({
     assignment: null,   // "assigned" | "unassigned" | null
     status: []          // ["yet_to_start", "in_progress", ...]
   });
+  // const [modalStep, setModalStep] = useState(null);
   const navigate = useNavigate();
+  const { modalStep, setModalStep } = useOutletContext();
 
   useEffect(() => {
     if (workspaceLoading) return;
     if (!activeWorkspace?._id) return;
+
     getAllFolders();
-  }, [workspaceLoading, activeWorkspace?._id]);
+
+  }, [workspaceLoading, activeWorkspace?._id, filters]);
 
 
   function handleCreate() {
@@ -60,23 +66,36 @@ export default function WelcomeWorkspace({
   }
 
   
-  function getAllFolders() {
-    setFoldersLoading(true);
-    getWorkspacePlanApi(activeWorkspace?._id).then(res => console.log(res, 'workspace plan'))
-    allFoldersApi("createdAt", "desc", activeWorkspace._id)
-      .then((res) => {
-        const isActive = res.data.subscriptionStatus === 'active';
-        setIsSubscriptionActive(isActive);
-        setFreeTrialUsed(res.data.trialUsed);
-        setAllFolders(res.data.folderArray);
-      })
-      .catch((err) => {
-        console.error(err);
-      })
-      .finally(() => {
-        setFoldersLoading(false);
-      });
-  }
+ function getAllFolders(isAfterCheckout = false) {
+  setFoldersLoading(true);
+
+  allFoldersApi("createdAt", "desc", activeWorkspace._id, filters)
+    .then((res) => {
+      const status = res.data.subscriptionStatus;
+      const trialUsed = res.data.trialUsed;
+
+      setIsSubscriptionActive(status === "active" || status === "trialing");
+      setFreeTrialUsed(trialUsed);
+      setAllFolders(res.data.folderArray);
+
+      // ⭐ AFTER CHECKOUT SUCCESS
+      if (isAfterCheckout) {
+        if (status === "trialing") setModalStep("trialStarted");
+        else if (status === "active") setModalStep("welcomeAboard");
+        return;
+      }
+
+      // ⭐ NORMAL WORKSPACE SWITCH / LOAD
+      if (status === "none" || status === "inactive" || status === "expired") {
+        setModalStep("noPlan");
+      } else {
+        setModalStep(null);
+      }
+    })
+    .catch(console.error)
+    .finally(() => setFoldersLoading(false));
+}
+
   
   function handleFolderUpdated(folderId, newName) {
     setAllFolders((prev) =>
@@ -113,7 +132,6 @@ export default function WelcomeWorkspace({
       })
     }
   }
-
   const isDoneLoading = workspaceLoading || foldersLoading || billingLoading;
 
   if (isDoneLoading) {
@@ -132,7 +150,7 @@ export default function WelcomeWorkspace({
           {activeTab == "allFolders" ? 
             <div className="hidden md:flex items-center gap-3">
               {userAccess == constants.OWNER && <button
-                onClick={() => setInviteModal(true)}
+                onClick={() => setIsSettingModalOpen(true)}
                 className="inline-flex items-center cursor-pointer gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
               >
                 <InviteIcon className="h-4 w-4" />
@@ -176,6 +194,7 @@ export default function WelcomeWorkspace({
             </div>}
           <div className="md:hidden flex items-center gap-2">
             <button
+              onClick={() => setIsSettingModalOpen(true)}
               className="inline-flex items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-3 py-2 hover:bg-[#1A1B1E]"
             >
               <InviteIcon className="h-4 w-4" />
@@ -196,7 +215,6 @@ export default function WelcomeWorkspace({
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
-      {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null}
       <CreateFolderModal
         isOpen={isCreateModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -204,18 +222,66 @@ export default function WelcomeWorkspace({
         loading={createLoading}
       />
       <ChoosePlanModal
-        open={(!freeTrialUsed || (freeTrialUsed && isSubscriptionActive))}
-        onClose={getAllFolders}
-        setChosenPlan={(v) => setChosenPlan(v)}
-        buttonLabel={!freeTrialUsed ? "Start free trial" : "Upgrade"}
+        open={modalStep === "choosePlan"}
+        setChosenPlan={(plan) => {
+          setChosenPlan(plan);
+          setModalStep(null)
+        }}
+        // onSuccess={() => {
+        //     setModalStep("trialStarted");
+        //     getAllFolders(); // refresh status
+        // }}
+        onSuccess={() => {
+          getAllFolders(true);   // pass flag to detect post-payment
+        }}
+        trialUsed={freeTrialUsed}
+        buttonLabel={!freeTrialUsed ? "Start free trial" : "Subscribe"}
       />
-      {chosenPlan != null && <SubscriptionModal 
-        open={true}
-        title={`Welcome to your ${chosenPlan} trial`}
-        onBtnClick={() => setChosenPlan("")}
-        subtitle='Your free trial is active. Feel free to try every feature and see what works best for you.'
-        buttonTitle='Go to dashboard'
-      />}
+      {modalStep === "activate" && (
+        <SubscriptionModal
+          open={true}
+          title="Activate your workspace!"
+          subtitle="Select a 7-day free trial plan so we can set up your workspace for use."
+          buttonTitle="See options"
+          onBtnClick={() => setModalStep("choosePlan")}
+          ModalImg={<ResumeSubIcon/>}
+        />
+      )}
+      {/* {modalStep === "noPlan" && (
+        <SubscriptionModal
+          open={true}
+          title="You don't have an active plan"
+          subtitle="Choose a plan to continue using your workspace."
+          buttonTitle="Choose plan"
+          onBtnClick={() => setModalStep("choosePlan")}
+        />
+      )} */}
+      {modalStep === "trialStarted" && (
+        <SubscriptionModal
+          open={true}
+          title={`Welcome to your ${chosenPlan || ""} trial`}
+          subtitle="Your free trial is active. Feel free to try every feature and see what works best for you."
+          buttonTitle="Go to dashboard"
+          onBtnClick={() => setModalStep(null)}
+        />
+      )}
+      {modalStep === "welcomeAboard" && (
+        <SubscriptionModal
+          open={true}
+          title="Welcome aboard!"
+          subtitle="Your subscription is active. Enjoy your workspace. You can manage your billing details under Settings → Billing"
+          buttonTitle="Get started"
+          onBtnClick={() => setModalStep(null)}
+        />
+      )}
+        {/* SETTINGS MODAL */}
+          <SettingsModal
+            isOpen={isSettingModalOpen}
+            onClose={() => setIsSettingModalOpen(false)}
+            activeScreen={"users"}
+            loading={createLoading}
+            activeWorkspace={activeWorkspace}
+          />
     </div>
   );
 }

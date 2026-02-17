@@ -240,16 +240,17 @@ export default function AssignEditorsModal({
 
 /* helpers */
 function mapPermissions(permissions = []) {
-  return permissions.map((p) => ({
-    id: p._id,
-    name: p.name || p.email.split("@")[0],
-    email: p.email,
-    role:
-      p.permissionType === "owner"
-        ? "Owner"
-        : p.permissionType === "member"
-        ? "Team member"
-        : "Collaborator",
-    avatar: `https://i.pravatar.cc/64?u=${p.email}`,
-  }));
+  return permissions
+    .filter(p => p.permissionType !== "owner")   // ⭐ remove owner
+    .map((p) => ({
+      id: p._id,
+      name: p.name || p.email?.split("@")[0],
+      email: p.email,
+      role:
+        p.permissionType === "member"
+          ? "Team member"
+          : "Collaborator",
+      avatar: `https://i.pravatar.cc/64?u=${p.email}`,
+    }));
 }
+

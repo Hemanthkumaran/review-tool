@@ -1,3 +1,5 @@
+import defaultUser from '../assets/images/default_user.png'
+
 function safeParseAnnotation(raw) {
   if (!raw) return null;
   try {

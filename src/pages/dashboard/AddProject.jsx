@@ -4,7 +4,7 @@ import CreateFolderModal from '../../components/modals/CreateFolderModal';
 import cutjamm from '../../assets/svgs/cutjamm.svg';
 import ProjectFolder from '../../components/ProjectFolder';
 import Folder from '../../components/Folder/Folder';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PATHS } from '../../routes/paths';
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import AddProjectModal from '../../components/modals/AddProjectModal';
@@ -16,27 +16,24 @@ import { getVideoDuration, uploadToMux } from '../../helpers/muxHelpers';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 import Spinner from '../../components/common/Spinner';
+import SettingsModal from '../../components/karn-comp/Layout/Settings/SettingsModal';
 
 export default function AddProject({
-  minutesUsed = 89,
-  minutesCap = 500,
   onCreateFolder = () => {},
 }) {
 
   const [addProjectOpen, setAddProjectOpen] = useState(false);
-  const [inviteModal, setInviteModal] = useState(false);
+  const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [allProjects, setAllProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const usagePct = Math.min(100, Math.round((minutesUsed / minutesCap) * 100));
   const navigate = useNavigate();
-  const location = useLocation();
   const [params] = useSearchParams();
   const folderId = params.get("folder");
   const folderName = params.get("folderName");
-  const { activeWorkspace, loading: workspaceLoading, userAccess, refreshWorkspacePlan } = useWorkspace();
-  
-    useEffect(() => {
+  const { activeWorkspace, userAccess, refreshWorkspacePlan } = useWorkspace();
+
+  useEffect(() => {
       if (activeWorkspace !== null) {
         getAllProjects();
       }
@@ -91,7 +88,6 @@ export default function AddProject({
         console.log("Video duration:", duration, folderId);
       }
 
-      console.log(data, 'data')
       // 1) Create project immediately
       const res = await createProjectApi(data);
       const { muxUploadURL } = res.data || {};
@@ -127,17 +123,14 @@ export default function AddProject({
       folderID: folderId,
       workspaceID: activeWorkspace._id
     };
-    console.log(params, 'params');
     
     allProjectsApi(params)
     .then(res => {
-      console.log(res, 'all projects');
       setAllProjects(res.data.projectArray);
       setLoading(false);
     })
     .catch(err => {
       setLoading(false);
-      console.log(err);
     })
   }
 
@@ -166,7 +159,7 @@ export default function AddProject({
             <div style={{ backgroundColor:"#1F1E0C", padding:"2px 13px", borderRadius:14, fontSize:14, marginLeft:5 }}>{allProjects.length}</div>
             </div>
           </div>
-          <div onClick={() => setInviteModal(true)} className="hidden md:flex items-center gap-3">
+          <div onClick={() => setIsSettingModalOpen(true)} className="hidden md:flex items-center gap-3">
             {userAccess == constants.OWNER &&<button
               className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
             >
@@ -191,12 +184,13 @@ export default function AddProject({
         <div className="mt-6 flex items-center justify-between">
           {/* Mobile actions */}
           <div className="md:hidden flex items-center gap-2">
-            <button
-              className="inline-flex items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-3 py-2 hover:bg-[#1A1B1E]"
-            >
-              <InviteIcon className="h-4 w-4" />
-              <span>Invite</span>
-            </button>
+              {userAccess == constants.OWNER && <button
+                onClick={() => setIsSettingModalOpen(true)}
+                className="inline-flex items-center cursor-pointer gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
+              >
+                <InviteIcon className="h-4 w-4" />
+                <span>Invite</span>
+              </button>}
             <button
               onClick={onCreateFolder}
               className="inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-3 py-2 hover:opacity-90"
@@ -231,13 +225,29 @@ export default function AddProject({
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
       </div>
-      {/* {inviteModal ? <ShareModal onClose={() => setInviteModal(false)}/> : null} */}
+      {/* <ShareModal onClose={() => setInviteModal(false)}/> */}
+        {/* <ShareModal
+          open={inviteModal}
+          onClose={() => setInviteModal(false)}
+          permissions={workspaceUsers?.permissions}
+          projectAccess={projectDetail?.permissions}
+          projectID={projectDetail._id}
+          onRefresh={fetchProject}
+        /> */}
       {addProjectOpen && <AddProjectModal
         isOpen={addProjectOpen}
         onClose={() => setAddProjectOpen(false)}
         handleCreate={handleCreate}
         createLoading={createLoading}
       />}
+              {/* SETTINGS MODAL */}
+                <SettingsModal
+                  isOpen={isSettingModalOpen}
+                  onClose={() => setIsSettingModalOpen(false)}
+                  activeScreen={"users"}
+                  loading={createLoading}
+                  activeWorkspace={activeWorkspace}
+                />
     </div>
   );
 }

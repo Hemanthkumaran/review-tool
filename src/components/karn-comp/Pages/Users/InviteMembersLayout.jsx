@@ -51,13 +51,11 @@ export default function InviteMembersLayout({ onBack = () => {}, activeWorkspace
       emails,
       "permissionType": role == "Team member" ? "member" : role.toLowerCase()
     }
-    console.log(data, activeWorkspace, 'data');
     inviteUserToWorkspace(activeWorkspace._id, data)
     .then(res => {
       setEmails([]);
       setValue("");
       showSuccessToast("The invitation was sent to the user");
-      console.log(res,'eer')
     })
     .catch(err => {
       console.log(err.response.data.error)
@@ -82,9 +80,9 @@ export default function InviteMembersLayout({ onBack = () => {}, activeWorkspace
           </p>
         </div>
 
-        <button className="close-btn" onClick={onBack}>
+        {/* <button className="close-btn" onClick={onBack}>
           <X size={18} />
-        </button>
+        </button> */}
       </div>
 
       {/* Invite as */}

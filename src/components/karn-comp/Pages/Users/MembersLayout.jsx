@@ -112,8 +112,6 @@ const data = useMemo(() => {
     }
     try {
       const res = await removeUserFromWorkspace(activeWorkspace._id, data);
-      console.log(res,'dkdlfnl');
-      
       fetchWorkspaceUsers();
       setIsLoading(false);
     } catch (e) {
@@ -135,9 +133,9 @@ const data = useMemo(() => {
           </p>
         </div>
 
-        <button className="close-btn">
+        {/* <button className="close-btn">
           <X size={18} />
-        </button>
+        </button> */}
       </div>
 
       {/* Members info */}

@@ -13,6 +13,7 @@ import { getVideoDuration, uploadToMux } from "../../helpers/muxHelpers";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
 import { getAuthToken, getGuestIdentity, setGuestIdentity } from "../../helpers/storage.js";
+import { constants } from "../../helpers/enum.js";
 
 export default function VideoReview() {
   const playerRef = useRef(null);
@@ -77,7 +78,6 @@ const muxStatus = activeRawVersion?.muxStatus;
     if (!getAuthToken()) {
       const storedGuest = getGuestIdentity();
       if (storedGuest) {
-        console.log(storedGuest, 'storedGuest');
         fetchProject(storedGuest);
       } else {
         setLoading(false);
@@ -149,7 +149,6 @@ useEffect(() => {
     return;
   }
   const version = projectDetail.versions?.find((v) => v._id === activeVersionId)
-  console.log(version, 'version');
   
   const backendComments = version?.comments || [];
   const mapped = mapCommentsToMarkers(backendComments);
@@ -196,7 +195,6 @@ function fetchProject(storedGuest = null) {
 
   // called AFTER upload finishes in VideoUploadPlaceholder
   const handleVideoUploaded = (projectData) => {
-    console.log(projectData, 'proo');
     
     setProjectDetail(projectData);
   };
@@ -401,19 +399,46 @@ function fetchProject(storedGuest = null) {
     // reuse your existing function that refetches project + remaps markers
     // e.g. fetchProjectDetail();
 
+    // const handleAddReply = async (commentId, text) => {
+    //   const trimmed = text?.trim();
+    //   if (!trimmed || !projectId || !versionId) return;
+
+    //   try {
+    //     await addReplyApi(projectId, versionId, commentId, { text: trimmed });
+    //     // refresh project data so replies show up
+    //     fetchProject();
+    //   } catch (err) {
+    //     console.error("Failed to add reply", err);
+    //     // optional: show toast
+    //   }
+    // };
+
     const handleAddReply = async (commentId, text) => {
       const trimmed = text?.trim();
       if (!trimmed || !projectId || !versionId) return;
 
       try {
-        await addReplyApi(projectId, versionId, commentId, { text: trimmed });
-        // refresh project data so replies show up
+        let reviewer = null;
+
+        if (userAccess == constants.REVIEWER) {
+          reviewer = getGuestIdentity();
+        }
+        
+        await addReplyApi(
+          projectId,
+          versionId,
+          commentId,
+          { text: trimmed },
+          reviewer
+        );
+
         fetchProject();
+
       } catch (err) {
         console.error("Failed to add reply", err);
-        // optional: show toast
       }
     };
+
 
 
   const handleSendComment = async ({ text, images, commentType, isEdit = false, commentId = null, existingMarker = null }) => {
@@ -543,11 +568,12 @@ function fetchProject(storedGuest = null) {
     });
     setSendingComment(false);
   } else {
-    const res = await addCommentApi(
-      projectID,
-      versionID,
-      formData
-    );
+    let reviewer = null;
+
+    if (userAccess == constants.REVIEWER) {
+      reviewer = getGuestIdentity();
+    }
+    const res = await addCommentApi(projectID, versionID, formData, reviewer);
     const backendComment = res.data.comment;
     setProjectDetail(prev => {
       if (!prev) return prev;

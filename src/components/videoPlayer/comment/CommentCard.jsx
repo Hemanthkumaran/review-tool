@@ -41,7 +41,7 @@ export default function CommentCard({
   
   const name = user?.name ?? "John";
   const role = user?.role ?? "Owner";
-  const avatar = user?.avatarUrl ?? "https://i.pravatar.cc/32?u=john";
+  const avatar = user?.avatarUrl;
   
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -117,7 +117,7 @@ export default function CommentCard({
         formatClockTime={formatClockTime}
         formatRelative={formatRelative}
       />
-      <CommentUserCard avatar={avatar} name={name} role={role}/>
+      <CommentUserCard avatar={avatar} rawData={marker._raw} role={role} name={name}/>
       {/* main content */}
       <div 
         className="text-[13px] text-gray-200 leading-relaxed mb-3"
@@ -257,6 +257,7 @@ export default function CommentCard({
                     sending={sending}
                     handleSubmitReply={handleSubmitReply}
                     handleReplyKeyDown={handleReplyKeyDown}
+                    rawData={marker._raw}
                   />
                 ))}
               </div>

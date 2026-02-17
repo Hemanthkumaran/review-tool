@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import Modal from "react-modal";
 import ToggleButton from "../../components/buttons/ToggleButton";
 import { useWorkspace } from "../../context/WorkspaceContext";
-import { startTrialApi } from "../../services/api";
+import { createPaymentOrderApi, startTrialApi } from "../../services/api";
 import SubscriptionModal from "../../components/modals/SubscriptionModal";
+import { useRazorpay } from "../../hooks/useRazorpay";
 
 const modalStyles = {
   overlay: {
@@ -23,34 +24,87 @@ const modalStyles = {
   },
 };
 
-export default function ChoosePlanModal({ open, onClose, setChosenPlan, buttonLabel }) {
+export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, buttonLabel, trialUsed, additionalStorageMinutes = 0 }) {
   const { activeWorkspace, refreshWorkspacePlan } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
-
+  const { openCheckout } = useRazorpay();
 
   const priceTeam = isAnnual ? 25 : 250;
   const priceAgency = isAnnual ? 50 : 500;
 
-  const handleStartTrial = async (planKey) => {
+  const handleChoosePlan = async (planKey) => {
     if (!activeWorkspace?._id) return;
 
     try {
       setLoadingPlan(planKey);
-      await startTrialApi(activeWorkspace._id, {
+
+      // 🟢 CASE 1 — FREE TRIAL AVAILABLE
+      if (!trialUsed) {
+
+        await startTrialApi(activeWorkspace._id, {
+          activePlan: planKey,
+          interval: isAnnual ? "yearly" : "monthly",
+        });
+
+        setChosenPlan(planKey);
+        onSuccess();
+
+        await refreshWorkspacePlan(activeWorkspace._id);
+        return;
+      }
+
+      // 🔵 CASE 2 — TRIAL ALREADY USED → PAYMENT FLOW
+
+      const res = await createPaymentOrderApi(activeWorkspace._id, {
         activePlan: planKey,
         interval: isAnnual ? "yearly" : "monthly",
+        purpose: "subscribe",
+        additionalStorageMinutes: additionalStorageMinutes
       });
-      setChosenPlan(planKey);
-      onClose();
-      await refreshWorkspacePlan(activeWorkspace._id);
+
+      const order = res.data.razorpay;
+
+      openCheckout({
+        orderId: order.orderID,
+        amount: order.amount,
+        currency: order.currency,
+        name: activeWorkspace.name,
+
+        onSuccess: async () => {
+          await refreshWorkspacePlan(activeWorkspace._id);
+          setChosenPlan(planKey);
+          onSuccess();
+        },
+      });
 
     } catch (err) {
-      console.error("Failed to start trial", err);
+      console.error("Plan selection failed", err);
+      alert("Something went wrong");
     } finally {
       setLoadingPlan(null);
     }
   };
+
+  // const handleChoosePlan = async (planKey) => {
+  //   if (!activeWorkspace?._id) return;
+
+  //   try {
+  //     setLoadingPlan(planKey);
+  //     await startTrialApi(activeWorkspace._id, {
+  //       activePlan: planKey,
+  //       interval: isAnnual ? "yearly" : "monthly",
+  //     });
+  //     setChosenPlan(planKey);
+  //     onSuccess();
+  //     await refreshWorkspacePlan(activeWorkspace._id);
+
+  //   } catch (err) {
+  //     console.error("Failed to start trial", err);
+  //   } finally {
+  //     setLoadingPlan(null);
+  //   }
+  // };
 
 
   return (
@@ -63,12 +117,12 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, buttonLa
     >
       <div className="relative min-h-[80vh] w-full p-6 bg-[#0f0f0f] rounded-[28px]">
         {/* Close button */}
-        <button
+        {/* <button
           onClick={onClose}
           className="absolute top-4 right-4 text-white/60 hover:text-white"
         >
           ✕
-        </button>
+        </button> */}
 
         <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-black/10" />
 
@@ -111,7 +165,7 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, buttonLa
               { text: "100 mins of storage + Storage addons", enabled: true },
             ]}
             buttonLabel={buttonLabel}
-            onClick={() => handleStartTrial("freelancer")}
+            onClick={() => handleChoosePlan("freelancer")}
             highlight={false}
           />
 
@@ -130,7 +184,7 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, buttonLa
               { text: "Version management", enabled: true },
             ]}
             buttonLabel={buttonLabel}
-            onClick={() => handleStartTrial("team")}
+            onClick={() => handleChoosePlan("team")}
             highlight
           />
 
@@ -144,7 +198,7 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, buttonLa
               { text: "1000 mins of storage + Storage addons", enabled: true },
               { text: "Custom UI branding (Paid addon)", enabled: true },
             ]}
-            onClick={() => handleStartTrial("team_plus")}
+            onClick={() => handleChoosePlan("team_plus")}
             buttonLabel={buttonLabel}
             highlight
           />

@@ -32,8 +32,6 @@ const profileBtnRef = useRef(null);
   subscription?.additionalStorageMinutes;
 const minutesUsed = Math.ceil(subscription?.storageMinutesUsed);
 
-  console.log(user, 'u');
-  
 const usagePercent = minutesCap
   ? Math.min(100, (minutesUsed / minutesCap) * 100)
   : 0;

@@ -38,13 +38,13 @@ const modalStyles = {
   },
 };
 
-export default function SettingsModal({ isOpen, onClose, activeWorkspace }) {
-  const [active, setActive] = useState("profile");
+export default function SettingsModal({ isOpen, onClose, activeWorkspace, activeScreen = null }) {
+  const [active, setActive] = useState(activeScreen || "profile");
 
   const renderContent = () => {
     switch (active) {
       case "profile":
-        return <Profile />;
+        return <Profile onClose={onClose}/>;
       case "workspace":
         return <WorkspaceSettings activeWorkspace={activeWorkspace}/>;
       case "users":

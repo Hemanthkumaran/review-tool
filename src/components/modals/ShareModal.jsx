@@ -223,7 +223,7 @@ const CustomMultiValue = (props) => {
   );
 };
 
-export default function ShareModal({ open = false, onClose, permissions, projectAccess, projectID, onRefresh }) {
+export default function ShareModal({ open = true, onClose, permissions, projectAccess, projectID, onRefresh }) {
   const [role, setRole] = useState(ROLE_OPTIONS[0]);
   const [inputValue, setInputValue] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]);
@@ -453,7 +453,7 @@ export default function ShareModal({ open = false, onClose, permissions, project
                 </div>
               </div> */}
             <div className="space-y-3">
-              {projectAccess.map((p) => {
+              {projectAccess?.map((p) => {
                 return <>
                   <div
                     key={p._id}

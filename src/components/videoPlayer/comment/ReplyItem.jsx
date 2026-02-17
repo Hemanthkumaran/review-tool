@@ -16,13 +16,17 @@ export default function ReplyItem({
   handleReplyKeyDown,
   setReplyText,
   replyText,
+  rawData
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState(reply.text);
   const [isHovered, setIsHovered] = useState(false);
   const [showReplyBox, setShowReplyBox] = useState(false);
-  console.log(reply, 'reply');
   
+  const getInitials = (firstName = "", lastName = "") =>
+  `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
+
+
   return (
     <>
       <div
@@ -31,14 +35,17 @@ export default function ReplyItem({
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* avatar */}
+        {reply.user?.avatarUrl !== null ? 
         <div className="w-9 h-9 rounded-2xl overflow-hidden bg-white/10 flex-shrink-0">
           <img
             src={reply.user?.avatarUrl}
             alt={reply.user?.name}
             className="w-full h-full object-cover"
           />
-        </div>
-
+        </div> :
+        <button className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#151618] border border-[#232427] mr-3">
+          <div>{getInitials(rawData?.userData.firstName, rawData?.userData.lastName)}</div>
+        </button>}
         {/* content */}
         <div className="flex-1">
           {!isEditing ? (

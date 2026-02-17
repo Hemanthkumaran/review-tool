@@ -6,7 +6,7 @@ import "./Profile.css";
 import { updateUserProfileApi } from "../../../../services/api";
 import { useUser } from "../../../../context/UserContext";
 
-const Profile = () => {
+const Profile = ({ onClose }) => {
   const { user, refreshUserProfile } = useUser();
 
   const [form, setForm] = useState({
@@ -136,6 +136,7 @@ const Profile = () => {
           textColor="white"
           border="2px solid #2a2a2a"
           marginRight="6px"
+          onClick={onClose}
         />
         <Button
           width="120px"
