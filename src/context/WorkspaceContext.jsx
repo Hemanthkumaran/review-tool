@@ -15,6 +15,8 @@ export const WorkspaceProvider = ({ children }) => {
   const [workspacePlan, setWorkspacePlan] = useState(null);
   const [billingLoading, setBillingLoading] = useState(false);
 
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [trialUsed, setTrialUsed] = useState(false);
 
   const userAccess = activeWorkspace?.permissionType == undefined ? constants.REVIEWER : activeWorkspace?.permissionType;
   
@@ -111,7 +113,11 @@ const fetchWorkspacePlan = async (workspaceId) => {
     if (!activeWorkspace?._id) return;
     fetchWorkspacePlan(activeWorkspace._id);
     fetchWorkspaceUsers(activeWorkspace._id);
+    setSubscriptionStatus(null);
+    setTrialUsed(false);
+
   }, [activeWorkspace?._id]);
+
 
   useEffect(() => {
     if (!workspaces.length) return;
@@ -145,6 +151,10 @@ const fetchWorkspacePlan = async (workspaceId) => {
         workspacePlan,
         billingLoading,
         refreshWorkspacePlan: fetchWorkspacePlan,
+        subscriptionStatus,
+        setSubscriptionStatus,
+        trialUsed,
+        setTrialUsed,
       }}
     >
       {children}

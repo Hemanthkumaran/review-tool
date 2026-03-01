@@ -56,6 +56,7 @@ export default function AssignEditorsModal({
         ? prev.filter((p) => p.id !== person.id)
         : [...prev, person]
     );
+    setShowDropdown(false);
   };
 
   const handleAssign = async () => {

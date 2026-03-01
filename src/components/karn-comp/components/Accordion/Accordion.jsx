@@ -68,7 +68,6 @@ export default function ProjectAccordion({ folder, getAllFolders }) {
     </div>
   </div>
 </Accordion.Content>
-
       </Accordion.Item>
     </>
   );

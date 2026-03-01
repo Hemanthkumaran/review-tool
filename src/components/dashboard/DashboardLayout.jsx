@@ -1,4 +1,3 @@
-// pages/dashboard/DashboardLayout.jsx
 import { Outlet } from "react-router-dom";
 import AppLoader from "../../components/common/AppLoader";
 import DashboardHeader from "../../components/DashboardHeader";
@@ -10,35 +9,38 @@ import { constants } from "../../helpers/enum";
 
 export default function DashboardLayout() {
   const { user, profileLoading } = useUser();
+
   const {
     workspaces,
-    workspacePlan,
     activeWorkspace,
     setActiveWorkspace,
     loading,
-    userAccess
+    userAccess,
+    subscriptionStatus
   } = useWorkspace();
+
   const [modalStep, setModalStep] = useState(null);
 
-  const subscription = workspacePlan?.subscription;
-
+  const subscription = { status: subscriptionStatus };
+  console.log(subscription, 'subs');
+  
   useEffect(() => {
     if (!activeWorkspace) return;
 
-    const status = workspacePlan?.subscription?.status;
-
-    // ACTIVE workspace → hide popup
-    if (status === "active" || status === "trialing") {
+    if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
       setModalStep(null);
       return;
     }
 
-    // NO PLAN workspace → show popup
-    if (!status || status === "none" || status === "inactive") {
+    if (
+      subscriptionStatus === "none" ||
+      subscriptionStatus === "inactive" ||
+      subscriptionStatus === "expired"
+    ) {
       setModalStep("noPlan");
     }
 
-  }, [activeWorkspace?._id, workspacePlan?.subscription?.status]);
+  }, [activeWorkspace?._id, subscriptionStatus]);
 
 
 

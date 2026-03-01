@@ -5,7 +5,7 @@ import cutjamm from '../../assets/svgs/cutjamm.svg';
 import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { allFoldersApi, createFolderApi, getWorkspacePlanApi } from '../../services/api';
+import { allFoldersApi, createFolderApi } from '../../services/api';
 import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
 import ProjectAccordion from '../../components/karn-comp/components/Accordion/Accordion';
@@ -28,15 +28,14 @@ export default function WelcomeWorkspace({
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [allFolders, setAllFolders] = useState([]);
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
-  const [isSubscriptionActive, setIsSubscriptionActive] = useState(null);
-  const [freeTrialUsed, setFreeTrialUsed] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
-  const { activeWorkspace, loading: workspaceLoading, userAccess, billingLoading } = useWorkspace();
+  const { activeWorkspace, loading: workspaceLoading, userAccess, billingLoading, setSubscriptionStatus, trialUsed, setTrialUsed } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [chosenPlan, setChosenPlan] = useState(null);
   const [openFolders, setOpenFolders] = useState([]);
+
   const [filters, setFilters] = useState({
     assignment: null,
     status: []
@@ -82,10 +81,11 @@ export default function WelcomeWorkspace({
   allFoldersApi("createdAt", "desc", activeWorkspace._id, filters)
     .then((res) => {
       const status = res.data.subscriptionStatus;
-      const trialUsed = res.data.trialUsed;
 
-      setIsSubscriptionActive(status === "active" || status === "trialing");
-      setFreeTrialUsed(trialUsed);
+      setSubscriptionStatus(res.data.subscriptionStatus);
+      setTrialUsed(res.data.trialUsed);
+
+
       setAllFolders(res.data.folderArray);
 
       // ⭐ AFTER CHECKOUT SUCCESS
@@ -232,10 +232,10 @@ export default function WelcomeWorkspace({
         </div>
         {getActiveContent()}
       </main>
-      <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
+      {/* <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
-      </div>
+      </div> */}
       <CreateFolderModal
         isOpen={isCreateModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -255,8 +255,8 @@ export default function WelcomeWorkspace({
         onSuccess={() => {
           getAllFolders(true);   // pass flag to detect post-payment
         }}
-        trialUsed={freeTrialUsed}
-        buttonLabel={!freeTrialUsed ? "Start free trial" : "Subscribe"}
+        trialUsed={trialUsed}
+        buttonLabel={!trialUsed ? "Start free trial" : "Subscribe"}
       />
       {modalStep === "activate" && (
         <SubscriptionModal

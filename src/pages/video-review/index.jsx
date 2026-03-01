@@ -56,6 +56,9 @@ export default function VideoReview() {
   const [uploadPct, setUploadPct] = useState(null); // 0–100
   const [isUploading, setIsUploading] = useState(false);
   const rawVersions = projectDetail?.versions || [];
+  const isLatestVersion =
+  rawVersions.length > 0 &&
+  activeVersionId === rawVersions[rawVersions.length - 1]?._id;
 
     const activeRawVersion = useMemo(() => {
   if (!activeVersionId || !rawVersions?.length) return null;
@@ -113,13 +116,23 @@ const muxStatus = activeRawVersion?.muxStatus;
       fetchProject(guestData);
     };
 
-  useEffect(() => {
-  if (!rawVersions?.length) return;
+//   useEffect(() => {
+//   if (!rawVersions?.length) return;
 
-  // pick latest version (last item from backend)
-  const latest = rawVersions[rawVersions.length - 1];
-  setActiveVersionId(latest._id);
-}, [rawVersions]);
+//   // pick latest version (last item from backend)
+//   const latest = rawVersions[rawVersions.length - 1];
+//   setActiveVersionId(latest._id);
+// }, [rawVersions]);
+
+  useEffect(() => {
+    if (!rawVersions?.length) return;
+
+    // Only set if nothing selected yet
+    if (!activeVersionId) {
+      const latest = rawVersions[rawVersions.length - 1];
+      setActiveVersionId(latest._id);
+    }
+  }, [rawVersions, activeVersionId]);
 
 useEffect(() => {
   const handler = (e) => {
@@ -178,12 +191,23 @@ function fetchProject(storedGuest = null) {
   getOneProjectApi(projectId, params).then((res) => {
     const project = res.data.project;
 
-    setProjectDetail(project);
+    // setProjectDetail(project);
 
-    const latest = project.versions?.[project.versions.length - 1];
-    if (latest) {
-      setActiveVersionId(latest._id);
-    }
+    setProjectDetail(prev => {
+      // preserve current version if exists
+      const currentVersionStillExists = project.versions?.some(
+        v => v._id === activeVersionId
+      );
+
+      if (!currentVersionStillExists) {
+        const latest = project.versions?.[project.versions.length - 1];
+        if (latest) {
+          setActiveVersionId(latest._id);
+        }
+      }
+
+      return project;
+    });
 
     setLoading(false);
   });
@@ -807,7 +831,9 @@ const handleNewVersionFile = async (e) => {
         )}
       </div>
       {/* Comment input bar */}
+      {!isLatestVersion ? null :
       <CommentBar
+        disabled={!isLatestVersion}
         currentTime={currentTime}
         isRecording={isRecording}
         hasPendingVoice={hasPendingVoice}
@@ -822,7 +848,7 @@ const handleNewVersionFile = async (e) => {
         pauseVideo={pauseVideo}
         commentInputRef={commentInputRef}
         sendingComment={sendingComment}
-      />
+      />}
     </div>
 
     {/* ================= COLUMN 2 ================= */}

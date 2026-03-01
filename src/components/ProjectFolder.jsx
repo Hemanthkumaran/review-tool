@@ -12,6 +12,7 @@ import AssignEditorsModal from "./modals/AssignEditorsModal";
 import { addUserToProjectApi } from "../services/api";
 import { showSuccessToast } from "../helpers/showToast";
 import ShareModal from "./modals/ShareModal";
+import { formatDuration } from "../helpers/common";
 
 const formatDateTime = (isoString) => {
   if (!isoString) return "-";
@@ -94,8 +95,12 @@ export default function ProjectFolder({
   const [showDelete, setShowDelete] = useState(false);
   const [openAssign, setOpenAssign] = useState(false);
   const [openShare, setOpenShare] = useState(false);
-
+  console.log(project, 'project');
+  
   const { userAccess, workspaceUsers } = useWorkspace();
+
+  const latestVersion = project?.versions[project.versions?.length - 1];
+  
   
 const handleAssignEditors = async (editors) => {
   try {
@@ -133,6 +138,10 @@ const handleAssignEditors = async (editors) => {
           alt={project.name}
           className="w-full h-full object-cover"
         />
+        <div style={{"backgroundColor":"rgb(24, 26, 28)","position":"absolute","top":"15px","right":"15px","fontSize":"11px","padding":"3px 8px","borderRadius":"10px"}}>v2</div>
+        <div style={{"backgroundColor":"rgb(24, 26, 28)","position":"absolute","top":"105px","right":"15px","fontSize":"11px","padding":"3px 8px","borderRadius":"10px"}}>
+          {formatDuration(latestVersion?.videoDuration)}
+        </div>
       </div>
       {/* Content */}
       <div className="px-2 pt-3">

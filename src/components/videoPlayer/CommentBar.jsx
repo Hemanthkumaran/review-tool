@@ -1,8 +1,7 @@
 // CommentBar.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import EmojiPicker from "emoji-picker-react";
 
-import VersionPill from "./VersionPill";
 import clockIcon from "../../assets/svgs/clock.svg";
 import brushIcon from "../../assets/svgs/brush.svg";
 import clipIcon from "../../assets/svgs/clip.svg";

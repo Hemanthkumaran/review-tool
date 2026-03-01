@@ -31,23 +31,13 @@ export default function AddProject({
   const [params] = useSearchParams();
   const folderId = params.get("folder");
   const folderName = params.get("folderName");
-  const { activeWorkspace, userAccess, refreshWorkspacePlan } = useWorkspace();
+  const { activeWorkspace, userAccess, refreshWorkspacePlan, setSubscriptionStatus, setTrialUsed } = useWorkspace();
 
   useEffect(() => {
       if (activeWorkspace !== null) {
         getAllProjects();
       }
     }, [activeWorkspace]);
-
-// useEffect(() => {
-//   if (workspaceLoading) return;
-//   if (!activeWorkspace?._id) return;
-//   if (!location.state?._id) return;
-
-//   getAllProjects();
-// }, [workspaceLoading, activeWorkspace?._id, location.state?._id]);
-
-
 
 
   const handleUpdateProject = async (id, payload) => {
@@ -126,6 +116,8 @@ export default function AddProject({
     
     allProjectsApi(params)
     .then(res => {
+      setSubscriptionStatus(res.data.subscriptionStatus);
+      setTrialUsed(res.data.trialUsed);
       setAllProjects(res.data.projectArray);
       setLoading(false);
     })
@@ -221,10 +213,10 @@ export default function AddProject({
         </div>
       </main>
       {/* Bottom-right watermark */}
-      <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
+      {/* <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
         <img src={cutjamm}/>
         <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
-      </div>
+      </div> */}
       {/* <ShareModal onClose={() => setInviteModal(false)}/> */}
         {/* <ShareModal
           open={inviteModal}

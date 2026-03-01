@@ -9,7 +9,6 @@ import { updateNotesApi } from "../../services/api";
 import ToggleButton from "../buttons/ToggleButton";
 import { constants } from "../../helpers/enum";
 import CommentFilterDropdown from "./CommentFilterDropdown";
-import { useEffect } from "react";
 
 export default function CommentsColumn({
   isOpen,
@@ -103,10 +102,6 @@ const filteredComments = useMemo(() => {
     return commentFilters.includes(commentType);
   });
 }, [markers, showResolved, commentFilters, activeVersionId]);
-
-
-
-
 
 
   // somewhere near the top of the file
