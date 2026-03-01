@@ -2,7 +2,6 @@ const getInitials = (firstName = "", lastName = "") =>
   `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
 
 function CommentUserCard({ role, avatar, rawData, name }) {
-  console.log(getInitials(rawData?.firstName, rawData?.lastName), 'moce');
   return (
     <div>
     <div className="flex items-center gap-3 mb-3">

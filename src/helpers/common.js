@@ -69,8 +69,6 @@ export function formatRelative(date) {
   return `${years} year${years > 1 ? "s" : ""} ago`;
 }
 
-
-
 export function logout() {
   clearAuth();
   window.__APP_AUTH__ = null;

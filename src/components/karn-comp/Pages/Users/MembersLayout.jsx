@@ -14,37 +14,30 @@ export default function MembersLayout({
   onInvite = () => {},
   activeWorkspace,
   fetchWorkspaceUsers,
-  workspaceUsers
+  workspaceUsers,
+  workspacePlan
 }) {
 
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setIsLoading] = useState(false);
+
   
 
-  /* ---------------------------------------
-   * Transform backend data → table data
-   * ------------------------------------- */
-const data = useMemo(() => {
+  const data = useMemo(() => {
+    return (workspaceUsers.permissions || []).map((perm) => ({
+      id: perm._id,
+      name: perm.name || null,
+      email: perm.email,
+      role:
+        perm.permissionType === "owner"
+          ? "Owner"
+          : perm.permissionType === "member"
+          ? "Team member"
+          : "Collaborator",
+      pending: !perm.name,
+    }));
+  }, [workspaceUsers.permissions]);
 
-
-  return (workspaceUsers.permissions || []).map((perm) => ({
-    id: perm._id,
-    name: perm.name || null,
-    email: perm.email,
-    role:
-      perm.permissionType === "owner"
-        ? "Owner"
-        : perm.permissionType === "member"
-        ? "Team member"
-        : "Collaborator",
-    pending: !perm.name,
-  }));
-}, [workspaceUsers.permissions]);
-
-
-  /* ---------------------------------------
-   * Columns
-   * ------------------------------------- */
   const columns = useMemo(
     () => [
       {
@@ -104,7 +97,11 @@ const data = useMemo(() => {
   const collaboratorCount = data.filter(
     (d) => d.role === "Collaborator"
   ).length;
-
+  
+  const maxUsers = workspacePlan?.subscription?.maxUsers ?? 1;
+  const activePlan = workspacePlan?.subscription?.activePlan;
+  const canInvite = teamCount < maxUsers;
+  
   async function handleRemove(rowItem) {
     setIsLoading(true);
     const data = {
@@ -132,10 +129,6 @@ const data = useMemo(() => {
             Add or remove teammates and collaborators.
           </p>
         </div>
-
-        {/* <button className="close-btn">
-          <X size={18} />
-        </button> */}
       </div>
 
       {/* Members info */}
@@ -147,10 +140,28 @@ const data = useMemo(() => {
           </div>
         </div>
 
-        <button className="invite-btn" onClick={onInvite}>
+        <button
+          className="invite-btn"
+          onClick={() => {
+            if (!canInvite) {
+              alert(
+                `Your ${activePlan} plan allows only ${maxUsers} user(s). Please upgrade to add more members.`
+              );
+              return;
+            }
+            onInvite();
+          }}
+          disabled={!canInvite}
+          style={!canInvite ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+        >
           <span className="plus">+</span>
           Invite
         </button>
+
+        {/* <button className="invite-btn" onClick={onInvite}>
+          <span className="plus">+</span>
+          Invite
+        </button> */}
       </div>
 
       {/* Table */}

@@ -9,6 +9,9 @@ import CommentUserCard from "./CommentUserCard";
 import ReplyInput from "./ReplyInput";
 import DeleteCommentModal from "../../modals/DeleteCommentModal";
 import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
+import { useUser } from "../../../context/UserContext";
+import { getGuestIdentity } from "../../../helpers/storage";
+
 
 
 export default function CommentCard({
@@ -25,7 +28,8 @@ export default function CommentCard({
   onReplyDeleted,
   handleSendComment,
   updateCommentResolvedLocal,
-  deleteCommentLocal
+  deleteCommentLocal,
+  loggedInUser
 }) {
   const {
     time,
@@ -34,14 +38,12 @@ export default function CommentCard({
     audioUrl,
     images = [],
     createdAt,
-    user,
     replies = [],
   } = marker;
-  console.log(marker, 'mmm');
   
-  const name = user?.name ?? "John";
-  const role = user?.role ?? "Owner";
-  const avatar = user?.avatarUrl;
+  const name = marker?.user?.name ?? "John";
+  const role = marker?.user?.role ?? "Owner";
+  const avatar = marker?.user?.avatarUrl;
   
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -54,8 +56,24 @@ export default function CommentCard({
   const [isHovered, setIsHovered] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  console.log(marker, 'comment');
+
   
+  const isOwnComment = () => {
+    if (!marker?._raw) return false;
+
+    if (loggedInUser?._id && marker._raw.userData?._id) {
+      return loggedInUser._id === marker._raw.userData._id;
+    }
+
+    if (!loggedInUser?._id && marker._raw.reviewerEmail) {
+      const guest = getGuestIdentity();
+      return guest?.reviewerEmail === marker._raw.reviewerEmail;
+    }
+
+    return false;
+  };
+  
+
   const handleToggleResolved = async () => {
     if (resolving) return;
 
@@ -143,7 +161,7 @@ export default function CommentCard({
                   </div>
 
                   {/* Edit / Delete */}
-                  {!isEditingComment && isHovered && (
+                  {!isEditingComment && isHovered && isOwnComment() && (
                     <div className="flex gap-5 text-[13px] text-gray-400">
                       <button
                         className="hover:text-white cursor-pointer"
@@ -250,6 +268,7 @@ export default function CommentCard({
                     projectId={projectId}
                     versionId={activeVersionId}
                     commentId={marker.id}
+                    loggedInUserId={loggedInUser?._id}
                     onReplyUpdated={onReplyUpdated}
                     onReplyDeleted={onReplyDeleted}
                     replyText={replyText}

@@ -576,20 +576,39 @@ function fetchProject(storedGuest = null) {
       formData
     );
     const backendComment = res.data.comment;
+    // setProjectDetail(prev => {
+    //   if (!prev) return prev;
+
+    //   return {
+    //     ...prev,
+    //     versions: prev.versions.map(v => {
+    //       if (v._id !== versionID) return v;
+    //       return {
+    //         ...v,
+    //         comments: [...v.comments, backendComment]
+    //       };
+    //     })
+    //   };
+    // });
     setProjectDetail(prev => {
-      if (!prev) return prev;
+  if (!prev) return prev;
+
+  return {
+    ...prev,
+    versions: prev.versions.map(v => {
+      if (v._id !== versionID) return v;
 
       return {
-        ...prev,
-        versions: prev.versions.map(v => {
-          if (v._id !== versionID) return v;
-          return {
-            ...v,
-            comments: [...v.comments, backendComment]
-          };
-        })
+        ...v,
+        comments: v.comments.map(c =>
+          c._id === backendComment._id
+            ? backendComment
+            : c
+        )
       };
-    });
+    })
+  };
+});
     setSendingComment(false);
   } else {
     let reviewer = null;

@@ -3,6 +3,7 @@ import { deleteReplyApi, updateReplyApi } from "../../../services/api";
 import ReplyInput from "./ReplyInput";
 import { formatRelative } from "../../../helpers/common";
 import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
+import { getGuestIdentity } from "../../../helpers/storage";
 
 export default function ReplyItem({
   reply,
@@ -16,7 +17,8 @@ export default function ReplyItem({
   handleReplyKeyDown,
   setReplyText,
   replyText,
-  rawData
+  rawData,
+  loggedInUserId
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState(reply.text);
@@ -25,7 +27,35 @@ export default function ReplyItem({
   
   const getInitials = (firstName = "", lastName = "") =>
   `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
+  
+const guest = getGuestIdentity();
 
+const isOwnReply =
+  // 🔹 Logged-in owner/admin
+  (loggedInUserId &&
+    reply?.user?.id &&
+    loggedInUserId === reply.user.id) ||
+
+  // 🔹 Guest reviewer (no loggedInUserId)
+  (!loggedInUserId &&
+    reply?.user?.email &&
+    guest?.reviewerEmail === reply.user.email);
+
+    // const isOwnComment = () => {
+  
+    //   if (loggedInUserId && reply.user?.id) {
+    //     return loggedInUserId == reply.user?.id;
+    //   }
+  
+    //   if (loggedInUserId == null || loggedInUserId == undefined) {
+    //     return true;
+    //   }
+  
+    // };
+
+    console.log(isOwnReply, 'isOwnComment reply');
+    console.log(isOwnReply, 'isOwnComment reply');
+    
 
   return (
     <>
@@ -85,7 +115,7 @@ export default function ReplyItem({
                   Reply
                 </span>
 
-                {isHovered && (
+                {isHovered && isOwnReply && (
                   <div className="flex gap-4 text-gray-400 text-xs">
                     <button
                       className="hover:text-white cursor-pointer"

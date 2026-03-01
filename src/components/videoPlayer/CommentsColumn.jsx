@@ -1,11 +1,11 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import SegmentedTabs from "../SegmentedTabs";
 import CommentCard from "./comment/CommentCard";
 import downloadIcon from "../../assets/svgs/download.svg";
 import filterIcon from "../../assets/svgs/filter.svg";
 import NotesEditor from "../notes/NotesEditor";
-import { updateNotesApi } from "../../services/api";
+import { getUserProfileApi, updateNotesApi } from "../../services/api";
 import ToggleButton from "../buttons/ToggleButton";
 import { constants } from "../../helpers/enum";
 import CommentFilterDropdown from "./CommentFilterDropdown";
@@ -44,8 +44,24 @@ export default function CommentsColumn({
   const [showResolved, setShowResolved] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [commentFilters, setCommentFilters] = useState([]);
+  const [user, setUser] = useState(null);
   const filterBtnRef = useRef(null);
 
+  useEffect(() => {
+    fetchUserProfile();
+  }, [])
+    const fetchUserProfile = async () => {
+      try {
+        // setProfileLoading(true);
+        const res = await getUserProfileApi();
+        setUser(res.data.user);
+      } catch (err) {
+        console.error("Failed to fetch user profile", err);
+        setUser(null);
+      } finally {
+        // setProfileLoading(false);
+      }
+    };
 const handleCommentUpdated = (commentId, newText) => {
   setMarkers((prev) =>
     prev.map((c) =>
@@ -255,6 +271,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
                   <CommentCard
                     key={m.id}
                     marker={m}
+                    loggedInUser={user}
                     projectId={projectId}
                     index={idx}
                     onGo={() => onSeek(m.time)}
