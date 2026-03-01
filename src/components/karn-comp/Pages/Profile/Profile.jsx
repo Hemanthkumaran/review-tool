@@ -5,6 +5,9 @@ import Button from "../../../UI/Button";
 import "./Profile.css";
 import { updateUserProfileApi } from "../../../../services/api";
 import { useUser } from "../../../../context/UserContext";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "../../../../routes/paths";
+import { clearAuth } from "../../../../helpers/storage";
 
 const Profile = ({ onClose }) => {
   const { user, refreshUserProfile } = useUser();
@@ -18,6 +21,7 @@ const Profile = ({ onClose }) => {
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
@@ -69,10 +73,10 @@ const Profile = ({ onClose }) => {
       </div>
       <div style={{ color:"#BFBFBF", fontSize:14, fontFamily:'Gilroy-Light', marginTop:5 }}>Adjust your display picture, name, and password from here.</div>
       <br />
-
       <EditableAvatar
         imageUrl={avatarUrl}
         onImageSelect={setImageFile}
+        user={user}
       />
       <br />
 
@@ -98,7 +102,6 @@ const Profile = ({ onClose }) => {
 
         <OutlineInput
           label="Email"
-          // placeholder="johnwick@gmail.com"
           name="email"
           value={form.email}
           disabled
@@ -115,10 +118,13 @@ const Profile = ({ onClose }) => {
       <br />
 
       <div>
-        <div className="mb-4 text-[#ffffff]">Change Password</div>
+        <div  className="mb-4 text-[#ffffff]">Change Password</div>
         <div>
           Set a new password for your account anytime.
-          <a  className="text-yellow-300" href="#">
+          <a onClick={() => {
+          // clearAuth();
+          navigate(PATHS.CHANGE_PASSWORD)
+        }} className="text-yellow-300">
             {" "}
             Update password
           </a>

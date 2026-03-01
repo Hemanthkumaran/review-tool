@@ -7,6 +7,7 @@ import { useWorkspace } from "../../../../context/WorkspaceContext";
 
 export default function ProjectAccordion({ folder, getAllFolders }) {
 
+
   const navigate = useNavigate();
     const {
       activeWorkspace
@@ -30,9 +31,9 @@ export default function ProjectAccordion({ folder, getAllFolders }) {
   };
     
   return (
-    <Accordion.Root type="multiple" className="accordion-root">
+    <>
       {/* ABC PROJECTS */}
-      <Accordion.Item value="abc" className="acc-item">
+      <Accordion.Item value={folder._id} className="acc-item">
         <Accordion.Header className="acc-header">
           <Accordion.Trigger className="acc-trigger">
             <div className="left-sec">
@@ -69,6 +70,6 @@ export default function ProjectAccordion({ folder, getAllFolders }) {
 </Accordion.Content>
 
       </Accordion.Item>
-    </Accordion.Root>
+    </>
   );
 }

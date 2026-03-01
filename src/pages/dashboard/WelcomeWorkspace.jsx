@@ -19,6 +19,7 @@ import ShareModal from '../../components/modals/ShareModal';
 import SubscriptionModal from '../../components/modals/SubscriptionModal';
 import { ResumeSubIcon } from '../../assets/svgs/SvgComponents';
 import SettingsModal from '../../components/karn-comp/Layout/Settings/SettingsModal';
+import * as Accordion from "@radix-ui/react-accordion";
 
 export default function WelcomeWorkspace({
   onCreateFolder = () => {},
@@ -35,9 +36,10 @@ export default function WelcomeWorkspace({
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [chosenPlan, setChosenPlan] = useState(null);
+  const [openFolders, setOpenFolders] = useState([]);
   const [filters, setFilters] = useState({
-    assignment: null,   // "assigned" | "unassigned" | null
-    status: []          // ["yet_to_start", "in_progress", ...]
+    assignment: null,
+    status: []
   });
   // const [modalStep, setModalStep] = useState(null);
   const navigate = useNavigate();
@@ -51,6 +53,14 @@ export default function WelcomeWorkspace({
 
   }, [workspaceLoading, activeWorkspace?._id, filters]);
 
+  useEffect(() => {
+    if (activeTab !== "projects") {
+      setFilters({
+        assignment: null,
+        status: []
+      });
+    }
+  }, [activeTab]);
 
   function handleCreate() {
     setCreateLoading(true);
@@ -127,9 +137,20 @@ export default function WelcomeWorkspace({
       </div>
     }
      else {
-      return allFolders.map(folder => {
-        return <ProjectAccordion key={folder._id} folder={folder} getAllFolders={getAllFolders}/>
-      })
+      return <Accordion.Root
+          type="multiple"
+          value={openFolders}
+          onValueChange={setOpenFolders}
+          className="accordion-root"
+        >
+          {allFolders.map(folder => (
+            <ProjectAccordion
+              key={folder._id}
+              folder={folder}
+              getAllFolders={getAllFolders}
+            />
+          ))}
+        </Accordion.Root>
     }
   }
   const isDoneLoading = workspaceLoading || foldersLoading || billingLoading;

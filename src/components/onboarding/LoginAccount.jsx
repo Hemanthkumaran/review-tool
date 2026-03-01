@@ -1,16 +1,13 @@
-import React, { useEffect, useState } from 'react'
+import { useState } from 'react'
 import logo from '../../assets/svgs/reviewtool-logo.svg';
 import OutlineInput from '../textInputs/OutlineInput';
 import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
-import { useNavigate } from 'react-router-dom';
-import { PATHS } from '../../routes/paths';
 import { signinApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 function LoginAccount({ setCurrentScreen }) {
 
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [form, setForm] = useState({
     "email": "",

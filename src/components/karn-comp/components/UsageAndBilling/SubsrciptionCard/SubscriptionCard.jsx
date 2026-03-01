@@ -18,8 +18,6 @@ export default function SubscriptionCard({
     totalAmount,
   } = subscription;
   
-  console.log(subscription, 'subscription');
-  
   const totalMinutes =
     baseStorageMinutes + additionalStorageMinutes;
 
@@ -34,9 +32,6 @@ export default function SubscriptionCard({
     totalMinutes === 0
       ? 0
       : (usedMinutes / totalMinutes) * 100;
-
-  const isUsageBlockingDowngrade =
-    usedMinutes > totalMinutes;
 
   return (
     <div className="subscription-card">
@@ -74,13 +69,12 @@ export default function SubscriptionCard({
               })}
             />
           </div>
-
           <div className="sub-minutes-text">
             <p className="sub-minutes-remaining">
-              {remainingMinutes} minutes remaining
+              {Math.round(remainingMinutes)} minutes remaining
             </p>
             <p className="sub-minutes-used">
-              {usedMinutes}/{totalMinutes} minutes used
+              {Math.round(usedMinutes)}/{Math.round(totalMinutes)} minutes used
             </p>
           </div>
         </div>

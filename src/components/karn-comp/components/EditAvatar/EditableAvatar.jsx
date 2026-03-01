@@ -4,8 +4,11 @@ import { FaPen } from "react-icons/fa";
 import "./EditableAvatar.css";
 import EditIcon from "../../assets/icons/edit.svg"
 
-const EditableAvatar = ({ imageUrl, onImageSelect }) => {
+const EditableAvatar = ({ imageUrl, onImageSelect, user }) => {
   const [preview, setPreview] = useState(imageUrl || null);
+  
+  const getInitials = (firstName = "", lastName = "") =>
+  `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
 
   useEffect(() => {
     setPreview(imageUrl);
@@ -31,16 +34,15 @@ const EditableAvatar = ({ imageUrl, onImageSelect }) => {
   return (
     <div className="avatar-wrapper" {...getRootProps()}>
       <input {...getInputProps()} />
-
+      {preview ?
       <img
-        src={
-          preview ||
-          "https://via.placeholder.com/300x300.png?text=Upload+Image"
-        }
+        src={preview}
         alt="Avatar"
         className="avatar-image"
-      />
-
+      /> :
+      <div className="d-flex justify-center align-center">
+        <div style={{ fontSize:24, marginTop:-15, fontWeight:'bold' }}>{getInitials(user?.firstName, user?.lastName)}</div>
+      </div>}
       <button type="button" className="edit-btn" onClick={open}>
         <img height="24px" width="20px" src={EditIcon} alt="" />
       </button>

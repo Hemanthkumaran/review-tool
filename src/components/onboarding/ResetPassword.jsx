@@ -4,7 +4,7 @@ import OutlineInput from '../textInputs/OutlineInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { forgotPasswordApi, verifyResetCodeApi } from '../../services/api';
 
-function ResetPassword({ setCurrentScreen }) {
+function ResetPassword({ setCurrentScreen, changePasswordFlow = false }) {
   const [showError, setShowError] = useState(false);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -142,12 +142,12 @@ function ResetPassword({ setCurrentScreen }) {
         </div>
       </form>
 
-      <p className="mt-6 text-sm text-center text-[#BFBFBF]">
+      {!changePasswordFlow &&<p className="mt-6 text-sm text-center text-[#BFBFBF]">
         Already have an account?
         <a onClick={() => !loading && setCurrentScreen("signIn")} className="text-[#F9EF38] hover:underline cursor-pointer">
           {' '}Sign in
         </a>
-      </p>
+      </p>}
     </div>
   )
 }

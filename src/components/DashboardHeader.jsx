@@ -26,13 +26,13 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const [openWorkspace, setOpenWorkspace] = useState(false);
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [createLoading] = useState(false);
-const profileBtnRef = useRef(null);
+  const profileBtnRef = useRef(null);
   const minutesCap =
   subscription?.baseStorageMinutes +
   subscription?.additionalStorageMinutes;
-const minutesUsed = Math.ceil(subscription?.storageMinutesUsed);
+  const minutesUsed = Math.ceil(subscription?.storageMinutesUsed);
 
-const usagePercent = minutesCap
+  const usagePercent = minutesCap
   ? Math.min(100, (minutesUsed / minutesCap) * 100)
   : 0;
 

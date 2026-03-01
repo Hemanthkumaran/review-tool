@@ -4,7 +4,7 @@ import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { resetForgotPasswordApi } from '../../services/api';
 
-function SetNewPassword({ setCurrentScreen }) {
+function SetNewPassword({ setCurrentScreen, changePasswordFlow = false }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -90,12 +90,12 @@ function SetNewPassword({ setCurrentScreen }) {
         </div>
       </form>
 
-      <p className="mt-6 text-sm text-center text-[#BFBFBF]">
+      {!changePasswordFlow && <p className="mt-6 text-sm text-center text-[#BFBFBF]">
         Already have an account?
         <a onClick={() => !loading && setCurrentScreen("signIn")} className="text-[#F9EF38] hover:underline cursor-pointer">
           {" "}Sign in
         </a>
-      </p>
+      </p>}
     </div>
   )
 }

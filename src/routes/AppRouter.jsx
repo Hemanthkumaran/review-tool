@@ -9,6 +9,7 @@ import VideoReview from "../pages/video-review";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import WelcomeWorkspace from "../pages/dashboard/WelcomeWorkspace";
 import AddProject from "../pages/dashboard/AddProject";
+import ChangePassword from "../pages/ChangePassword";
 
 const NotFound = () => <div className="p-8">404 - Not Found</div>;
 
@@ -17,11 +18,10 @@ const router = createBrowserRouter([
     path: PATHS.ROOT,
     element: (
       <PublicRoute>
-        <CreateAccount />
+        <CreateAccount/>
       </PublicRoute>
     ),
   },
-
   {
     path: PATHS.DASHBOARD,
     element: (
@@ -40,7 +40,6 @@ const router = createBrowserRouter([
       },
     ],
   },
-
   {
     path: PATHS.VIDEO_REVIEW,
     element: (
@@ -49,7 +48,14 @@ const router = createBrowserRouter([
       </ReviewerRoute>
     ),
   },
-
+  {
+    path: PATHS.CHANGE_PASSWORD,
+    element: (
+      <ProtectedRoute>
+        <ChangePassword />
+      </ProtectedRoute>
+    ),
+  },
   { path: "*", element: <NotFound /> },
 ]);
 

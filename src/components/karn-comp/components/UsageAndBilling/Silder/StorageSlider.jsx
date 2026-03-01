@@ -58,7 +58,8 @@ export default function StorageSlider() {
 
 
   const handleUpgrade = async () => {
-    if (!activeWorkspace?._id || increaseMinutes === 0) return;
+
+    if (!activeWorkspace?._id) return;
 
     setLoading(true);
 

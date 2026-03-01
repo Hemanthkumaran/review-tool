@@ -5,4 +5,5 @@ export const PATHS = {
   DASHBOARD: '/dashboard',
   ADD_PROJECT: 'add-project',
   VIDEO_REVIEW: '/video-review/:projectId',
+  CHANGE_PASSWORD: '/change-password',
 };
