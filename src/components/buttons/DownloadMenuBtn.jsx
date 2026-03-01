@@ -10,11 +10,11 @@ const menuItems = [
   { id: "delete", label: "Delete", icon: "trash" },
 ];
 
-export default function DownloadMenuButton({ onAction, projectDetail }) {
+export default function DownloadMenuButton({ onAction, projectDetail, onRefresh }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
-
-  // close on outside click
+  console.log(projectDetail, 'projectDetail');
+  
   useEffect(() => {
     function handleClickOutside(e) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -73,15 +73,18 @@ export default function DownloadMenuButton({ onAction, projectDetail }) {
           />
         </svg>
       </button>
-    {open && (
-    <FinalLinkPopover
-      open={open}
-      onClose={() => setOpen(false)}
-      onSave={(link) =>
-        updateDownloadLinkApi(projectDetail._id, {downloadLink: link})
-      }
-    />)}
-      
+      {open && (
+        <FinalLinkPopover
+          open={open}
+          onClose={() => {
+            onRefresh();
+            setOpen(false);
+          }}
+          initialValue={projectDetail?.downloadLink ?? ""}
+          onSave={(link) =>
+            updateDownloadLinkApi(projectDetail._id, {downloadLink: link})
+          }
+        />)}
     </div>
   );
 }

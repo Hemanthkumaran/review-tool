@@ -14,7 +14,6 @@ import { AssignIcon, PenIcon, ShareIcon, TrashIcon } from '../../assets/svgs/Svg
 
 
 
-
 function VideoHeader({ fetchProject, onDeleteVersion, handleUpdateProject, projectDetail, goBack, versions, onChangeVersion, activeVersionId, onAddNewVersion, userAccess }) {
   
   const [open, setOpen] = useState(false);
@@ -164,7 +163,7 @@ console.log(userAccess, 'userAccess');
                 mt={1}
               />
               {userAccess !== constants.REVIEWER && <div style={{ margin:"0 10px" }}>
-                <DownloadMenuButton projectDetail={projectDetail} onAction={closeMoreMenu}/>
+                <DownloadMenuButton projectDetail={projectDetail} onAction={closeMoreMenu} onRefresh={fetchProject}/>
               </div>}
             <div className="relative">
             {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && <button

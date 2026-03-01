@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 export default function FinalLinkPopover({
   open,
   onClose,
-  onSave, // async (link) => Promise
+  onSave,
   initialValue = "",
   title = "Add your final video link here"
 }) {
@@ -11,7 +11,6 @@ export default function FinalLinkPopover({
   const [link, setLink] = useState(initialValue);
   const [saving, setSaving] = useState(false);
 
-  // close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {

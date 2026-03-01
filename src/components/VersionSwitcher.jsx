@@ -6,7 +6,7 @@ import manageVersion from '../assets/svgs/manage-version.svg';
 import downloadIcon from '../assets/svgs/download-icon.svg';
 import trashIcon from '../assets/svgs/trash-icon.svg';
 import { constants } from "../helpers/enum";
-import { getMuxGif } from "../helpers/muxHelpers";
+import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
 
 // Small helpers --------------------------------------------------
 
@@ -127,9 +127,9 @@ export default function VersionSwitcher({
                       {label}
                     </div>
                     <div className="w-[72px] h-[48px] rounded-lg overflow-hidden bg-black/40 flex-shrink-0">
-                      {v.thumbnailUrl ? (
+                      {v._raw.muxPlaybackID ? (
                         <img
-                          src={v.thumbnailUrl}
+                          src={getMuxThumbnail(v._raw.muxPlaybackID)}
                           alt={v.name || label}
                           className="w-full h-full object-cover"
                         />
@@ -225,9 +225,9 @@ function ManageVersionsModal({
   userAccess
 }) {
 
-  const sortedVersions = [...versions].sort((a, b) => {
-  return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-});
+//   const sortedVersions = [...versions].sort((a, b) => {
+//   return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+// });
 
 
   return (
@@ -251,8 +251,8 @@ function ManageVersionsModal({
           style={{ maxHeight: 260 }}
         >
           <div className="space-y-5">
-            {sortedVersions.map((v, idx) => {
-              const label = `v${sortedVersions.length - idx}`;
+            {versions.map((v, idx) => {
+              const label = v.label || `v${idx + 1}`;
               const duration = formatDuration(v.durationSeconds);
               const dateText = formatDateTime(v.createdAt);
               const meta = [dateText, duration].filter(Boolean).join(" • ");
@@ -269,7 +269,7 @@ function ManageVersionsModal({
                   <div className="w-[96px] h-[64px] rounded-xl overflow-hidden bg-black/40 flex-shrink-0">
                     {v._raw?.muxPlaybackID ? (
                       <img
-                        src={getMuxGif(v._raw?.muxPlaybackID)}
+                        src={getMuxGif(v._raw?.muxPlaybackID )}
                         alt={v.name || label}
                         className="w-full h-full object-cover"
                       />
