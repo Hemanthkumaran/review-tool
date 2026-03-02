@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import bellIcon from "../assets/svgs/bell.svg";
+// import bellIcon from "../assets/svgs/bell.svg";
 import arrowDown from "../assets/svgs/arrow-down.svg";
-import ownerLogo from "../assets/svgs/owner.svg";
+// import ownerLogo from "../assets/svgs/owner.svg";
 import ProfileMenu from "./ProfileMenu";
 import WorkspaceDropdown from "./WorkspaceDropdown";
 import SettingsModal from "./karn-comp/Layout/Settings/SettingsModal";
@@ -22,7 +22,7 @@ function Plus({ className = "" }) {
   );
 }
 
-function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setActiveWorkspace, subscription }) {
+function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setActiveWorkspace, workspacePlan }) {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,9 +33,9 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const [createLoading] = useState(false);
   const profileBtnRef = useRef(null);
   const minutesCap =
-  subscription?.baseStorageMinutes +
-  subscription?.additionalStorageMinutes;
-  const minutesUsed = Math.ceil(subscription?.storageMinutesUsed);
+  workspacePlan?.subscription?.baseStorageMinutes +
+  workspacePlan?.subscription?.additionalStorageMinutes;
+  const minutesUsed = Math.ceil(workspacePlan?.subscription?.storageMinutesUsed);
 
   const usagePercent = minutesCap
   ? Math.min(100, (minutesUsed / minutesCap) * 100)
@@ -63,7 +63,10 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
           onClick={() => setOpenWorkspace((v) => !v)}
           className="flex items-center gap-3 rounded-full bg-[#151618] border border-[#101213] px-3 py-2 cursor-pointer"
         >
-          <img style={{ height:40, width:40, borderRadius:40 }} src={activeWorkspace?.logo?.url ?? ownerLogo} />
+          {activeWorkspace?.logo?.url ?
+          <img style={{ height:40, width:40, borderRadius:40 }} src={activeWorkspace?.logo?.url} /> :
+          null
+          }
           <span className="text-sm md:text-base font-medium">
             {activeWorkspace?.name}
           </span>
@@ -101,21 +104,21 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
             </div>
             </div>}
 
-          <button className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#1E1F22] hover:bg-[#24262A]">
+          {/* <button className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#1E1F22] hover:bg-[#24262A]">
             <Plus className="h-4 w-4" />
-          </button>
+          </button> */}
         </div>
 
         <div
           className="flex items-center justify-between"
-          style={{
-            border: "2px solid #181A1C",
-            borderRadius: 30,
-            padding: "2px 4px",
-            width: 140,
-          }}
+          // style={{
+          //   border: "2px solid #181A1C",
+          //   borderRadius: 30,
+          //   padding: "2px 4px",
+          //   width: 140,
+          // }}
         >
-          <div
+          {/* <div
             className="flex items-center justify-center"
             style={{
               border: "2px solid #181A1C",
@@ -125,7 +128,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
             }}
           >
             <img src={bellIcon} />
-          </div>
+          </div> */}
 
           {/* PROFILE CLICK (FIXED – NO FLICKER) */}
           <div

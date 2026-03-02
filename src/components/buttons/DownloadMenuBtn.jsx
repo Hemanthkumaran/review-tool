@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import arrowDown from '../../assets/svgs/arrow-down.svg'
 import { updateDownloadLinkApi } from "../../services/api";
 import FinalLinkPopover from "../DownloadLinkPopover";
+import { DownloadOriginalTick } from "../../assets/svgs/SvgComponents";
 
 const menuItems = [
   { id: "rename", label: "Rename", icon: "edit" },
@@ -53,8 +54,11 @@ export default function DownloadMenuButton({ onAction, projectDetail, onRefresh 
           transition-colors
         "
       >
-        <span style={{ fontFamily:'Gilroy-Light'}}>Add final video link</span>
-
+        {/* <span><DownloadOriginalTick/></span> */}
+        {projectDetail?.downloadLink ?
+          <span style={{ fontFamily:'Gilroy-Light'}}>Download original</span> :
+          <span style={{ fontFamily:'Gilroy-Light'}}>Add final video link</span>
+        }
         {/* chevron */}
         <svg
           className={`w-4 h-4 transition-transform ${

@@ -17,7 +17,8 @@ export default function DashboardLayout() {
     setActiveWorkspace,
     loading,
     userAccess,
-    subscriptionStatus
+    subscriptionStatus,
+    workspacePlan
   } = useWorkspace();
 
   const [modalStep, setModalStep] = useState(null);
@@ -53,7 +54,7 @@ export default function DashboardLayout() {
         workspaces={workspaces}
         activeWorkspace={activeWorkspace}
         setActiveWorkspace={setActiveWorkspace}
-        subscription={subscription}
+        workspacePlan={workspacePlan}
         userAccess={userAccess}
       />
         {/* ⭐ modal shown here, not inside page */}

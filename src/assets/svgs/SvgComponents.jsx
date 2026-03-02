@@ -226,3 +226,21 @@ export const ResumeSubIcon = (props) => (
     <circle cx={50} cy={50} r={50} fill="#F9EF38" opacity={0.1} />
   </svg>
 )
+
+export const DownloadOriginalTick = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={20}
+    height={20}
+    fill="none"
+    {...props}
+  >
+    <path fill="#000" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
+    <path
+      stroke="#F9EF38"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m6.5 9.75 2.5 2.5 4.5-4.5"
+    />
+  </svg>
+)
