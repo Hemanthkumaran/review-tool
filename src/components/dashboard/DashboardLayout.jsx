@@ -8,6 +8,7 @@ import SubscriptionModal from "../modals/SubscriptionModal";
 import { constants } from "../../helpers/enum";
 
 export default function DashboardLayout() {
+
   const { user, profileLoading } = useUser();
 
   const {
@@ -22,7 +23,6 @@ export default function DashboardLayout() {
   const [modalStep, setModalStep] = useState(null);
 
   const subscription = { status: subscriptionStatus };
-  console.log(subscription, 'subs');
   
   useEffect(() => {
     if (!activeWorkspace) return;
@@ -41,8 +41,6 @@ export default function DashboardLayout() {
     }
 
   }, [activeWorkspace?._id, subscriptionStatus]);
-
-
 
   if (loading && profileLoading) {
     return <AppLoader visible={loading} message="Loading…" />;

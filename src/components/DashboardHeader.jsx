@@ -6,6 +6,8 @@ import ProfileMenu from "./ProfileMenu";
 import WorkspaceDropdown from "./WorkspaceDropdown";
 import SettingsModal from "./karn-comp/Layout/Settings/SettingsModal";
 import { constants } from "../helpers/enum";
+import { useLocation, useNavigate } from "react-router-dom";
+import { PATHS } from "../routes/paths";
 
 function Plus({ className = "" }) {
   return (
@@ -21,6 +23,9 @@ function Plus({ className = "" }) {
 }
 
 function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setActiveWorkspace, subscription }) {
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [openProfile, setOpenProfile] = useState(false);
   const [openWorkspace, setOpenWorkspace] = useState(false);
@@ -39,6 +44,16 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const getInitials = (firstName = "", lastName = "") =>
   `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
 
+  const handleWorkspaceChange = (workspace) => {
+
+    setActiveWorkspace(workspace);
+    setOpenWorkspace(false);
+    console.log(location.pathname, 'location.pathname');
+    
+    if (location.pathname === "/dashboard/add-project") {
+      navigate(`${PATHS.DASHBOARD}?ws=${activeWorkspace?._id}`)
+    }
+  };
   
   return (
     <header className="flex items-center justify-between px-2 md:px-2">
@@ -67,10 +82,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
           <WorkspaceDropdown
             workspaces={workspaces}
             activeWorkspace={activeWorkspace}
-            onSelect={(ws) => {
-              setActiveWorkspace(ws);
-              setOpenWorkspace(false);
-            }}
+            onSelect={handleWorkspaceChange}
           />
         )}
       </div>

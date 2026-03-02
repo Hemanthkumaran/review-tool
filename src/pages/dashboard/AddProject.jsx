@@ -140,11 +140,11 @@ export default function AddProject({
         {/* Title row */}
         <div className="mt-8 flex items-center justify-between">
           <div className="flex items-center">
-            <img onClick={() => navigate(-1)} style={{ height:20, width:20, cursor:'pointer' }} src={LeftArrow} />
+            <img onClick={() => navigate(`${PATHS.DASHBOARD}?ws=${activeWorkspace?._id}`)} style={{ height:20, width:20, cursor:'pointer' }} src={LeftArrow} />
             <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
             <div className="flex items-center">
             <div style={{ fontFamily:"Gilroy-Light", color:"#fff" }}>
-              <span onClick={() => navigate(-1)} style={{ color:"#9C9C9C", cursor:'pointer' }}>
+              <span onClick={() => navigate(`${PATHS.DASHBOARD}?ws=${activeWorkspace?._id}`)} style={{ color:"#9C9C9C", cursor:'pointer' }}>
                 All Folders {" "}</span> / {" "}
                 <span>{folderName}</span>
             </div>
