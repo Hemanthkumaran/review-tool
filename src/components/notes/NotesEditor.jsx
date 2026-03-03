@@ -1,21 +1,15 @@
-// src/components/notes/NotesEditor.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
 import FinalLinkPopover from "../DownloadLinkPopover";
+import { AaIcon, BoldIcon, CheckListIcon, ItalicIcon, LinkIcon } from "../../assets/svgs/SvgComponents";
 
-/**
- * Props:
- *  - sections?: [{ id: string; label: string }]
- *  - initialBySection?: Record<sectionId, html>
- *  - lastUpdatedBySection?: Record<sectionId, Date|string>
- *  - onSave?(sectionId: string, html: string): Promise<void> | void
- *  - onCancel?(): void
- *  - savingSectionId?: string
- */
+
+const toolbarStyle = {"border":"1px solid #1F1F21","margin":"0px 15px","marginBottom":"15px", "marginRight":"5px","borderRadius":"15px"};
+
 export default function NotesEditor({
   sections = [
     { id: "brief", label: "Brief" },
@@ -31,8 +25,9 @@ export default function NotesEditor({
   const defaultSectionId = sections[0]?.id;
   const [activeSection, setActiveSection] = useState(defaultSectionId);
   const [showLinkPopover, setShowLinkPopover] = useState(false);
-const [linkInitialValue, setLinkInitialValue] = useState("");
-const linkButtonRef = useRef(null);
+  const [linkInitialValue, setLinkInitialValue] = useState("");
+
+
 
   const isSwitchingRef = useRef(false);
       const {
@@ -126,7 +121,6 @@ const linkButtonRef = useRef(null);
       editor.commands.setContent(contents[id] || "", false);
     }
 
-    // allow updates again after content is set
     requestAnimationFrame(() => {
       isSwitchingRef.current = false;
     });
@@ -144,25 +138,26 @@ const linkButtonRef = useRef(null);
   const dirty = !!dirtyMap[activeSection];
   const isSaving = savingSectionId === activeSection;
 
-  // Aa – toggle upper / lower case
-  const toggleCase = () => {
-    const { state } = editor;
-    const { from, to } = state.selection;
-    if (from === to) return;
-    const selectedText = state.doc.textBetween(from, to, "\n");
-    if (!selectedText) return;
+const toggleCase = () => {
+  const { state } = editor;
+  const { from, to } = state.selection;
+  if (from === to) return;
 
-    const isAllUpper = selectedText === selectedText.toUpperCase();
-    const nextText = isAllUpper
-      ? selectedText.toLowerCase()
-      : selectedText.toUpperCase();
+  const selectedText = state.doc.textBetween(from, to, "\n");
+  if (!selectedText) return;
 
-    editor
-      .chain()
-      .focus()
-      .insertContentAt({ from, to }, nextText)
-      .run();
-  };
+  const isAllUpper = selectedText === selectedText.toUpperCase();
+  const nextText = isAllUpper
+    ? selectedText.toLowerCase()
+    : selectedText.toUpperCase();
+
+  editor
+    .chain()
+    .focus()
+    .insertContentAt({ from, to }, nextText)
+    .setTextSelection({ from, to })   // 🔥 restore selection
+    .run();
+};
 
   const toggleItalic = () => {
     editor.chain().focus().toggleItalic().run();
@@ -176,29 +171,13 @@ const linkButtonRef = useRef(null);
     editor.chain().focus().toggleBulletList().run();
   };
 
-  // const addLink = () => {
-  //   const previousUrl = editor.getAttributes("link").href;
-  //   const url = window.prompt("Enter link URL", previousUrl || "https://");
+const openLinkPopover = () => {
+  editor.chain().focus().run();   // 🔥 force editor focus first
 
-  //   if (url === null) return;
-  //   if (url === "") {
-  //     editor.chain().focus().extendMarkRange("link").unsetLink().run();
-  //     return;
-  //   }
-
-  //   editor
-  //     .chain()
-  //     .focus()
-  //     .extendMarkRange("link")
-  //     .setLink({ href: url })
-  //     .run();
-  // };
-
-  const openLinkPopover = () => {
-    const previousUrl = editor.getAttributes("link").href || "";
-    setLinkInitialValue(previousUrl);
-    setShowLinkPopover(true);
-  };
+  const previousUrl = editor.getAttributes("link").href || "";
+  setLinkInitialValue(previousUrl);
+  setShowLinkPopover(true);
+};
 
   const handleSaveLink = async (url) => {
     if (!url) {
@@ -241,36 +220,102 @@ const linkButtonRef = useRef(null);
     }));
     onCancel?.();
   };
+const isBold = editor.isActive("bold");
+const isItalic = editor.isActive("italic");
+const isBullet = editor.isActive("bulletList");
+const isLink = editor.isActive("link");
+
+const { from, to } = editor.state.selection;
+const selectedText =
+  from !== to
+    ? editor.state.doc.textBetween(from, to, "\n")
+    : "";
+
+const isUppercase =
+  from !== to &&
+  selectedText &&
+  selectedText === selectedText.toUpperCase();
+
+const FormatButton = ({ children, onClick, active }) => (
+  <button
+    type="button"
+    onMouseDown={(e) => {
+      e.preventDefault();   // preserve selection
+      onClick();
+    }}
+    className={`h-8 min-w-8 px-3 flex items-center justify-center rounded-full transition
+      ${active 
+        ? "bg-[#FEEA3B] text-black" 
+        : "text-white/70 hover:bg-white/10 hover:text-white"}
+    `}
+  >
+    {children}
+  </button>
+);
+
+const ToolbarButton = ({
+  children,
+  onClick,
+  active,
+  type = "format", // "format" | "action"
+}) => {
+  const handleMouseDown = (e) => {
+    if (type === "format") {
+      e.preventDefault(); // preserve selection
+      onClick?.();
+    }
+  };
 
   return (
-    <div className="rounded-2xl flex flex-col h-[460px] text-[13px] text-gray-100">
-      {/* top tabs row */}
-        <div className="relative flex items-center justify-between gap-6 text-[14px] px-2">
-          {/* base line across all tabs */}
-          <div className="absolute left-0 right-0 bottom-0 h-[2px] bg-[#222222]" />
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              style={{ fontFamily:'Gilroy-Light', cursor:'pointer' }}
-              onClick={() => handleChangeSection(s.id)}
-              className={`relative pb-1 border-b-[2px] z-[1] ${
-                activeSection === s.id
-                  ? "border-[#FEEA3B] text-white"
-                  : "border-transparent text-gray-400"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
+    <button
+      type="button"
+      onMouseDown={type === "format" ? handleMouseDown : undefined}
+      onClick={type === "action" ? onClick : undefined}
+      className={`
+        h-8 min-w-8 px-3 flex items-center justify-center 
+        rounded-full transition-all duration-150 cursor-pointer
+        ${active 
+          ? "bg-[#FEEA3B] text-black" 
+          : "text-white/70 hover:bg-white/10 hover:text-white"}
+      `}
+    >
+      {children}
+    </button>
+  );
+};
 
-      {/* editor area – wrapper clickable, but won't interrupt selections */}
+  return (
+    <div className="relative flex flex-col h-full rounded-2xl border border-[#202124] bg-[#050506] overflow-hidden">
+      {/* top tabs row */}
+        <div className="relative flex items-center justify-around gap-8 px-4 pt-3 text-[14px]">
+          {/* bottom divider line */}
+          <div className="absolute left-0 right-0 bottom-0 h-[1px] bg-[#1A1A1A]" />
+
+          {sections.map((s) => {
+            const active = activeSection === s.id;
+
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleChangeSection(s.id)}
+                className={`relative pb-3 text-sm transition-colors ${
+                  active ? "text-white" : "text-gray-400 hover:text-gray-200"
+                }`}
+              >
+                {s.label}
+
+                {active && (
+                  <div className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-[#FEEA3B] rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
       <div
-        className="flex-1 px-4 py-3 overflow-auto cursor-text"
+        className="flex-1 px-4 py-4 overflow-y-auto"
         onClick={(e) => {
           if (!editor) return;
-          // ⬇️ FIX 2: don't steal clicks/selections that happen inside ProseMirror
           const inProseMirror = e.target.closest(".ProseMirror");
           if (inProseMirror) return;
           editor.chain().focus("end").run();
@@ -286,73 +331,69 @@ const linkButtonRef = useRef(null);
         title="Enter link url"
       />
       {/* toolbar footer */}
-      {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
-        <div className="mt-auto px-4 py-2 border-top border-white/5 flex items-center justify-between text-[11px]">
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={toggleCase}
-            className="px-2 py-1 rounded-full hover:bg-white/5"
-          >
-            Aa
-          </button>
-          <button
-            type="button"
-            onClick={toggleItalic}
-            className={`px-2 py-1 rounded-full hover:bg-white/5 italic ${
-              editor.isActive("italic") ? "bg-white/10" : ""
-            }`}
-          >
-            I
-          </button>
-          <button
-            type="button"
-            onClick={toggleBold}
-            className={`px-2 py-1 rounded-full hover:bg-white/5 font-semibold ${
-              editor.isActive("bold") ? "bg-white/10" : ""
-            }`}
-          >
-            B
-          </button>
-          <button
-            type="button"
-            onClick={toggleBulletList}
-            className={`px-2 py-1 rounded-full hover:bg-white/5 ${
-              editor.isActive("bulletList") ? "bg-white/10" : ""
-            }`}
-          >
-            ✓
-          </button>
-          <button
-            ref={linkButtonRef}
-            type="button"
-            onClick={openLinkPopover}
-            className="px-2 py-1 rounded-full hover:bg-white/5"
-          >
-            🔗
-          </button>
-        </div>
-
-        {dirty && (
+      {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && (
+        <div style={toolbarStyle} className="sticky bottom-0 left-0 right-0 bg-[#050506] px-1 py-3 flex items-center justify-between">
+          {/* LEFT TOOLS */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="px-3 py-[6px] rounded-full border border-[#2a2b2e] bg-[#111216] text-gray-200 hover:bg-[#18191d]"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-              className="px-4 py-[6px] rounded-full bg-[#FEEA3B] text-black font-medium disabled:opacity-40 disabled:cursor-default"
-            >
-              {isSaving ? "Saving…" : "Save"}
-            </button>
+            <ToolbarButton type="format" onClick={toggleCase} active={isUppercase}>
+  <AaIcon />
+</ToolbarButton>
+
+<ToolbarButton type="format" onClick={toggleItalic} active={isItalic}>
+  <ItalicIcon />
+</ToolbarButton>
+
+<ToolbarButton type="format" onClick={toggleBold} active={isBold}>
+  <BoldIcon />
+</ToolbarButton>
+
+<ToolbarButton type="format" onClick={toggleBulletList} active={isBullet}>
+  <CheckListIcon />
+</ToolbarButton>
+<button
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+
+    // Save current selection before blur
+    const { from, to } = editor.state.selection;
+    editor.chain().focus().setTextSelection({ from, to }).run();
+
+    openLinkPopover();
+  }}
+  className={`h-8 min-w-8 px-3 flex items-center justify-center rounded-full transition
+    ${isLink
+      ? "bg-[#FEEA3B] text-black"
+      : "text-white/70 hover:bg-white/10 hover:text-white"}
+  `}
+>
+  <LinkIcon />
+</button>
           </div>
-        )}
-      </div>}
+
+          {/* RIGHT ACTIONS */}
+          {dirty && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleCancel}
+                style={{ borderRadius:8, fontFamily:'Gilroy-Light', fontSize:14 }}
+                className="px-5 py-[6px] cursor-pointer text-sm border border-[#2a2b2e] bg-[#111216] hover:bg-[#18191d] transition"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                style={{ borderRadius:8, fontFamily:'Gilroy-Light', fontSize:14 }}
+                className="px-6 py-[6px] bg-[#FEEA3B] text-black disabled:opacity-40"
+              >
+                {isSaving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );

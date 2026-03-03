@@ -244,3 +244,92 @@ export const DownloadOriginalTick = (props) => (
     />
   </svg>
 )
+
+export const AaIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={16}
+    height={10}
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      d="M8.087 9.45h-.756l-.918-2.404H1.675L.757 9.45H0L3.673 0h.756l3.658 9.45ZM4.051.876 1.945 6.37h4.212L4.05.877Zm11.085 3.348V2.699h.689v6.75h-.689V7.924a3.28 3.28 0 0 1-1.201 1.228 3.287 3.287 0 0 1-1.701.446c-.954 0-1.778-.338-2.47-1.013-.685-.684-1.027-1.52-1.027-2.51 0-.99.342-1.823 1.026-2.498a3.367 3.367 0 0 1 2.47-1.026c.63 0 1.198.148 1.702.445a3.28 3.28 0 0 1 1.201 1.229ZM10.25 8.113a2.774 2.774 0 0 0 2.039.837c.792 0 1.467-.28 2.025-.837.549-.55.823-1.229.823-2.039s-.274-1.49-.823-2.038a2.758 2.758 0 0 0-2.025-.837c-.801 0-1.48.279-2.039.837-.549.549-.823 1.228-.823 2.038 0 .81.274 1.49.823 2.039Z"
+      opacity={0.65}
+    />
+  </svg>
+)
+
+export const ItalicIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={10}
+    height={13}
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.886.5h5.078M.5 12.35h5.079M6.425.5 3.04 12.35"
+    />
+  </svg>
+)
+
+export const BoldIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={8}
+    height={11}
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      d="M5.782 5.223A2.827 2.827 0 0 1 7.13 6.262c.341.475.512 1.017.512 1.627 0 .816-.29 1.514-.868 2.093a2.852 2.852 0 0 1-2.093.868H.001V0h4.324C5.11 0 5.782.279 6.34.837c.558.558.837 1.23.837 2.015 0 .516-.124.986-.372 1.41a2.547 2.547 0 0 1-1.023.961ZM4.325.775H.822v4.154h3.503c.558 0 1.033-.202 1.426-.605.403-.424.604-.914.604-1.472 0-.569-.201-1.054-.604-1.457a1.863 1.863 0 0 0-1.426-.62Zm-3.503 9.3h3.86c.578 0 1.08-.212 1.503-.636.424-.444.635-.96.635-1.55 0-.6-.211-1.11-.635-1.534a2 2 0 0 0-1.504-.651H.821v4.37Z"
+      opacity={0.65}
+    />
+  </svg>
+)
+
+export const CheckListIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={16}
+    height={16}
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6 14.667h4c3.334 0 4.667-1.333 4.667-4.666V6c0-3.334-1.333-4.667-4.666-4.667H6c-3.334 0-4.667 1.333-4.667 4.667v4c0 3.333 1.333 4.666 4.667 4.666Z"
+    />
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m5.166 8 1.887 1.887 3.78-3.774"
+    />
+  </svg>
+)
+
+export const LinkIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={16}
+    height={16}
+    fill="none"
+    className={className}
+  >
+    <path
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="m12.004 9.182.712-.712a3.677 3.677 0 0 0 0-5.186 3.677 3.677 0 0 0-5.186 0l-.712.712M3.993 6.821l-.707.707a3.673 3.673 0 0 0 0 5.186 3.677 3.677 0 0 0 5.186 0l.707-.707M6.115 9.885l3.771-3.771"
+    />
+  </svg>
+);

@@ -169,7 +169,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
   return (
     <>
       {/* chevron button overlapping between columns */}
-      <button
+      {/* <button
         type="button"
         onClick={onToggle}
         className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#111111] border border-[#242424] shadow flex items-center justify-center hover:bg-white/10 z-20"
@@ -205,7 +205,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
             />
           </svg>
         )}
-      </button>
+      </button> */}
 
       {/* comments panel – hide content when collapsed */}
       {isOpen && (
@@ -224,16 +224,16 @@ const handleSaveNotesSection = async (sectionId, html) => {
           </div>
 
           {/* body */}
-          <div className="mt-3 px-2 pb-4 pt-2 flex-1 overflow-auto bg-[#101213] rounded-2xl">
+          <div className="mt-3 flex-1 min-h-0 bg-[#101213] rounded-2xl flex flex-col">
             { activeTab === "comments" ?
-            <div className="flex items-center px-2 justify-between gap-2 mb-4">
-              <div className="flex items-center">
+            <div className="flex items-center px-2 justify-between gap-2 mb-4 mt-3">
+              <div className="px-2 flex items-center">
                   <span>
                     All Comments
                   </span>
                   <img style={{ marginLeft:10 }} src={downloadIcon}/>
               </div>
-              <div className="flex items-center gap-3 text-xs text-gray-400">
+              <div className=" px-2 flex items-center gap-3 text-xs text-gray-400">
                   <span>Unresolved only</span>
                   <ToggleButton
                     checked={showResolved}
@@ -260,7 +260,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
               </div>
             </div> : null }
             {activeTab === "comments" ? (
-              <>
+              <div className="h-full overflow-y-auto px-2">
                 {filteredComments.length === 0 && (
                   <div className="text-[13px] text-gray-500 mt-6">
                     No comments yet — add one from the comment bar below the
@@ -289,20 +289,18 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     updateCommentResolvedLocal={updateCommentResolvedLocal}
                   />
                 ))}
-              </>
-            ) : (
-              <div className="text-[13px] text-gray-500 mt-2">
-                <NotesEditor
-                  sections={NOTES_SECTIONS}
-                  initialBySection={notesBySection}
-                  // lastUpdatedBySection={notesUpdatedBySection}
-                  onSave={handleSaveNotesSection}
-                  onCancel={() => {}}
-                  savingSectionId={savingSectionId}
-                  lastUpdatedBySection={{}}
-                />
               </div>
-            )}
+            ) : (
+                <div className="h-full">
+                  <NotesEditor
+                    sections={NOTES_SECTIONS}
+                    initialBySection={notesBySection}
+                    onSave={handleSaveNotesSection}
+                    onCancel={() => {}}
+                    savingSectionId={savingSectionId}
+                  />
+                </div>
+              )}
           </div>
         </div>
       )}
