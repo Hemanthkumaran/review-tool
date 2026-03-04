@@ -496,7 +496,7 @@ function fetchProject(storedGuest = null) {
   const formData = new FormData();
   formData.append('commentType', commentType);
   // timeline in seconds (backend expects string)
-  formData.append("timeline", Math.round(baseTime).toString());
+  formData.append("timeline", baseTime.toFixed(3));
 
   if (trimmed) {
     formData.append("text", trimmed);

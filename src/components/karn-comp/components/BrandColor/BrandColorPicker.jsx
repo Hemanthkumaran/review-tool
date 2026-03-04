@@ -2,8 +2,7 @@ import { useState, useRef } from "react";
 import { HexColorPicker } from "react-colorful";
 import "./BrandColorPicker.css";
 
-export default function BrandColorPicker() {
-  const [color, setColor] = useState("#F9EF38");
+export default function BrandColorPicker({ disabled, brandColor, setBrandColor }) {
   const [open, setOpen] = useState(false);
   const pickerRef = useRef(null);
 
@@ -11,16 +10,21 @@ export default function BrandColorPicker() {
     <div className="brand-wrapper">
       <label className="brand-label">Branding Colour</label>
 
-      <div className="brand-input" onClick={() => setOpen(!open)}>
-        <span className="color-box" style={{ backgroundColor: color }} />
+      <div
+        className={`brand-input ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+        onClick={() => {
+          if (!disabled) setOpen(!open);
+        }}
+      >
+        <span className="color-box" style={{ backgroundColor: brandColor || "#F9EF38" }} />
         <span className="color-text">
-          {color.replace("#", "").toUpperCase()}
+          {brandColor?.replace("#", "").toUpperCase()|| "#F9EF38"}
         </span>
       </div>
 
       {open && (
         <div className="picker-popover" ref={pickerRef}>
-          <HexColorPicker color={color} onChange={setColor} />
+          <HexColorPicker color={brandColor || "#F9EF38"} onChange={setBrandColor} />
         </div>
       )}
     </div>

@@ -44,6 +44,8 @@ export default function WelcomeWorkspace({
   const navigate = useNavigate();
   const { modalStep, setModalStep } = useOutletContext();
 
+  const brandingColor = activeWorkspace?.colourCode ?? '#F9EF38';
+  
   useEffect(() => {
     if (workspaceLoading) return;
     if (!activeWorkspace?._id) return;
@@ -180,7 +182,8 @@ export default function WelcomeWorkspace({
               {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
                 <button
                 onClick={handleCreate}
-                className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
+                style={{ background: brandingColor}}
+                className={`cursor-pointer inline-flex items-center gap-2 rounded-full text-black px-4 py-2 hover:opacity-90`}
               >
                 <PlusThin className="h-4 w-4" />
                 <span>Create folder</span>

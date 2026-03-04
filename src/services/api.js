@@ -304,10 +304,10 @@ export const updateUserProfileApi = (payload) =>
     },
   });
 
-  export const getUserProfileApi = () =>
+export const getUserProfileApi = () =>
   axiosClient.get("/user/getUserProfile");
 
-  export const updateWorkspaceApi = (workspaceID, payload) =>
+export const updateWorkspaceApi = (workspaceID, payload) =>
   axiosClient.patch(
     `/user/updateWorkspace?workspaceID=${workspaceID}`,
     payload,
@@ -316,4 +316,18 @@ export const updateUserProfileApi = (payload) =>
         "Content-Type": "multipart/form-data",
       },
     }
+  );
+
+export const createAddonPaymentApi = async (workspaceId, payload) => 
+  axiosClient.post(
+    `/billing/createPaymentOrder?workspaceID=${workspaceId}`,
+    payload
+  );
+
+export const cancelAddonApi = async (workspaceId) =>
+  axiosClient.post(
+    `/billing/cancelAddon?workspaceID=${workspaceId}`,
+      {
+        addonCode: "white_label",
+      }
   );

@@ -24,6 +24,8 @@ export const WorkspaceProvider = ({ children }) => {
   const workspaceIdFromUrl = searchParams.get("ws");
 
 const fetchWorkspacePlan = async (workspaceId) => {
+  console.log('refreshWorkspacePlan getting called', workspaceId);
+  
   if (!workspaceId) return;
 
   try {

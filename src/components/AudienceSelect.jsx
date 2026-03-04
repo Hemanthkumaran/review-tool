@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import arrowDown from "../assets/svgs/arrow-down.svg";
-import { useWorkspace } from "../context/WorkspaceContext";
 import { constants } from "../helpers/enum";
 
 const ownerOptions = [

@@ -7,7 +7,7 @@ import { useWorkspace } from "../../../../context/WorkspaceContext";
 
 
 const Billing = () => {
-  const { workspacePlan, billingLoading } = useWorkspace();
+  const { workspacePlan, billingLoading, activeWorkspace, refreshWorkspace, refreshWorkspacePlan } = useWorkspace();
 
   if (billingLoading) return null;
 
@@ -39,7 +39,10 @@ const Billing = () => {
       <div>
         <SubscriptionCard
           subscription={subscription}
+          activeWorkspace={activeWorkspace}
           costPerMinute={workspacePlan.costPerMinute}
+          refreshWorkspace={refreshWorkspace}
+          refreshWorkspacePlan={refreshWorkspacePlan}
         />
 
         <div style={{ margin: "24px 0 0 0" }}>

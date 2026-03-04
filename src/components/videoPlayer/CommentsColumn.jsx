@@ -43,7 +43,7 @@ export default function CommentsColumn({
   const [savingSectionId, setSavingSectionId] = useState(null);
   const [showResolved, setShowResolved] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
-  const [commentFilters, setCommentFilters] = useState([]);
+  const [commentFilters, setCommentFilters] = useState([constants.MEMBER, constants.COLLABORATOR, constants.REVIEWER]);
   const [user, setUser] = useState(null);
   const filterBtnRef = useRef(null);
 
@@ -108,16 +108,25 @@ const handleReplyDeleted = (commentId, replyId) => {
 
 const filteredComments = useMemo(() => {
   return markers.filter((c) => {
-    // If unresolvedOnly is ON → hide resolved
     if (showResolved && c.isResolved) return false;
 
-    // No filters → show all
-    if (!commentFilters.length) return true;
+    const role = c.user?.role;
 
-    const commentType = c.commentType ?? "everyone";
-    return commentFilters.includes(commentType);
+    if (role === constants.OWNER) return true;
+
+    let roleType;
+
+    if (role === constants.COLLABORATOR) {
+      roleType = constants.COLLABORATOR;
+    } else if (role === constants.REVIEWER) {
+      roleType = constants.REVIEWER;
+    } else {
+      roleType = constants.MEMBER;
+    }
+
+    return commentFilters.includes(roleType);
   });
-}, [markers, showResolved, commentFilters, activeVersionId]);
+}, [markers, showResolved, commentFilters]);
 
 
   // somewhere near the top of the file

@@ -333,3 +333,26 @@ export const LinkIcon = ({ className }) => (
     />
   </svg>
 );
+
+export const CancelRedCircle = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={24}
+    height={24}
+    fill="none"
+    {...props}
+  >
+    <path
+      fill="#FF3030"
+      fillOpacity={0.1}
+      d="M0 12C0 5.373 5.373 0 12 0s12 5.373 12 12-5.373 12-12 12S0 18.627 0 12Z"
+    />
+    <path
+      stroke="#FF3030"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.2}
+      d="m14.828 9.172-5.657 5.657M9.171 9.171l5.657 5.657"
+    />
+  </svg>
+)

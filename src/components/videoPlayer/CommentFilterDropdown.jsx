@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { constants } from "../../helpers/enum";
 
 
 export default function CommentFilterDropdown({
@@ -46,18 +47,18 @@ export default function CommentFilterDropdown({
       "
     >
       {[
-          {
-            label: "Team",
-            value: "team only",
-          },
-          {
-            label: "Reviewer",
-            value: "reviewer only",
-          },
-          {
-            label: "Client",
-            value: "everyone",
-          }
+        {
+          label: "Team",
+          value: constants.MEMBER,
+        },
+        {
+          label: "Collaborator",
+          value: constants.COLLABORATOR,
+        },
+        {
+          label: "Reviewer",
+          value: constants.REVIEWER,
+        },
       ].map((item) => (
         <button
           key={item.value}

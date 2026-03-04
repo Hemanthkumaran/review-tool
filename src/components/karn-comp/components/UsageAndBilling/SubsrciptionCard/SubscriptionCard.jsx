@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import "./SubscriptionCard.css";
 import { DateFormat } from "../../../../../helpers/common";
+import { CancelRedCircle } from "../../../../../assets/svgs/SvgComponents";
+import { cancelAddonApi } from "../../../../../services/api";
+import RemoveAccessModal from "../../../../modals/RemoveAccessModal";
 
 export default function SubscriptionCard({
   subscription,
   costPerMinute,
+  activeWorkspace,
+  refreshWorkspace,
+  refreshWorkspacePlan
 }) {
   const {
     activePlan,
@@ -17,7 +23,9 @@ export default function SubscriptionCard({
     subscriptionEndAt,
     totalAmount,
   } = subscription;
-  
+  console.log(subscription,'subscription' );
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const totalMinutes =
     baseStorageMinutes + additionalStorageMinutes;
 
@@ -32,6 +40,15 @@ export default function SubscriptionCard({
     totalMinutes === 0
       ? 0
       : (usedMinutes / totalMinutes) * 100;
+
+  const handleCancelAddon = async () => {
+    setLoading(true);
+    await cancelAddonApi(activeWorkspace._id);
+    await refreshWorkspace();
+    await refreshWorkspacePlan(activeWorkspace._id);
+    setLoading(true);
+    setIsOpen(false);
+  };
 
   return (
     <div className="subscription-card">
@@ -119,6 +136,21 @@ export default function SubscriptionCard({
 
       <div className="sub-divider"></div>
 
+      <div>
+        <div className="sub-addon-name mb-2">
+          Active Add-ons
+        </div>
+        {subscription?.addons?.map(item => {
+          if (item.status == "active") {
+            return <div className="flex align-center">
+              <div id={item._id} style={{ fontFamily:'Gilroy-Regular', color:"#BFBFBF", fontSize:16, marginRight:10 }}>{`Custom UI Branding - $ ${item.amount}/month`}</div>
+              <div onClick={() => setIsOpen(true)} style={{cursor:'pointer'}}><CancelRedCircle/></div>
+            </div>
+          }
+        })}
+      </div>
+      <div className="sub-divider"></div>
+
       {/* ---------- FAQ ---------- */}
       <div className="sub-faq-row">
         <span>Questions? Check out&nbsp;</span>
@@ -126,6 +158,14 @@ export default function SubscriptionCard({
           Billing FAQ
         </button>
       </div>
+      <RemoveAccessModal
+          open={isOpen}
+          onClose={() => setIsOpen(false)}
+          title="Remove Addon"
+          description="Following addon will be removed from the plan"
+          buttonText={loading ? "Removing..." : "Remove Addon"}
+          handleRemove={handleCancelAddon}
+        />
     </div>
   );
 }
