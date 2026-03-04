@@ -24,12 +24,10 @@ const reviewerOptions = [
 
 export default function AudienceSelect({
   value,
+  userAccess,
   onChange = () => {},
 }) {
 
-  const {
-    userAccess
-  } = useWorkspace();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -53,7 +51,7 @@ export default function AudienceSelect({
       {/* Trigger */}
       <button
         type="button"
-        disabled={userAccess === constants.COLLABORATOR}
+        disabled={userAccess === constants.COLLABORATOR || userAccess === constants.REVIEWER}
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 px-4 py-[6px] rounded-full bg-[#282A2B] text-[11px] text-gray-200"
       >

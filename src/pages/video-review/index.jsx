@@ -27,21 +27,20 @@ export default function VideoReview() {
   const [projectDetail, setProjectDetail] = useState(null);
 
   const [videoSrc, setVideoSrc] = useState(null);
-  // const [videoFile, setVideoFile] = useState(null);
 
   const [markers, setMarkers] = useState([]);
   const [sendingComment, setSendingComment] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
   const [activeVersionId, setActiveVersionId] = useState(null);
+  const [projectAccess, setProjectAccess] = useState(null);
 
   // voice recording
   const [isRecording, setIsRecording] = useState(false);
-  const [pendingVoice, setPendingVoice] = useState(null); // { url, startTime }
+  const [pendingVoice, setPendingVoice] = useState(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const voiceStartTimeRef = useRef(0);
   const cancelledRef = useRef(false);
-  const { userAccess } = useWorkspace();
   const { projectId } = useParams();
   const [error, setError] = useState("");
   const [showGuestModal, setShowGuestModal] = useState(false);
@@ -190,8 +189,8 @@ function fetchProject(storedGuest = null) {
 
   getOneProjectApi(projectId, params).then((res) => {
     const project = res.data.project;
-
-    // setProjectDetail(project);
+    const permission = res.data.permission == 'none' ? constants.REVIEWER : res.data.permission;
+    setProjectAccess(permission);
 
     setProjectDetail(prev => {
       // preserve current version if exists
@@ -444,7 +443,7 @@ function fetchProject(storedGuest = null) {
       try {
         let reviewer = null;
 
-        if (userAccess == constants.REVIEWER) {
+        if (projectAccess == constants.REVIEWER) {
           reviewer = getGuestIdentity();
         }
         
@@ -613,7 +612,7 @@ function fetchProject(storedGuest = null) {
   } else {
     let reviewer = null;
 
-    if (userAccess == constants.REVIEWER) {
+    if (getGuestIdentity() == constants.REVIEWER) {
       reviewer = getGuestIdentity();
     }
     const res = await addCommentApi(projectID, versionID, formData, reviewer);
@@ -803,7 +802,7 @@ const handleNewVersionFile = async (e) => {
       fileInputRef.current?.click();
     }}
     onDeleteVersion={handleDeleteVersion}
-    userAccess={userAccess}
+    userAccess={projectAccess}
   />
 
   {/* MAIN LAYOUT */}
@@ -845,7 +844,7 @@ const handleNewVersionFile = async (e) => {
             projectId={projectId}
             onVideoUploaded={handleVideoUploaded}
             muxStatus={activeVersion?.muxStatus}
-            userAccess={userAccess}
+            userAccess={projectAccess}
           />
         )}
       </div>
@@ -867,6 +866,7 @@ const handleNewVersionFile = async (e) => {
         pauseVideo={pauseVideo}
         commentInputRef={commentInputRef}
         sendingComment={sendingComment}
+        userAccess={projectAccess}
       />}
     </div>
 
@@ -885,7 +885,7 @@ const handleNewVersionFile = async (e) => {
         onAddReply={handleAddReply}
         handleSendComment={handleSendComment}
         activeVersionId={activeVersionId}
-        userAccess={userAccess}
+        userAccess={projectAccess}
         updateCommentResolvedLocal={updateCommentResolvedLocal}
         updateCommentLocal={updateCommentLocal}
         deleteCommentLocal={deleteCommentLocal}

@@ -63,9 +63,6 @@ const closeMoreMenu = () => setOpen(false);
     }
   };
 
-console.log(userAccess, 'userAccess');
-
-
   function getMenutItems() {
     const menuItems = [
       { id: "rename", label: "Rename", icon: "edit" },
@@ -156,12 +153,14 @@ console.log(userAccess, 'userAccess');
                 console.log("Project status updated:", s);
               }}
             /> */}
+            {userAccess !== constants.REVIEWER && <div style={{ margin:"0 10px" }}>
               <StatusDropdown
                 value={projectStatus}
                 onChange={(status) => onStatusChange?.(projectDetail._id, status)}
                 py={2}
                 mt={1}
               />
+              </div>}
               {userAccess !== constants.REVIEWER && <div style={{ margin:"0 10px" }}>
                 <DownloadMenuButton projectDetail={projectDetail} onAction={closeMoreMenu} onRefresh={fetchProject}/>
               </div>}

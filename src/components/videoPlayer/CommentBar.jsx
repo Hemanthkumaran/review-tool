@@ -40,11 +40,9 @@ export default function CommentBar({
   onCancelAnnotation,
   pauseVideo,
   sendingComment,
-  commentInputRef
+  commentInputRef,
+  userAccess
 }) {
-  const {
-    userAccess
-  } = useWorkspace();
   const [text, setText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
@@ -181,6 +179,7 @@ sendingComment ||
           <AudienceSelect
             value={audience}
             onChange={setAudience}
+            userAccess={userAccess}
           />
         </div>
 

@@ -32,6 +32,8 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
     // Voice note (signed URL)
     const audioUrl = c.voiceNote?.url || null;
 
+    const sNo = c.sNo
+
     const annotation = safeParseAnnotation(c.annotation);
 
     const baseType =
@@ -84,6 +86,7 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
       user,
       replies,
       isResolved: !!c.isResolved,
+      sNo: sNo,
       _raw: c, // keep raw
     };
   });

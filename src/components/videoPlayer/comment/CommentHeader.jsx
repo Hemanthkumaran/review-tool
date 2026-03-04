@@ -6,6 +6,7 @@ export default function CommentHeader({
   createdAt,
   isResolved,
   resolving,
+  sNo,
   // onGo,
   onToggleResolved,
 }) {
@@ -20,7 +21,7 @@ export default function CommentHeader({
           {formatClockTime(time)}
         </span>
         <span className="text-gray-400">•</span>
-        <span className="text-gray-300">#{index + 1}</span>
+        <span className="text-gray-300">#{sNo + 1}</span>
       </div>
 
       {/* Right */}

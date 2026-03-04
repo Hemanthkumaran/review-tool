@@ -127,6 +127,7 @@ export default function CommentCard({
       <CommentHeader
         time={time}
         index={index}
+        sNo={marker.sNo}
         createdAt={createdAt}
         isResolved={isResolved}
         resolving={resolving}
