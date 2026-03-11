@@ -198,7 +198,7 @@ sendingComment ||
       />
       {/* image previews */}
       {attachments.length > 0 && (
-        <div className="bg-[#101213] border-x border-[#1F1F21] px-4 py-2 w-full flex gap-2 overflow-x-auto">
+          <div className="bg-[#101213] border-x border-[#1F1F21] px-4 py-2 w-full flex justify-end gap-2 overflow-x-auto">
           {attachments.map((att) => (
             <div
               key={att.url}

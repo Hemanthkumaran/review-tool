@@ -5,8 +5,8 @@ import Link from "@tiptap/extension-link";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
 import FinalLinkPopover from "../DownloadLinkPopover";
-import { AaIcon, BoldIcon, CheckListIcon, ItalicIcon, LinkIcon } from "../../assets/svgs/SvgComponents";
-
+import { HeadingIcon, BoldIcon, BulletListIcon, ItalicIcon, LinkIcon } from "../../assets/svgs/SvgComponents";
+import { Tooltip } from 'react-tooltip';
 
 const toolbarStyle = {"border":"1px solid #1F1F21","margin":"0px 15px","marginBottom":"15px", "marginRight":"5px","borderRadius":"15px"};
 
@@ -26,9 +26,8 @@ export default function NotesEditor({
   const [activeSection, setActiveSection] = useState(defaultSectionId);
   const [showLinkPopover, setShowLinkPopover] = useState(false);
   const [linkInitialValue, setLinkInitialValue] = useState("");
-
-
-
+const [isEditing, setIsEditing] = useState(false);
+const linkSelectionRef = useRef(null);
   const isSwitchingRef = useRef(false);
       const {
         userAccess
@@ -63,15 +62,44 @@ export default function NotesEditor({
         },
       }),
       Link.configure({
-        openOnClick: true,
+        openOnClick: false,
+        autolink: true,
         linkOnPaste: true,
-      }),
+        HTMLAttributes: {
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
+      })
     ],
+    onFocus() {
+      setIsEditing(true);
+    },
     content: contents[activeSection] || "",
     autofocus: false,
     editorProps: {
       attributes: {
         class: "notes-editor font-[Gilroy] text-[13px]",
+      },
+
+      handleClick(view, pos, event) {
+        const link = event.target.closest("a");
+
+        if (link) {
+          event.preventDefault();
+
+          const href = link.getAttribute("href");
+
+          const { from, to } = view.state.selection;
+
+          linkSelectionRef.current = { from, to };
+
+          setLinkInitialValue(href || "");
+          setShowLinkPopover(true);
+
+          return true;
+        }
+
+        return false;
       },
     },
     onUpdate({ editor }) {
@@ -90,6 +118,24 @@ export default function NotesEditor({
       }));
     },
   });
+
+  const [, forceUpdate] = useState({});
+
+useEffect(() => {
+  if (!editor) return;
+
+  const update = () => {
+    forceUpdate({});
+  };
+
+  editor.on("selectionUpdate", update);
+  editor.on("transaction", update);
+
+  return () => {
+    editor.off("selectionUpdate", update);
+    editor.off("transaction", update);
+  };
+}, [editor]);
 
   // sync with initialBySection (e.g. after fetch)
   useEffect(() => {
@@ -135,7 +181,6 @@ export default function NotesEditor({
     );
   }
 
-  const dirty = !!dirtyMap[activeSection];
   const isSaving = savingSectionId === activeSection;
 
 const toggleCase = () => {
@@ -172,54 +217,96 @@ const toggleCase = () => {
   };
 
 const openLinkPopover = () => {
-  editor.chain().focus().run();   // 🔥 force editor focus first
+  if (!linkSelectionRef.current) {
+    setLinkInitialValue("");
+    setShowLinkPopover(true);
+    return;
+  }
 
-  const previousUrl = editor.getAttributes("link").href || "";
-  setLinkInitialValue(previousUrl);
+  const { from } = linkSelectionRef.current;
+
+  const node = editor.state.doc.resolve(from);
+  const linkMark = node.marks().find((m) => m.type.name === "link");
+
+  const url = linkMark?.attrs?.href || "";
+
+  setLinkInitialValue(url);
   setShowLinkPopover(true);
 };
 
-  const handleSaveLink = async (url) => {
-    if (!url) {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
+const handleSaveLink = (url) => {
+  if (!linkSelectionRef.current) return;
 
+  const { from, to } = linkSelectionRef.current;
+
+  editor.chain().focus().setTextSelection({ from, to }).run();
+
+  if (!url) {
     editor
       .chain()
       .focus()
-      .extendMarkRange("link")
-      .setLink({ href: url })
+      .extendMarkRange("link") // important
+      .unsetLink()
       .run();
-    };
+
+    setShowLinkPopover(false);
+    return;
+  }
+
+  let formattedUrl = url.trim();
+
+  if (!/^https?:\/\//i.test(formattedUrl)) {
+    formattedUrl = "https://" + formattedUrl;
+  }
+
+  editor
+    .chain()
+    .focus()
+    .extendMarkRange("link")
+    .setLink({ href: formattedUrl })
+    .run();
+
+  setShowLinkPopover(false);
+};
 
 
 
-  const handleSave = async () => {
-    if (!onSave) return;
-    const html = contents[activeSection] || "";
-    await onSave(activeSection, html);
+const handleSave = async () => {
+  if (!onSave) return;
 
-    setDirtyMap((prev) => ({
-      ...prev,
-      [activeSection]: false,
-    }));
-  };
+  const html = contents[activeSection] || "";
+  await onSave(activeSection, html);
 
-  const handleCancel = () => {
-    const original = initialBySection[activeSection] || "";
-    editor.commands.setContent(original, false);
+  setDirtyMap((prev) => ({
+    ...prev,
+    [activeSection]: false,
+  }));
 
-    setContents((prev) => ({
-      ...prev,
-      [activeSection]: original,
-    }));
-    setDirtyMap((prev) => ({
-      ...prev,
-      [activeSection]: false,
-    }));
-    onCancel?.();
-  };
+  setIsEditing(false);
+
+  editor.commands.blur();
+};
+
+const handleCancel = () => {
+  const original = initialBySection[activeSection] || "";
+  editor.commands.setContent(original, false);
+
+  setContents((prev) => ({
+    ...prev,
+    [activeSection]: original,
+  }));
+
+  setDirtyMap((prev) => ({
+    ...prev,
+    [activeSection]: false,
+  }));
+
+  setIsEditing(false);
+
+  editor.commands.blur(); // removes blinking cursor
+
+  onCancel?.();
+};
 const isBold = editor.isActive("bold");
 const isItalic = editor.isActive("italic");
 const isBullet = editor.isActive("bulletList");
@@ -258,6 +345,7 @@ const ToolbarButton = ({
   onClick,
   active,
   type = "format", // "format" | "action"
+  ...props
 }) => {
   const handleMouseDown = (e) => {
     if (type === "format") {
@@ -268,6 +356,7 @@ const ToolbarButton = ({
 
   return (
     <button
+      {...props}
       type="button"
       onMouseDown={type === "format" ? handleMouseDown : undefined}
       onClick={type === "action" ? onClick : undefined}
@@ -335,44 +424,63 @@ const ToolbarButton = ({
         <div style={toolbarStyle} className="sticky bottom-0 left-0 right-0 bg-[#050506] px-1 py-3 flex items-center justify-between">
           {/* LEFT TOOLS */}
           <div className="flex items-center gap-2">
-            <ToolbarButton type="format" onClick={toggleCase} active={isUppercase}>
-  <AaIcon />
-</ToolbarButton>
-
-<ToolbarButton type="format" onClick={toggleItalic} active={isItalic}>
-  <ItalicIcon />
-</ToolbarButton>
-
-<ToolbarButton type="format" onClick={toggleBold} active={isBold}>
-  <BoldIcon />
-</ToolbarButton>
-
-<ToolbarButton type="format" onClick={toggleBulletList} active={isBullet}>
-  <CheckListIcon />
-</ToolbarButton>
-<button
-  type="button"
-  onClick={(e) => {
-    e.preventDefault();
-
-    // Save current selection before blur
-    const { from, to } = editor.state.selection;
-    editor.chain().focus().setTextSelection({ from, to }).run();
-
-    openLinkPopover();
-  }}
-  className={`h-8 min-w-8 px-3 flex items-center justify-center rounded-full transition
-    ${isLink
-      ? "bg-[#FEEA3B] text-black"
-      : "text-white/70 hover:bg-white/10 hover:text-white"}
-  `}
->
-  <LinkIcon />
-</button>
+            <ToolbarButton 
+              type="format" 
+              onClick={toggleCase} 
+              active={isUppercase}
+              data-tooltip-id="editor-tooltip"
+              data-tooltip-content="Heading"
+            >
+            <HeadingIcon />
+          </ToolbarButton>
+          <ToolbarButton
+            type="format"
+            onClick={toggleItalic}
+            active={isItalic}
+            data-tooltip-id="editor-tooltip"
+            data-tooltip-content="Italic"
+          >
+            <ItalicIcon />
+          </ToolbarButton>
+          <ToolbarButton 
+            type="format" 
+            onClick={toggleBold} 
+            active={isBold}
+            data-tooltip-id="editor-tooltip"
+            data-tooltip-content="Bold"
+          >
+            <BoldIcon />
+          </ToolbarButton>
+          <ToolbarButton 
+            type="format" 
+            onClick={toggleBulletList} 
+            active={isBullet}
+            data-tooltip-id="editor-tooltip"
+            data-tooltip-content="Bulleted List"
+          >
+            <BulletListIcon />
+          </ToolbarButton>
+      <button
+        data-tooltip-id="editor-tooltip"
+        data-tooltip-content="Link"
+        type="button"
+        onClick={() => {
+          const { from, to } = editor.state.selection;
+          linkSelectionRef.current = { from, to };
+          openLinkPopover();
+        }}
+        className={`h-8 min-w-8 px-3 flex items-center justify-center rounded-full transition
+          ${isLink
+            ? "bg-[#FEEA3B] text-black"
+            : "text-white/70 hover:bg-white/10 hover:text-white"}
+        `}
+      >
+        <LinkIcon />
+      </button>
           </div>
 
           {/* RIGHT ACTIONS */}
-          {dirty && (
+          {isEditing && (
             <div className="flex items-center gap-3">
               <button
                 onClick={handleCancel}
@@ -394,7 +502,7 @@ const ToolbarButton = ({
           )}
         </div>
       )}
-
+<Tooltip id="editor-tooltip" />
     </div>
   );
 }

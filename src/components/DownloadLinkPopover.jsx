@@ -12,6 +12,10 @@ export default function FinalLinkPopover({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    setLink(initialValue || "");
+  }, [initialValue]);
+
+  useEffect(() => {
     if (!open) return;
     const handler = (e) => {
       if (!ref.current?.contains(e.target)) onClose?.();
@@ -74,39 +78,57 @@ export default function FinalLinkPopover({
       />
 
       {/* Actions */}
-      <div className="flex items-center justify-between mt-6">
-        <button
-          type="button"
-          onClick={() => setLink("")}
-          className="
-            px-6 py-1.5
-            rounded-full w-full
-            border border-[#2A2B2E]
-            bg-[#111216]
-            text-gray-300
-            hover:bg-[#18191d] mr-2
-          "
-        >
-          Clear
-        </button>
+<div className="flex items-center justify-between mt-6 gap-2">
+  <button
+    type="button"
+    onClick={() => window.open(link, "_blank")}
+    disabled={!link}
+    className="
+      px-6 py-1.5
+      rounded-full
+      border border-[#2A2B2E]
+      bg-[#111216]
+      text-gray-300
+      hover:bg-[#18191d]
+    "
+  >
+    Open
+  </button>
 
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!link.trim() || saving}
-          className="
-            px-10 py-1.5 w-full
-            rounded-full
-            bg-[#FDF45C]
-            text-black
-            font-medium
-            disabled:opacity-40
-            disabled:cursor-not-allowed
-          "
-        >
-          {saving ? "Saving…" : "Save"}
-        </button>
-      </div>
+  <button
+    type="button"
+    onClick={() => {
+      setLink("");
+      onSave(""); // remove link instantly
+    }}
+    className="
+      px-6 py-1.5
+      rounded-full
+      border border-[#2A2B2E]
+      bg-[#111216]
+      text-gray-300
+      hover:bg-[#18191d]
+    "
+  >
+    Clear
+  </button>
+
+  <button
+    type="button"
+    onClick={handleSave}
+    disabled={!link.trim() || saving}
+    className="
+      px-8 py-1.5
+      rounded-full
+      bg-[#FDF45C]
+      text-black
+      font-medium
+      disabled:opacity-40
+    "
+  >
+    {saving ? "Saving…" : "Save"}
+  </button>
+</div>
     </div>
   );
 }
