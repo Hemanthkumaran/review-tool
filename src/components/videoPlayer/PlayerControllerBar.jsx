@@ -7,7 +7,7 @@ import speakerIcon from "../../assets/svgs/speaker.svg";
 import fullscreenIcon from "../../assets/svgs/fullscreen.svg";
 import { LoopIcon } from "../../assets/svgs/SvgComponents";
 import { MutedOutlined } from "@ant-design/icons";
-import { formatClockTime } from "../../helpers/common";
+import { formatClockTime, formatClockTime2 } from "../../helpers/common";
 
 
 const IconButton = ({ onClick, title, children, active }) => (
@@ -158,15 +158,12 @@ export default function PlayerControlsBar({
     </div>
   )}
 </div>
-
-
         </div>
-
         {/* center time */}
         <div className="min-w-[120px] text-center tracking-wide">
-          {formatClockTime(currentTime)}{" "}
+          {formatClockTime2(currentTime)}{" "}
           <span className="text-gray-500">
-            / {formatClockTime(Number.isFinite(duration) ? duration : 0)}
+            / {formatClockTime2(Number.isFinite(duration) ? duration : 0)}
           </span>
         </div>
 

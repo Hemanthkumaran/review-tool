@@ -232,6 +232,8 @@ export default function StorageSlider() {
         additionalStorage={additionalStorage}
         currentAdditionalCost={currentAdditionalCost}
         currentMonthlyTotal={currentMonthlyTotal}
+        decreaseMinutes={decreaseMinutes}
+        costPerMinute={costPerMinute}
       />
     </div>
   );

@@ -15,9 +15,14 @@ export default function ConfirmPlanModal({
   additionalStorage,
   newAdditonalCost,
   newAdditionalStorage,
-  newMonthlyTotal
+  newMonthlyTotal,
+  decreaseMinutes,
+  costPerMinute
 }) {
   
+  const payNow = newAdditonalCost > 0;
+
+
   return (
     <Modal
       isOpen={isOpen}
@@ -76,12 +81,22 @@ export default function ConfirmPlanModal({
             </div>
             <div>{`$ ${currentAdditionalCost}/mo`}</div>
           </div>
-          <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
-            <div>
-              <span style={{ textTransform:'capitalize'}}>{`Additional Storage Cost (${newAdditionalStorage}  mins)`} </span>
+          {newAdditionalStorage > 0 && (
+            <div className="plan-row">
+              <span>Additional storage (+{newAdditionalStorage} min)</span>
+              <span>+${newAdditonalCost.toFixed(2)}</span>
             </div>
-            <div>{`$ ${newAdditonalCost}/mo`}</div>
-          </div>
+          )}
+
+          {/* Show decrease warning */}
+            {decreaseMinutes > 0 && (
+              <div className="plan-row" style={{ color: "#ff4d4f" }}>
+                <span>Storage decrease ({decreaseMinutes} min)</span>
+                <span>
+                  -${(decreaseMinutes * costPerMinute).toFixed(2)}
+                </span>
+              </div>
+            )}
           <div style={{ height:1, backgroundColor:"#2B2B2B", marginBottom:10 }}/>
           <div className="flex justify-between">
             <div style={{ color:"#BFBFBF", fontFamily:'Gilroy-Bold' }}>Total monthly cost (from next billing cycle)</div>
@@ -101,9 +116,11 @@ export default function ConfirmPlanModal({
         <button className="cancel-btn" onClick={onClose}>
           Cancel
         </button>
-        <button className="confirm-btn" onClick={onConfirm}>
-          Confirm changes
-        </button>
+<button className="confirm-btn" onClick={onConfirm}>
+  {payNow
+    ? `Pay $${newAdditonalCost.toFixed(2)} to upgrade`
+    : "Confirm changes"}
+</button>
       </div>
     </Modal>
   );

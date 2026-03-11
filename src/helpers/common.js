@@ -24,6 +24,21 @@ export const DateFormat = (value) => {
   return formatted;
 };
 
+export function formatClockTimeMMSS(t = 0) {
+  if (!Number.isFinite(t)) t = 0;
+
+  const totalSeconds = Math.floor(t);
+
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return (
+    String(minutes).padStart(2, "0") +
+    ":" +
+    String(seconds).padStart(2, "0")
+  );
+}
+
 export function formatClockTime(t = 0) {
   if (!Number.isFinite(t)) t = 0;
 
@@ -39,6 +54,27 @@ export function formatClockTime(t = 0) {
     String(seconds).padStart(2, "0") +
     "." +
     String(ms).padStart(2, "0")
+  );
+}
+
+export function formatClockTime2(t = 0, fps = 30) {
+  if (!Number.isFinite(t)) t = 0;
+
+  const totalSeconds = Math.floor(t);
+  const frames = Math.floor((t % 1) * fps);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return (
+    String(hours).padStart(2, "0") +
+    ":" +
+    String(minutes).padStart(2, "0") +
+    ":" +
+    String(seconds).padStart(2, "0") +
+    ":" +
+    String(frames).padStart(2, "0")
   );
 }
 

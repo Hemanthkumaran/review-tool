@@ -10,7 +10,7 @@ const modalStyles = {
   overlay: {
     backgroundColor: "rgba(0,0,0,0.6)",
     backdropFilter: "blur(6px)",
-    zIndex: 50,
+    zIndex: 100000,
   },
   content: {
     inset: "50% auto auto 50%",
@@ -24,14 +24,51 @@ const modalStyles = {
   },
 };
 
-export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, buttonLabel, trialUsed, additionalStorageMinutes = 0 }) {
-  const { activeWorkspace, refreshWorkspacePlan } = useWorkspace();
+const PLAN_LIMITS = {
+  freelancer: 100,
+  team: 500,
+  team_plus: 1000,
+};
+
+export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, buttonLabel, trialUsed, additionalStorageMinutes = 0, showClose = false }) {
+  const { activeWorkspace, refreshWorkspacePlan, workspacePlan } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
   const { openCheckout } = useRazorpay();
 
   const priceTeam = isAnnual ? 25 : 250;
   const priceAgency = isAnnual ? 50 : 500;
+
+  const subscription = activeWorkspace?.subscription || workspacePlan?.subscription;
+
+  const minutesUsed = subscription?.storageMinutesUsed || 0;
+
+  const totalMinutesAllowed =
+    (subscription?.baseStorageMinutes || 0) +
+    (subscription?.additionalStorageMinutes || 0);
+
+  const currentPlan = subscription?.activePlan;
+
+  const canSwitchTo = (planKey) => {
+    const limit = PLAN_LIMITS[planKey];
+    return minutesUsed <= limit;
+  };
+
+  const getPlanState = (planKey) => {
+  const isCurrent = currentPlan === planKey;
+  const overLimit = !canSwitchTo(planKey);
+
+  return {
+    isCurrent,
+    overLimit,
+    buttonLabel: isCurrent
+      ? "Continue with Current Plan"
+      : overLimit
+      ? "Over limits"
+      : "Switch Plan",
+    disabled: isCurrent || overLimit,
+  };
+};
 
   const handleChoosePlan = async (planKey) => {
     if (!activeWorkspace?._id) return;
@@ -106,6 +143,8 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
   //   }
   // };
 
+const isCurrent = currentPlan === "freelancer";
+const overLimit = !canSwitchTo("freelancer");
 
   return (
     <Modal
@@ -117,12 +156,14 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
     >
       <div className="relative min-h-[80vh] w-full p-6 bg-[#0f0f0f] rounded-[28px]">
         {/* Close button */}
-        {/* <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white/60 hover:text-white"
-        >
-          ✕
-        </button> */}
+        {showClose && (
+          <button
+            onClick={onClose}
+            className="absolute cursor-pointer top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white/70 hover:text-white transition"
+          >
+            ✕
+          </button>
+        )}
 
         <div className="pointer-events-none absolute inset-0 rounded-[28px] ring-1 ring-black/10" />
 
@@ -157,6 +198,7 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
         {/* Pricing cards */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <PricingCard
+          planKey="freelancer"
             title="Freelancer"
             price={priceTeam}
             period={isAnnual ? "year" : "month"}
@@ -164,12 +206,14 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
               { text: "1 user", enabled: true },
               { text: "100 mins of storage + Storage addons", enabled: true },
             ]}
-            buttonLabel={buttonLabel}
+            buttonLabel={getPlanState("freelancer").buttonLabel}
+            disabled={getPlanState("freelancer").disabled}
             onClick={() => handleChoosePlan("freelancer")}
             highlight={false}
           />
 
           <PricingCard
+            planKey="team"
             title="Team"
             price={priceAgency}
             period={isAnnual ? "year" : "month"}
@@ -183,12 +227,14 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
               { text: "Internal notes", enabled: true },
               { text: "Version management", enabled: true },
             ]}
-            buttonLabel={buttonLabel}
+            buttonLabel={getPlanState("team").buttonLabel}
+            disabled={getPlanState("team").disabled}
             onClick={() => handleChoosePlan("team")}
             highlight
           />
 
           <PricingCard
+            planKey="team_plus"
             title="Team Plus"
             price={priceAgency}
             period={isAnnual ? "year" : "month"}
@@ -199,7 +245,8 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
               { text: "Custom UI branding (Paid addon)", enabled: true },
             ]}
             onClick={() => handleChoosePlan("team_plus")}
-            buttonLabel={buttonLabel}
+            buttonLabel={getPlanState("team_plus").buttonLabel}
+            disabled={getPlanState("team_plus").disabled}
             highlight
           />
         </div>
@@ -217,12 +264,13 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
 }
 
 
-function PricingCard({   title,
+function PricingCard({ title,
   price,
   period,
   features,
   buttonLabel,
   highlight,
+  disabled,
   onClick,
   loading, }) {
   return (
@@ -266,6 +314,11 @@ function PricingCard({   title,
               >
                 {loading ? "Starting..." : buttonLabel}
               </button>
+              {disabled && buttonLabel === "Over limits" && (
+                  <div className="mt-3 text-xs text-gray-400 text-center">
+                    You currently have more storage usage than this plan allows
+                  </div>
+                )}
             </div>
         </div>
       </div>

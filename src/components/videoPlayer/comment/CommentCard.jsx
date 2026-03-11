@@ -149,9 +149,6 @@ export default function CommentCard({
             <p className="whitespace-pre-line">{marker.text}</p>
             {(type === "voice" || type === "mixed") && audioUrl && (
             <div className="mt-1">
-              <span className="block mb-1 text-[11px] text-gray-400">
-                Voice note
-              </span>
               <VoiceNotePlayer src={audioUrl}/>
               {images.length > 0 && (
                 <div className="flex flex-wrap gap-3 mt-1">

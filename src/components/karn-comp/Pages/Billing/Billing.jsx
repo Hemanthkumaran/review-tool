@@ -4,16 +4,23 @@ import close from "../../assets/icons/close.svg";
 import "./Billing.css";
 import Button from "../../UI/Button";
 import { useWorkspace } from "../../../../context/WorkspaceContext";
+import ChoosePlanModal from "../../../../pages/chooseplan";
+import { useState } from "react";
 
 
 const Billing = () => {
-  const { workspacePlan, billingLoading, activeWorkspace, refreshWorkspace, refreshWorkspacePlan } = useWorkspace();
 
+  const { workspacePlan, billingLoading, activeWorkspace, refreshWorkspace, refreshWorkspacePlan, trialUsed } = useWorkspace();
+
+  const [chosenPlan, setChosenPlan] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  
   if (billingLoading) return null;
 
   const subscription = workspacePlan?.subscription;
   if (!subscription) return null;
-
+  console.log(subscription, 'workspacePlan?.subscription');
+  
   return (
     <>
       {/* usage and billing */}
@@ -29,7 +36,7 @@ const Billing = () => {
 
         <div className="subscription-header">
           <div className="text-[18px]">Subscription</div>
-          <div className="text-[16px] text-yellow-200 cursor-pointer">
+          <div onClick={() => setIsOpen(true)} className="text-[16px] text-yellow-200 cursor-pointer">
             Change Plan
           </div>
         </div>
@@ -65,6 +72,18 @@ const Billing = () => {
           />
         </div>
       </div>
+      <ChoosePlanModal
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        setChosenPlan={(plan) => {
+          setChosenPlan(plan);
+        }}
+        onSuccess={() => {
+        }}
+        trialUsed={trialUsed}
+        buttonLabel={!trialUsed ? "Start free trial" : "Subscribe"}
+        showClose={true}
+      />
     </>
   );
 };

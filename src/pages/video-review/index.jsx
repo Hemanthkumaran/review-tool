@@ -814,9 +814,9 @@ const handleNewVersionFile = async (e) => {
     style={{ height: "calc(100vh - 160px)" }}
   >
     {/* ================= COLUMN 1 ================= */}
-    <div className="flex flex-col min-w-0 ">
+    <div className="flex flex-col min-w-0 h-full">
       {/* Video container */}
-      <div className="relative w-full flex-1 rounded-3xl bg-black">
+      <div className="relative w-full flex-1 rounded-3xl bg-black min-h-0">
         {showVideo ? (
            <div className="relative w-full h-full overflow-hidden rounded-3xl">
           <VideoPlayerWithSeekbar
@@ -855,6 +855,7 @@ const handleNewVersionFile = async (e) => {
         currentTime={currentTime}
         isRecording={isRecording}
         hasPendingVoice={hasPendingVoice}
+        pendingVoiceUrl={pendingVoice?.url}
         isAnnotating={annotationMode}
         hasPendingAnnotation={hasPendingAnnotation}
         onSend={handleSendComment}
@@ -871,7 +872,7 @@ const handleNewVersionFile = async (e) => {
     </div>
 
     {/* ================= COLUMN 2 ================= */}
-    <div className="relative h-full overflow-hidden">
+    <div className="relative h-full overflow-hidden flex flex-col">
       <CommentsColumn
         isOpen={isCommentsOpen}
         onToggle={() => setIsCommentsOpen((v) => !v)}

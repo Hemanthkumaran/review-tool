@@ -10,8 +10,9 @@ import micIcon from "../../assets/svgs/mic.svg";
 import sendIcon from "../../assets/svgs/send.svg";
 import AudienceSelect from "../AudienceSelect";
 import { constants } from "../../helpers/enum";
-import { formatClockTime } from "../../helpers/common";
+import { formatClockTime, formatClockTime2, formatClockTimeMMSS } from "../../helpers/common";
 import Spinner from "../common/Spinner";
+import VoicePreviewModal from "../modals/VoicePreviewModal";
 
 
 /**
@@ -40,19 +41,23 @@ export default function CommentBar({
   pauseVideo,
   sendingComment,
   commentInputRef,
-  userAccess
+  userAccess,
+  pendingVoiceUrl
 }) {
   const [text, setText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [recordSeconds, setRecordSeconds] = useState(0);
   const [attachments, setAttachments] = useState([]); // [{ url, name }]
   const fileInputRef = useRef(null);
   const [audience, setAudience] = useState("everyone");
-
+  const [showVoicePreview, setShowVoicePreview] = useState(false);
+  
   const emojiBtnRef = useRef(null);
   const emojiPickerRef = useRef(null);
   const [emojiPos, setEmojiPos] = useState(null);
 
+  const MAX_RECORD_SECONDS = 180;
+  const [recordSeconds, setRecordSeconds] = useState(MAX_RECORD_SECONDS);
+  
   useEffect(() => {
     if (userAccess) {
       setAudience(userAccess == constants.COLLABORATOR ? "team only" : "everyone")
@@ -78,18 +83,37 @@ export default function CommentBar({
   }, []);
 
   // recording timer
+  // useEffect(() => {
+  //   if (!isRecording) {
+  //     setRecordSeconds(0);
+  //     return;
+  //   }
+
+  //   const id = setInterval(() => {
+  //     setRecordSeconds((s) => s + 1);
+  //   }, 1000);
+
+  //   return () => clearInterval(id);
+  // }, [isRecording]);
+
   useEffect(() => {
-    if (!isRecording) {
-      setRecordSeconds(0);
-      return;
-    }
+  if (!isRecording) {
+    setRecordSeconds(MAX_RECORD_SECONDS);
+    return;
+  }
 
-    const id = setInterval(() => {
-      setRecordSeconds((s) => s + 1);
-    }, 1000);
+  const id = setInterval(() => {
+    setRecordSeconds((s) => {
+      if (s <= 1) {
+        onStopVoice?.(); // auto stop
+        return 0;
+      }
+      return s - 1;
+    });
+  }, 1000);
 
-    return () => clearInterval(id);
-  }, [isRecording]);
+  return () => clearInterval(id);
+}, [isRecording, onStopVoice]);
 
   const toggleEmoji = () => {
     if (!showEmojiPicker) {
@@ -172,7 +196,6 @@ sendingComment ||
           }
         }}
       />
-
       {/* image previews */}
       {attachments.length > 0 && (
         <div className="bg-[#101213] border-x border-[#1F1F21] px-4 py-2 w-full flex gap-2 overflow-x-auto">
@@ -207,7 +230,7 @@ sendingComment ||
         <div className="flex items-center gap-1">
           <div className="flex items-center gap-1 mr-1 py-[3px] rounded-full bg-[#111111] text-[11px]">
             <img src={clockIcon} />
-            <span>{formatClockTime(currentTime)}</span>
+            <span>{formatClockTime2(currentTime)}</span>
           </div>
           <AudienceSelect
             value={audience}
@@ -306,7 +329,7 @@ sendingComment ||
             <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
               <span className="text-red-500 text-xs">●</span>
               <span className="text-gray-200">
-                Recording… {formatClockTime(recordSeconds)}
+                Recording… {formatClockTimeMMSS(recordSeconds)}
               </span>
               <button
                 className="text-[#F87171] hover:underline ml-1"
@@ -323,12 +346,19 @@ sendingComment ||
             </div>
           ) : (
             hasPendingVoice && (
-              <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
+              <div
+                className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px] cursor-pointer"
+                onClick={() => setShowVoicePreview(true)}
+              >
                 <img src={micIcon} className="w-3 h-3 opacity-80" />
-                <span className="text-gray-200">Voice note ready</span>
+                <span className="text-gray-200">Click to play</span>
+
                 <button
                   className="text-gray-400 hover:text-white ml-1"
-                  onClick={onCancelVoice}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancelVoice();
+                  }}
                   title="Remove voice note"
                 >
                   ✕
@@ -359,6 +389,11 @@ sendingComment ||
           </button>
         </div>
       </div>
+      <VoicePreviewModal
+        isOpen={showVoicePreview}
+        onClose={() => setShowVoicePreview(false)}
+        audioUrl={pendingVoiceUrl}
+      />
     </div>
   );
 }

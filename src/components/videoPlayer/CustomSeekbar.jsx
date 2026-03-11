@@ -1,6 +1,6 @@
 // src/components/videoPlayer/CustomSeekBar.jsx
 import React, { useCallback, useState } from "react";
-import { formatClockTime } from "../../helpers/common";
+import { formatClockTime, formatClockTime2 } from "../../helpers/common";
 
 
 function getMuxThumbnail(playbackId, time) {
@@ -172,7 +172,7 @@ export default function CustomSeekBar({
               className="w-full h-20"
             />
             <div className="text-[11px] text-center text-white py-1 bg-black/70">
-              {formatClockTime(hoverTime)}
+              {formatClockTime2(hoverTime)}
             </div>
           </div>
         </div>

@@ -218,7 +218,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
 
       {/* comments panel – hide content when collapsed */}
       {isOpen && (
-        <div className="h-[74vh] rounded-2xl flex flex-col">
+        <div className="h-[100vh] rounded-2xl flex flex-col">
           {/* tabs */}
           <div className="mt-2">
             <SegmentedTabs

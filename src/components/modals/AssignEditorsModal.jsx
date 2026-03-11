@@ -16,7 +16,8 @@ export default function AssignEditorsModal({
   projectAccess
 }) {
   const people = useMemo(() => mapPermissions(permissions), [permissions]);
-
+  console.log(people,permissions, 'people');
+  
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -60,16 +61,19 @@ export default function AssignEditorsModal({
   };
 
   const handleAssign = async () => {
-    await Promise.all(
-      selected.map((p) =>
-        addUserToProjectApi(projectID, p.email)
-      )
-    );
-
-    setSelected([]);
-    setQuery("");
-    setShowDropdown(false);
-    onRefresh?.();
+    try {
+      await Promise.all(
+        selected.map((p) =>
+          addUserToProjectApi(projectID, p.email)
+        )
+      );
+      setSelected([]);
+      setQuery("");
+      setShowDropdown(false);
+      onRefresh?.();
+    } catch(e) {
+      alert(e.response.data.error);
+    }
   };
 
   const handleRemove = async (email) => {
@@ -242,7 +246,7 @@ export default function AssignEditorsModal({
 /* helpers */
 function mapPermissions(permissions = []) {
   return permissions
-    .filter(p => p.permissionType !== "owner")   // ⭐ remove owner
+    .filter(p => p.permissionType !== "owner") 
     .map((p) => ({
       id: p._id,
       name: p.name || p.email?.split("@")[0],

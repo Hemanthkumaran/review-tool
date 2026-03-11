@@ -12,7 +12,8 @@ export default function SubscriptionCard({
   costPerMinute,
   activeWorkspace,
   refreshWorkspace,
-  refreshWorkspacePlan
+  refreshWorkspacePlan,
+  minutesUsed
 }) {
   const {
     activePlan,
@@ -91,7 +92,7 @@ export default function SubscriptionCard({
               {Math.round(remainingMinutes)} minutes remaining
             </p>
             <p className="sub-minutes-used">
-              {Math.round(usedMinutes)}/{Math.round(totalMinutes)} minutes used
+              {Math.ceil(usedMinutes)}/{Math.round(totalMinutes)} minutes used
             </p>
           </div>
         </div>

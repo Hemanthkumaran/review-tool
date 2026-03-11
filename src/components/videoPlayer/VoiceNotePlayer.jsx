@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import pauseIcon from '../../assets/svgs/pause.svg';
 import playIcon from '../../assets/svgs/play.svg';
-import { formatClockTime } from "../../helpers/common";
+import { formatClockTime, formatClockTimeMMSS } from "../../helpers/common";
 
 export default function VoiceNotePlayer({ src }) {
   const audioRef = useRef(null);
@@ -139,7 +139,7 @@ export default function VoiceNotePlayer({ src }) {
 
       {/* Time pill */}
       <div className="px-4 py-[6px] rounded-full bg-[#101114] text-[12px] text-gray-100 font-medium min-w-[64px] text-center">
-        {formatClockTime(currentTime)}
+        {formatClockTimeMMSS(Math.max(duration - currentTime, 0))}
       </div>
     </div>
   );
