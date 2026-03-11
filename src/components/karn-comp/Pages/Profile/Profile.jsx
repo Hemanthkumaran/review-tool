@@ -89,6 +89,7 @@ const Profile = ({ onClose }) => {
             value={form.firstName}
             onChange={handleChange}
             styles={{ borderColor: "#2B2B2B" }}
+            disabled={true}
           />
           <OutlineInput
             label=""
@@ -96,6 +97,7 @@ const Profile = ({ onClose }) => {
             name="lastName"
             value={form.lastName}
             onChange={handleChange}
+            disabled={true}
             styles={{ borderColor: "#2B2B2B", marginLeft:25 }}
           />
         </div>
@@ -104,7 +106,7 @@ const Profile = ({ onClose }) => {
           label="Email"
           name="email"
           value={form.email}
-          disabled
+          disabled={true}
           styles={{
             borderColor: "#2B2B2B",
             width: "70%",
@@ -119,7 +121,7 @@ const Profile = ({ onClose }) => {
 
       <div>
         <div  className="mb-4 text-[#ffffff]">Change Password</div>
-        <div>
+        <div className="cursor-pointer">
           Set a new password for your account anytime.
           <a onClick={() => {
           // clearAuth();

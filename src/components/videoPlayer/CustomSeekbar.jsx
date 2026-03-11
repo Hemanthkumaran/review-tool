@@ -168,6 +168,7 @@ export default function CustomSeekBar({
           <div className="w-[160px] rounded-lg overflow-hidden bg-black shadow-xl">
             <img
               src={getMuxThumbnail(playbackId, hoverTime)}
+              style={{ objectFit:'contain' }}
               className="w-full h-20"
             />
             <div className="text-[11px] text-center text-white py-1 bg-black/70">

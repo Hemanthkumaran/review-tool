@@ -7,6 +7,7 @@ import downloadIcon from '../assets/svgs/download-icon.svg';
 import trashIcon from '../assets/svgs/trash-icon.svg';
 import { constants } from "../helpers/enum";
 import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
+import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
 
 // Small helpers --------------------------------------------------
 
@@ -41,6 +42,7 @@ export default function VersionSwitcher({
   onAddNewVersion,
   onDownloadVersion,
   onDeleteVersion,
+  projectName,
   userAccess
 }) {
   const [open, setOpen] = useState(false);
@@ -139,7 +141,7 @@ export default function VersionSwitcher({
                     </div>
                     <div className="flex-1">
                       <div style={{ fontFamily:'Gilroy-Regular' }} className="text-[13px] truncate">
-                        {v.name || "Version video.mp4"}
+                        {projectName}
                       </div>
                       {meta && (
                         <div className="text-[11px] text-gray-400 mt-[2px]">
@@ -193,7 +195,6 @@ export default function VersionSwitcher({
           </div>
         )}
       </div>
-
       {showManage && (
         <ManageVersionsModal
           versions={versions}
@@ -206,6 +207,7 @@ export default function VersionSwitcher({
           onDownloadVersion={onDownloadVersion}
           onDeleteVersion={onDeleteVersion}
           userAccess={userAccess}
+          projectName={projectName}
         />
       )}
     </>
@@ -222,12 +224,16 @@ function ManageVersionsModal({
   onAddNewVersion,
   onDownloadVersion,
   onDeleteVersion,
-  userAccess
+  userAccess,
+  projectName
 }) {
 
 //   const sortedVersions = [...versions].sort((a, b) => {
 //   return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
 // });
+
+  const [showDelete, setShowDelete] = useState(false);
+  const [versionToDelete, setVersionToDelete] = useState(null);
 
 
   return (
@@ -279,7 +285,7 @@ function ManageVersionsModal({
                   </div>
                   <div className="flex-1">
                     <div className="text-[14px] font-[Gilroy-Medium]">
-                      {v.name || "Logo introduction video.mp4"}
+                      {projectName}
                     </div>
                     {meta && (
                       <div className="text-[12px] text-gray-400 mt-[2px]">
@@ -311,7 +317,7 @@ function ManageVersionsModal({
                         </svg>
                       </div>
                     ) : (
-                      <div className="w-6 h-6 rounded-full border border-white/25" />
+                      <div className="w-4 h-4 rounded-full border border-white/25" />
                     )}
                   </button>
 
@@ -331,8 +337,8 @@ function ManageVersionsModal({
                   <button
                     type="button"
                     onClick={() => {
-                      onDeleteVersion && onDeleteVersion(v)
-                      onClose()
+                      setVersionToDelete(v);
+                      setShowDelete(true);
                     }}
                     className="w-8 h-8 flex items-center justify-center hover:bg-white/5 rounded-full"
                   >
@@ -366,6 +372,21 @@ function ManageVersionsModal({
           </button>
         </div>}
       </div>
+      <DeleteConfirmModal
+        open={showDelete}
+        onOpenChange={setShowDelete}
+        title="Delete this version?"
+        description="This video version will be removed permanently. This action cannot be undone."
+        confirmText="DELETE"
+        confirmLabel="Delete permanently"
+        onConfirm={() => {
+          if (versionToDelete && onDeleteVersion) {
+            onDeleteVersion(versionToDelete);
+          }
+          setShowDelete(false);
+          setVersionToDelete(null);
+        }}
+      />
     </div>
   );
 }

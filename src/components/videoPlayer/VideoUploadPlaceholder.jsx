@@ -202,9 +202,9 @@ useEffect(() => {
           <img src={uploadIcon} />
           <span
             style={{ fontFamily: "Gilroy-Light" }}
-            className="cursor-pointer text-[14px] text-[#BFBFBF] underline underline-offset-[3px] decoration-gray-500 hover:text-gray-100 hover:decoration-gray-300"
+            className="cursor-pointer text-[14px] text-[#BFBFBF] decoration-gray-500 hover:text-gray-100 hover:decoration-gray-300"
           >
-            {isDragging ? "Drop your video here" : "Click to upload"}
+            {isDragging ? "Drop your video here" : "Click to upload or drag and drop"}
           </span>
           {error && (
             <span className="mt-1 text-[11px] text-red-400 max-w-xs text-center">

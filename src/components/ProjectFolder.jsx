@@ -100,6 +100,7 @@ export default function ProjectFolder({
   const { userAccess, workspaceUsers } = useWorkspace();
 
   const latestVersion = project?.versions[project.versions?.length - 1];
+  console.log(latestVersion, 'latestVersion', formatDuration(latestVersion?.videoDuration));
   
   
 const handleAssignEditors = async (editors) => {
@@ -110,7 +111,7 @@ const handleAssignEditors = async (editors) => {
       )
     );
 
-    showSuccessToast("Editors assigned successfully"); // if you’re using toast
+    showSuccessToast("Editors assigned successfully");
     setOpenAssign(false);
   } catch (err) {
     console.error(err);
@@ -131,15 +132,17 @@ const handleAssignEditors = async (editors) => {
       onClick={onClick}
     >
       {/* Thumbnail */}
-      <div className="rounded-2xl overflow-hidden border border-[#2A2A2A] bg-black aspect-[16/9]">
+      <div style={{ position:'relative' }} className="rounded-2xl overflow-hidden border border-[#2A2A2A] bg-black aspect-[16/9]">
         <img
           loading="lazy"
           src={getMuxGif(project?.versions[0]?.muxPlaybackID)}
           alt={project.name}
           className="w-full h-full object-cover"
         />
-        <div style={{"backgroundColor":"rgb(24, 26, 28)","position":"absolute","top":"15px","right":"15px","fontSize":"11px","padding":"3px 8px","borderRadius":"10px"}}>v2</div>
-        <div style={{"backgroundColor":"rgb(24, 26, 28)","position":"absolute","top":"105px","right":"15px","fontSize":"11px","padding":"3px 8px","borderRadius":"10px"}}>
+        <div style={{"backgroundColor":"rgb(24, 26, 28)","position":"absolute","top":"5%","right":"5%","fontSize":"11px","padding":"3px 8px","borderRadius":"10px"}}>
+          v{project?.versions?.length}
+        </div>
+        <div style={{"backgroundColor":"rgb(24, 26, 28)","position":"absolute","bottom":"5%","right":"5%","fontSize":"11px","padding":"3px 8px","borderRadius":"10px"}}>
           {formatDuration(latestVersion?.videoDuration)}
         </div>
       </div>

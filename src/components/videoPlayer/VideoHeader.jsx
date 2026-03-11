@@ -135,6 +135,7 @@ const closeMoreMenu = () => setOpen(false);
                 onSelectVersion={(v) => onChangeVersion(v)}
                 onAddNewVersion={onAddNewVersion}
                 userAccess={userAccess}
+                projectName={projectDetail.name}
                 onDownloadVersion={(v) => {
                 // call download API
                 }}

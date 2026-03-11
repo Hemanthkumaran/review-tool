@@ -1,9 +1,9 @@
 import { clearAuth } from "./storage";
 
-export function formatDuration(seconds) {
-  if (!seconds || seconds < 0) return "0:00";
+export function formatDuration(duration) {
+  if (!duration || duration < 0) return "0:00";
 
-  const totalSeconds = Math.floor(seconds);
+  const totalSeconds = Math.floor(duration * 60);
   const minutes = Math.floor(totalSeconds / 60);
   const remainingSeconds = totalSeconds % 60;
 

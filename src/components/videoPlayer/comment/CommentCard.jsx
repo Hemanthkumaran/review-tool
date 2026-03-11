@@ -56,6 +56,7 @@ export default function CommentCard({
   const [isHovered, setIsHovered] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   
   const isOwnComment = () => {
@@ -146,6 +147,34 @@ export default function CommentCard({
         {!isEditingComment ? (
           <>
             <p className="whitespace-pre-line">{marker.text}</p>
+            {(type === "voice" || type === "mixed") && audioUrl && (
+            <div className="mt-1">
+              <span className="block mb-1 text-[11px] text-gray-400">
+                Voice note
+              </span>
+              <VoiceNotePlayer src={audioUrl}/>
+              {images.length > 0 && (
+                <div className="flex flex-wrap gap-3 mt-1">
+                  {images.map((src, i) => (
+                    <div
+                      key={`${src}-${i}`}
+                      className="w-[76px] h-[76px] rounded-2xl overflow-hidden bg-black/40"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewImage(src);
+                      }}
+                    >
+                      <img
+                        src={src}
+                        alt={`attachment-${i + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
             {/* footer row */}
                 <div className="mt-3 flex items-center justify-between">
                   {/* Reply */}
@@ -231,31 +260,7 @@ export default function CommentCard({
             </>
           )}
         </div>
-        {(type === "voice" || type === "mixed") && audioUrl && (
-          <div className="mt-1">
-            <span className="block mb-1 text-[11px] text-gray-400">
-              Voice note
-            </span>
-            <VoiceNotePlayer src={audioUrl}/>
-          </div>
-        )}
-        {/* images row */}
-        {images.length > 0 && (
-          <div className="flex flex-wrap gap-3 mt-1">
-            {images.map((src, i) => (
-              <div
-                key={`${src}-${i}`}
-                className="w-[76px] h-[76px] rounded-2xl overflow-hidden bg-black/40"
-              >
-                <img
-                  src={src}
-                  alt={`attachment-${i + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        
       {/* replies list */}
       {replies.length > 0 && (
         <div className="mt-3">
@@ -316,7 +321,18 @@ export default function CommentCard({
           }
         }}
       />
-    </div>
-    
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+          onClick={() => setPreviewImage(null)}
+        >
+          <img
+            src={previewImage}
+            className="max-w-[90vw] max-h-[90vh] rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+      </div>
   );
 }

@@ -9,7 +9,6 @@ import emojiIcon from "../../assets/svgs/emoji.svg";
 import micIcon from "../../assets/svgs/mic.svg";
 import sendIcon from "../../assets/svgs/send.svg";
 import AudienceSelect from "../AudienceSelect";
-import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
 import { formatClockTime } from "../../helpers/common";
 import Spinner from "../common/Spinner";
@@ -50,12 +49,33 @@ export default function CommentBar({
   const fileInputRef = useRef(null);
   const [audience, setAudience] = useState("everyone");
 
+  const emojiBtnRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+  const [emojiPos, setEmojiPos] = useState(null);
 
   useEffect(() => {
     if (userAccess) {
       setAudience(userAccess == constants.COLLABORATOR ? "team only" : "everyone")
     }
   }, [userAccess]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(e.target) &&
+        !emojiBtnRef.current.contains(e.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // recording timer
   useEffect(() => {
@@ -70,6 +90,19 @@ export default function CommentBar({
 
     return () => clearInterval(id);
   }, [isRecording]);
+
+  const toggleEmoji = () => {
+    if (!showEmojiPicker) {
+      const rect = emojiBtnRef.current.getBoundingClientRect();
+
+      setEmojiPos({
+        top: rect.top - 420, // height of picker
+        left: rect.left - 280 // adjust so it aligns nicely
+      });
+    }
+
+    setShowEmojiPicker((v) => !v);
+  };
 
   const handleSend = () => {
     if (isRecording) return;
@@ -218,15 +251,23 @@ sendingComment ||
           {!isRecording && (
             <div className="relative">
               <button
+                ref={emojiBtnRef}
                 className="p-[6px] rounded-full hover:bg-white/5"
-                onClick={() => setShowEmojiPicker((v) => !v)}
+                onClick={toggleEmoji}
                 title="Add emoji"
               >
                 <img src={emojiIcon} />
               </button>
-
-              {showEmojiPicker && (
-                <div className="absolute right-0 mt-2 z-50">
+              {showEmojiPicker && emojiPos && (
+                <div
+                  ref={emojiPickerRef}
+                  style={{
+                    position: "fixed",
+                    top: emojiPos.top,
+                    left: emojiPos.left,
+                    zIndex: 9999
+                  }}
+                >
                   <EmojiPicker
                     theme="dark"
                     emojiStyle="native"

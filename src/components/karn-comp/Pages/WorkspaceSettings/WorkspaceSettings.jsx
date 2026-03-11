@@ -27,8 +27,9 @@ const WorkspaceSettings = ({ onClose }) => {
   console.log(workspacePlan, 'pland');
   
   const subscription = workspacePlan?.subscription;
+  console.log(subscription, 'subscription');
 
-  const addOnStatus = subscription?.addons[0]?.status;
+  const addOnStatus = subscription?.status;
   
 
   // 🔁 Prefill data
@@ -125,7 +126,8 @@ const WorkspaceSettings = ({ onClose }) => {
       <div className="w-[80%] pt-6 pl-6 pb-4 border-[#2a2a2a] border-2 rounded-lg bg-[#131313]">
         <div className="flex justify-between mb-4">
           <div>Logo</div>
-          {addOnStatus != 'active' ? <div onClick={handleUnlockBranding} className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
+          {addOnStatus != 'active' ? 
+          <div onClick={handleUnlockBranding} className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
             <img height="20" width="20" src={lock} alt="" />
           </div> : null}
         </div>
@@ -140,7 +142,7 @@ const WorkspaceSettings = ({ onClose }) => {
       </div>
 
       <div className="domain">
-        <div className="domain-head">
+        <div style={{ opacity:0.3 }} className="domain-head">
           <div className="mr-4">Custom Domain</div>
           <Button
             content="coming soon"
@@ -152,6 +154,7 @@ const WorkspaceSettings = ({ onClose }) => {
 
         <div className="relative mt-[-8px]">
           <OutlineInput
+            disabled={true}
             placeholder="www.review.A2Zstudio.com"
             styles={{
               border: "2px solid #2a2a2a",
@@ -182,7 +185,7 @@ const WorkspaceSettings = ({ onClose }) => {
             content={loading ? "Saving..." : "Save"}
             textColor="black"
             bgColor="yellow"
-            disabled={loading}
+            disabled={workspaceName.length > 2 ? false : true}
             onClick={handleSave}
           />
         </div>

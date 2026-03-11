@@ -13,10 +13,11 @@ import "./Folder.css";
 import { PenIcon, TrashIcon } from "../../assets/svgs/SvgComponents";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
+import { formatDuration } from "../../helpers/common";
 
 const Folder = ({ folder, onClick, onDeleted, onRenamed, noOfProjects }) => {
   const [hovered, setHovered] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false); // ✅ NEW
+  const [menuOpen, setMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [name, setName] = useState(folder.name);
   const [saving, setSaving] = useState(false);
@@ -171,7 +172,7 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed, noOfProjects }) => {
 
             <div className="flex items-center">
               <img src={timerIcon} width={16} height={16} className="mr-1" />
-              <span className="text-[#999]">5 mins</span>
+              <span className="text-[#999]">{formatDuration(folder.totalVideoDuration)} mins</span>
             </div>
           </div>
         </div>
