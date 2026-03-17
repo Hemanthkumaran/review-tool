@@ -152,12 +152,12 @@ export default function AddProject({
             </div>
           </div>
           <div onClick={() => setIsSettingModalOpen(true)} className="hidden md:flex items-center gap-3">
-            {userAccess == constants.OWNER &&<button
+            {/* {userAccess == constants.OWNER &&<button
               className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#151618] border border-[#232427] px-4 py-2 hover:bg-[#1A1B1E]"
             >
               <InviteIcon className="h-4 w-4" />
               <span>Invite</span>
-            </button>}
+            </button>} */}
             {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
             <button
                 onClick={(e) => {

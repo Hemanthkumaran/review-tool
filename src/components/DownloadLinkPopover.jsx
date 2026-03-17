@@ -26,6 +26,16 @@ export default function FinalLinkPopover({
 
   if (!open) return null;
 
+  const handleOpen = () => {
+    if (!link) return;
+
+    const formattedLink = link.startsWith("http")
+      ? link
+      : `https://${link}`;
+
+    window.open(formattedLink, "_blank", "noopener,noreferrer");
+  };
+
   const handleSave = async () => {
     if (!link.trim() || saving) return;
 
@@ -81,7 +91,7 @@ export default function FinalLinkPopover({
 <div className="flex items-center justify-between mt-6 gap-2">
   <button
     type="button"
-    onClick={() => window.open(link, "_blank")}
+    onClick={() => handleOpen(link)}
     disabled={!link}
     className="
       px-6 py-1.5

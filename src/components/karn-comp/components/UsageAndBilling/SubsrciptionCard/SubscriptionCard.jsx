@@ -89,10 +89,10 @@ export default function SubscriptionCard({
           </div>
           <div className="sub-minutes-text">
             <p className="sub-minutes-remaining">
-              {Math.round(remainingMinutes)} minutes remaining
+              {(remainingMinutes).toFixed(2)} minutes remaining
             </p>
             <p className="sub-minutes-used">
-              {Math.ceil(usedMinutes)}/{Math.round(totalMinutes)} minutes used
+              {usedMinutes.toFixed(2)}/{Math.round(totalMinutes)} minutes used
             </p>
           </div>
         </div>

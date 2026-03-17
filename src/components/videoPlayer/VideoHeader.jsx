@@ -80,13 +80,22 @@ const closeMoreMenu = () => setOpen(false);
   }
 
   const onStatusChange = async (id, payload) => {
-    console.log(id, payload, 'id, payload');
     setProjectStatus(payload);
     try {
       await updateProjectApi(id, {status: payload});
     } catch (err) {
       console.error("Update failed", err);
     }
+  };
+
+  const handleOpen = (link) => {
+    if (!link) return;
+
+    const formattedLink = link.startsWith("http")
+      ? link
+      : `https://${link}`;
+
+    window.open(formattedLink, "_blank", "noopener,noreferrer");
   };
 
 
@@ -154,17 +163,40 @@ const closeMoreMenu = () => setOpen(false);
                 console.log("Project status updated:", s);
               }}
             /> */}
-            {userAccess !== constants.REVIEWER && <div style={{ margin:"0 10px" }}>
+            <div style={{ margin:"0 10px" }}>
               <StatusDropdown
+                editable={userAccess == constants.REVIEWER}
                 value={projectStatus}
                 onChange={(status) => onStatusChange?.(projectDetail._id, status)}
                 py={2}
                 mt={1}
               />
-              </div>}
-              {userAccess !== constants.REVIEWER && <div style={{ margin:"0 10px" }}>
+              </div>
+              {((userAccess == constants.REVIEWER && projectDetail?.downloadLink)) ?
+              <button
+                type="button"
+                onMouseDown={(e) => e.stopPropagation()} 
+                onClick={() => handleOpen(projectDetail?.downloadLink)}
+                className="
+                  inline-flex items-center gap-2
+                  cursor-pointer
+                  rounded-full
+                  bg-[#F9EF38]
+                  px-4 py-2
+                  text-sm font-medium
+                  text-black
+                  shadow-[0_2px_4px_rgba(0,0,0,0.25)]
+                  border border-[#F9EF38]
+                  hover:bg-[#FFEE5A]
+                  transition-colors
+                "
+              >
+                  <span style={{ fontFamily:'Gilroy-Light'}}>Download original</span>
+              </button> :
+               <div style={{ margin:"0 10px" }}>
                 <DownloadMenuButton projectDetail={projectDetail} onAction={closeMoreMenu} onRefresh={fetchProject}/>
-              </div>}
+              </div>
+              }
             <div className="relative">
             {(userAccess == constants.OWNER || userAccess == constants.MEMBER) && <button
               onClick={() => setOpen(prev => !prev)}

@@ -8,6 +8,7 @@ import trashIcon from '../assets/svgs/trash-icon.svg';
 import { constants } from "../helpers/enum";
 import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
 import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
+import { formatDuration } from "../helpers/common";
 
 // Small helpers --------------------------------------------------
 
@@ -23,16 +24,16 @@ function formatDateTime(dt) {
   });
 }
 
-function formatDuration(sec) {
-  if (!sec && sec !== 0) return "";
-  const s = Math.floor(sec % 60)
-    .toString()
-    .padStart(2, "0");
-  const m = Math.floor(sec / 60)
-    .toString()
-    .padStart(2, "0");
-  return `${m}:${s} min`;
-}
+// function formatDuration(sec) {
+//   if (!sec && sec !== 0) return "";
+//   const s = Math.floor(sec % 60)
+//     .toString()
+//     .padStart(2, "0");
+//   const m = Math.floor(sec / 60)
+//     .toString()
+//     .padStart(2, "0");
+//   return `${m}:${s} min`;
+// }
 
 
 export default function VersionSwitcher({
@@ -110,10 +111,23 @@ export default function VersionSwitcher({
             <div className="max-h-[260px] overflow-y-auto">
               {versions.map((v, idx) => {
                 const label = v.label || `v${idx + 1}`;
-                const duration = formatDuration(v.durationSeconds);
-                const dateText = formatDateTime(v.createdAt);
-                const meta = [dateText, duration].filter(Boolean).join(" • ");
                 const isActive = current && current._id === v._id;
+                const date = new Date(v.createdAt);
+                const dateText = date.toLocaleString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                }).replace(",", "");
+                const dateTextFormatted = dateText.replace(/AM|PM/, (m) => m.toLowerCase());
+                const durationText = v._raw.videoDuration
+                  ? `${formatDuration(v._raw.videoDuration)} min`
+                  : "";
+                const meta = [dateTextFormatted, durationText]
+                  .filter(Boolean)
+                  .join(" • ");
 
                 return (
                   <button
@@ -259,10 +273,23 @@ function ManageVersionsModal({
           <div className="space-y-5">
             {versions.map((v, idx) => {
               const label = v.label || `v${idx + 1}`;
-              const duration = formatDuration(v.durationSeconds);
-              const dateText = formatDateTime(v.createdAt);
-              const meta = [dateText, duration].filter(Boolean).join(" • ");
               const isActive = v._id === currentVersionId;
+              const date = new Date(v.createdAt);
+              const dateText = date.toLocaleString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              }).replace(",", "");
+              const dateTextFormatted = dateText.replace(/AM|PM/, (m) => m.toLowerCase());
+              const durationText = v._raw.videoDuration
+                ? `${formatDuration(v._raw.videoDuration)} min`
+                : "";
+              const meta = [dateTextFormatted, durationText]
+                .filter(Boolean)
+                .join(" • ");
 
               return (
                 <div

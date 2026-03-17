@@ -60,7 +60,7 @@ export default function CommentBar({
   
   useEffect(() => {
     if (userAccess) {
-      setAudience(userAccess == constants.COLLABORATOR ? "team only" : "everyone")
+      setAudience((userAccess == constants.OWNER || userAccess == constants.COLLABORATOR) ? "team only" : "everyone")
     }
   }, [userAccess]);
 
@@ -179,7 +179,7 @@ sendingComment ||
   );
 
   return (
-    <div style={{ width: "60%", margin: "0 auto" }}>
+    <div style={{ width: "60%", margin: "0 auto", paddingBottom:20 }}>
       {/* text input */}
       <input
         ref={commentInputRef}

@@ -89,7 +89,6 @@ const Profile = ({ onClose }) => {
             value={form.firstName}
             onChange={handleChange}
             styles={{ borderColor: "#2B2B2B" }}
-            disabled={true}
           />
           <OutlineInput
             label=""
@@ -97,7 +96,6 @@ const Profile = ({ onClose }) => {
             name="lastName"
             value={form.lastName}
             onChange={handleChange}
-            disabled={true}
             styles={{ borderColor: "#2B2B2B", marginLeft:25 }}
           />
         </div>

@@ -155,18 +155,18 @@ export default function WelcomeWorkspace({
         </Accordion.Root>
     }
   }
-  const isDoneLoading = workspaceLoading || foldersLoading || billingLoading;
+  const isLoading = workspaceLoading || foldersLoading || billingLoading;
 
-  if (isDoneLoading) {
-    return <div className='flex items-center justify-center mt-30'>
-        <Spinner size={46} color="#F9EF38" />
-    </div>
-  }
+  // if (isDoneLoading) {
+  //   return <div className='flex items-center justify-center mt-30'>
+  //       <Spinner size={46} color="#F9EF38" />
+  //   </div>
+  // }
 
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
       <main className="px-6 md:px-8">
-        <div className="mt-8 flex items-center justify-between">
+        <div className="mt-8 h-[45px] flex items-center justify-between">
           <div style={{ fontFamily:"Gilroy-SemiBold", fontSize:24 }}>
             Welcome to {activeWorkspace?.name}'s workspace
           </div>
@@ -206,7 +206,7 @@ export default function WelcomeWorkspace({
           }
         </div>
         <div className="mt-6 flex items-center justify-between">
-            { userAccess != constants.REVIEWER && <div style={{ width:250 }} className="mt-2">
+            {userAccess != constants.REVIEWER && <div style={{ width:250 }} className="mt-2">
               <SegmentedTabs
                 options={[
                   { id: "allFolders", label: "All folders" },
@@ -233,7 +233,13 @@ export default function WelcomeWorkspace({
             </button>
           </div>
         </div>
-        {getActiveContent()}
+        {
+          isLoading ?
+          <div className='flex items-center justify-center mt-30'>
+            <Spinner size={46} color="#F9EF38" />
+          </div> :
+          getActiveContent()
+        }
       </main>
       {/* <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
         <img src={cutjamm}/>

@@ -234,22 +234,31 @@ export default function ShareModal({ open = true, onClose, permissions, projectA
   const handleTogglePassword = () => {
     setPasswordRequired((prev) => !prev);
   };
+  console.log(permissions, 'permissions');
   
-  const emailOptions = permissions?.map((p) => ({
+const emailOptions = (permissions || [])
+  .filter((p) => p.permissionType !== "owner") // 🚫 exclude owner
+  .map((p) => ({
     value: p.email,
-    label: p.email, 
-    ...p
+    label: p.email,
+    ...p,
   }));
 
-  const filteredSuggestions = useMemo(() => {
-    const query = inputValue.toLowerCase();
-    if (!query) return [];
-    return permissions?.filter(
+const filteredSuggestions = useMemo(() => {
+  const query = inputValue.toLowerCase();
+  if (!query) return [];
+
+  return (permissions || [])
+    .filter(
       (p) =>
-        p.email.toLowerCase().includes(query) ||
-        p.email.toLowerCase().includes(query)
-    ).slice(0, 3);
-  }, [inputValue]);
+        p.permissionType !== "owner" && // ✅ exclude owner
+        (
+          p.email.toLowerCase().includes(query) ||
+          (p.name || "").toLowerCase().includes(query) // ✅ optional improvement
+        )
+    )
+    .slice(0, 3);
+}, [inputValue, permissions]);
 
 
   const handleShare = async () => {
@@ -430,7 +439,7 @@ export default function ShareModal({ open = true, onClose, permissions, projectA
 
         {/* current members */}
         <div className="px-6 py-3">
-            <span style={{ fontFamily:'Gilroy-Light', fontSize:14}}>People with access</span>
+            {/* <span style={{ fontFamily:'Gilroy-Light', fontSize:14}}>People with access</span> */}
           <div className="space-y-2 max-h-60 overflow-auto pb-2 no-scrollbar">
             {/* <div
                 className="flex items-center justify-between text-[13px] mt-3 mb-2"
@@ -452,7 +461,7 @@ export default function ShareModal({ open = true, onClose, permissions, projectA
                   <span>{'Owner'}</span>
                 </div>
               </div> */}
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               {projectAccess?.map((p) => {
                 return <>
                   <div
@@ -474,7 +483,7 @@ export default function ShareModal({ open = true, onClose, permissions, projectA
                   </div>
                 </>
               })}
-            </div>
+            </div> */}
             <RemoveAccessModal
               open={!!removeTarget}
               onClose={() => setRemoveTarget(null)}

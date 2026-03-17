@@ -21,15 +21,18 @@ const modalStyles = {
   },
 };
 
-const formatDuration = (seconds) => {
-  if (!seconds || Number.isNaN(seconds)) return "";
-  const total = Math.floor(seconds);
-  const m = Math.floor(total / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = (total % 60).toString().padStart(2, "0");
-  return `${m}:${s} min`;
-};
+export function formatShortDuration(secondsInput) {
+  if (!secondsInput || secondsInput <= 0) return "0 sec";
+
+  const totalSeconds = Math.round(secondsInput);
+
+  if (totalSeconds < 60) {
+    return `${totalSeconds} sec`;
+  }
+
+  const minutes = Math.floor(totalSeconds / 60);
+  return `${minutes} min`;
+}
 
 const AddProjectModal = ({ isOpen, onClose, handleCreate, createLoading }) => {
   const [projectName, setProjectName] = useState("");
@@ -71,7 +74,7 @@ const AddProjectModal = ({ isOpen, onClose, handleCreate, createLoading }) => {
 
     video.onloadedmetadata = () => {
       const duration = video.duration;
-      setVideoDuration(formatDuration(duration));
+      setVideoDuration(formatShortDuration(duration));
       URL.revokeObjectURL(blobUrl);
     };
   };
@@ -172,66 +175,66 @@ const handleDrop = (e) => {
         </div>
 
         {/* video upload */}
-<div className="mt-3">
-  <div
-    style={{
-      fontFamily: "Gilroy-Light",
-      paddingBottom: "8px",
-      fontSize: 14,
-    }}
-  >
-    Upload project file
-  </div>
+        <div className="mt-3">
+          <div
+            style={{
+              fontFamily: "Gilroy-Light",
+              paddingBottom: "8px",
+              fontSize: 14,
+            }}
+          >
+            Upload project file (Optional)
+          </div>
 
-  {/* hidden file input */}
-  <input
-    ref={fileInputRef}
-    type="file"
-    accept="video/*"
-    className="hidden"
-    onChange={handleInputChange}
-  />
+    {/* hidden file input */}
+    <input
+      ref={fileInputRef}
+      type="file"
+      accept="video/*"
+      className="hidden"
+      onChange={handleInputChange}
+    />
 
-  {/* IF NO FILE: show dropzone */}
-  {!selectedFile && (
-    <div
-      style={{
-        padding: "24px 0",
-        border: dragOver ? "2px solid #FEEA3B" : "2px dotted gray",
-        borderRadius: "18px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        background: dragOver ? "#181818" : "transparent",
-        transition: "border-color 0.15s ease, background 0.15s ease",
-      }}
-      onClick={handleClickUpload}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-    >
-      <img src={uploadIcon} alt="" />
+    {/* IF NO FILE: show dropzone */}
+    {!selectedFile && (
       <div
         style={{
-          marginTop: "8px",
-          fontFamily: "Gilroy-Light",
-          fontSize: 13,
-          color: "#E5E5E5",
+          padding: "24px 0",
+          border: dragOver ? "2px solid #FEEA3B" : "2px dotted gray",
+          borderRadius: "18px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          background: dragOver ? "#181818" : "transparent",
+          transition: "border-color 0.15s ease, background 0.15s ease",
         }}
+        onClick={handleClickUpload}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
       >
-        <span
+        <img src={uploadIcon} alt="" />
+        <div
           style={{
-            textDecoration: "underline",
-            cursor: "pointer",
-            color: "#FEEA3B",
+            marginTop: "8px",
+            fontFamily: "Gilroy-Light",
+            fontSize: 13,
+            color: "#E5E5E5",
           }}
         >
-          Click to upload
-        </span>{" "}
-        or drag and drop
+          <span
+            style={{
+              textDecoration: "underline",
+              cursor: "pointer",
+              color: "#FEEA3B",
+            }}
+          >
+            Click to upload
+          </span>{" "}
+          or drag and drop
+        </div>
       </div>
-    </div>
-  )}
+    )}
 
   {/* IF FILE SELECTED: show blue card like design */}
   {selectedFile && (
@@ -248,15 +251,19 @@ const handleDrop = (e) => {
       }}
     >
       <div>
-        <div
-          style={{
-            fontFamily: "Gilroy-Light",
-            fontSize: 18,
-            color: "#FFFFFF",
-          }}
-        >
-          {selectedFile.name}
-        </div>
+<div
+  style={{
+    fontFamily: "Gilroy-Light",
+    fontSize: 16,
+    color: "#FFFFFF",
+    maxWidth: "200px",       // 🔑 required
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  }}
+>
+  {selectedFile.name}
+</div>
         {videoDuration && (
           <div
             style={{

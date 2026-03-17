@@ -146,9 +146,10 @@ const WorkspaceSettings = ({ onClose }) => {
           <div className="mr-4">Custom Domain</div>
           <Button
             content="coming soon"
-            width="150px"
+            width="80px"
             bgColor="yellow"
             textColor="black"
+            styles={{ fontSize:10 }}
           />
         </div>
 

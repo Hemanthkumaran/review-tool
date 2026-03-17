@@ -13,9 +13,11 @@ export default function WorkspaceMembersPage({ activeWorkspace }) {
   }, []);
 
   const handleFetchUsers = async () => {
+    console.log('111');
+    
     setLoading(true);
     try {
-      fetchWorkspaceUsers();
+      fetchWorkspaceUsers(activeWorkspace._id);
       setLoading(false);
     } catch (e) {
       setLoading(false);
@@ -34,7 +36,7 @@ export default function WorkspaceMembersPage({ activeWorkspace }) {
       )}
 
       {view === "invite" && (
-        <InviteMembersLayout onBack={() => setView("members")} workspacePlan={workspacePlan} activeWorkspace={activeWorkspace}/>
+        <InviteMembersLayout onBack={() => setView("members")} workspacePlan={workspacePlan} fetchWorkspaceUsers={handleFetchUsers} activeWorkspace={activeWorkspace}/>
       )}
     </>
   );

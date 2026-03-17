@@ -21,7 +21,7 @@ export default function CommentHeader({
           {formatClockTime(time)}
         </span>
         <span className="text-gray-400">•</span>
-        <span className="text-gray-300">#{sNo + 1}</span>
+        <span className="text-gray-300">#{sNo}</span>
       </div>
 
       {/* Right */}

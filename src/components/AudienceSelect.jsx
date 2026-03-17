@@ -4,8 +4,8 @@ import { constants } from "../helpers/enum";
 
 const ownerOptions = [
   { value: "everyone", label: "Everyone" },
-  { value: "reviewer only", label: "Reviewer only" },
   { value: "team only", label: "Team only" },
+  { value: "reviewer only", label: "Reviewer only" },
 ];
 
 const teamMemberOptions = [
@@ -31,8 +31,9 @@ export default function AudienceSelect({
   const ref = useRef(null);
 
   const OPTIONS = userAccess == constants.OWNER ? ownerOptions : userAccess == constants.MEMBER ? teamMemberOptions : userAccess == constants.REVIEWER ? reviewerOptions : collaboratorOptions;
-      
-  const active = OPTIONS.find((o) => o.value == value);
+
+  const active = OPTIONS.find((o) => o.value === value);
+
 
   // close on outside click
   useEffect(() => {

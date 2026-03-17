@@ -23,33 +23,29 @@ export const WorkspaceProvider = ({ children }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const workspaceIdFromUrl = searchParams.get("ws");
 
-const fetchWorkspacePlan = async (workspaceId) => {
-  console.log('refreshWorkspacePlan getting called', workspaceId);
-  
-  if (!workspaceId) return;
+  const fetchWorkspacePlan = async (workspaceId) => {
+    
+    if (!workspaceId) return;
 
-  try {
-    setBillingLoading(true);
+    try {
+      setBillingLoading(true);
 
-    const res = await getWorkspacePlanApi(workspaceId);
+      const res = await getWorkspacePlanApi(workspaceId);
 
-    setWorkspacePlan(res.data);
+      setWorkspacePlan(res.data);
 
-  } catch (err) {
-    console.error("Failed to fetch plan", err);
-  } finally {
-    setBillingLoading(false);
-  }
-};
-
-
+    } catch (err) {
+      console.error("Failed to fetch plan", err);
+    } finally {
+      setBillingLoading(false);
+    }
+  };
 
   const fetchWorkspaces = async () => {
     try {
       setLoading(true);
 
       const res = await getAllUserWorkspace();
-      console.log(res, 'i got refreshed');
       
       const list = res.data.workspaceArray || [];
 

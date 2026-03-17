@@ -9,14 +9,14 @@ const STATUS_OPTIONS = [
   { value: "approved", label: "Approved" },
 ];
 
-export default function StatusDropdown({ value, onChange, py = 2.5, mt = 2, bgColor="#101013" }) {
+export default function StatusDropdown({ value, onChange, py = 2.5, mt = 2, bgColor="#101013", editable = true }) {
   const current =
     STATUS_OPTIONS.find((s) => s.value === value) || STATUS_OPTIONS[0];
 
   return (
     <DropdownMenu.Root>
       {/* Trigger */}
-      <DropdownMenu.Trigger asChild>
+      <DropdownMenu.Trigger disabled={editable} asChild>
         <button
           className={`px-4 py-${py}
             rounded-full
@@ -26,7 +26,7 @@ export default function StatusDropdown({ value, onChange, py = 2.5, mt = 2, bgCo
             flex items-center gap-2
             cursor-pointer mt-${mt}
           `}
-          onClick={(e) => e.stopPropagation()} // 🚫 stop card navigation
+          onClick={(e) => e.stopPropagation()} 
         >
           {current.label}
           <ChevronDown color="#fff" />

@@ -102,7 +102,7 @@ export default function ProjectFilter({ filters = { assignment: null, status: []
         { label: "In progress", value: "in_progress" },
         { label: "Internal review", value: "internal_review" },
         { label: "Client review", value: "client_review" },
-        { label: "Completed", value: "completed" },
+        { label: "Approved", value: "approved" },
       ].map((item) => (
         <button
           key={item.value}

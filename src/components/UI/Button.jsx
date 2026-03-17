@@ -11,8 +11,7 @@ const Button = ({
   onClick,
   loading = false,
   disabled = false,
-  
-  
+  styles = {}
 }) => {
   const isDisabled = loading || disabled;
 
@@ -36,6 +35,7 @@ const Button = ({
         gap: "8px",
         position: "relative",
         fontSize: 14,
+        ...styles
       }}
       onClick={!isDisabled ? onClick : undefined}
       disabled={isDisabled}

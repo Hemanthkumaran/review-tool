@@ -575,39 +575,25 @@ function fetchProject(storedGuest = null) {
       formData
     );
     const backendComment = res.data.comment;
-    // setProjectDetail(prev => {
-    //   if (!prev) return prev;
-
-    //   return {
-    //     ...prev,
-    //     versions: prev.versions.map(v => {
-    //       if (v._id !== versionID) return v;
-    //       return {
-    //         ...v,
-    //         comments: [...v.comments, backendComment]
-    //       };
-    //     })
-    //   };
-    // });
     setProjectDetail(prev => {
-  if (!prev) return prev;
-
-  return {
-    ...prev,
-    versions: prev.versions.map(v => {
-      if (v._id !== versionID) return v;
+      if (!prev) return prev;
 
       return {
-        ...v,
-        comments: v.comments.map(c =>
-          c._id === backendComment._id
-            ? backendComment
-            : c
-        )
+        ...prev,
+        versions: prev.versions.map(v => {
+          if (v._id !== versionID) return v;
+
+          const updatedComments = [...v.comments, backendComment].sort(
+            (a, b) => a.timeline - b.timeline
+          );
+
+          return {
+            ...v,
+            comments: updatedComments
+          };
+        })
       };
-    })
-  };
-});
+    });
     setSendingComment(false);
   } else {
     let reviewer = null;
@@ -624,9 +610,14 @@ function fetchProject(storedGuest = null) {
         ...prev,
         versions: prev.versions.map(v => {
           if (v._id !== versionID) return v;
+
+          const updatedComments = [...v.comments, backendComment].sort(
+            (a, b) => a.timeline - b.timeline
+          );
+
           return {
             ...v,
-            comments: [...v.comments, backendComment]
+            comments: updatedComments
           };
         })
       };

@@ -21,10 +21,11 @@ export default function MembersLayout({
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setIsLoading] = useState(false);
 
+  console.log(workspaceUsers, 'workspaceUsers');
   
 
   const data = useMemo(() => {
-    return (workspaceUsers.permissions || []).map((perm) => ({
+    return (workspaceUsers?.permissions || []).map((perm) => ({
       id: perm._id,
       name: perm.name || null,
       email: perm.email,
@@ -36,7 +37,7 @@ export default function MembersLayout({
           : "Collaborator",
       pending: !perm.name,
     }));
-  }, [workspaceUsers.permissions]);
+  }, [workspaceUsers?.permissions]);
 
   const columns = useMemo(
     () => [
@@ -110,6 +111,7 @@ export default function MembersLayout({
     try {
       const res = await removeUserFromWorkspace(activeWorkspace._id, data);
       fetchWorkspaceUsers();
+      setIsOpen(false);
       setIsLoading(false);
     } catch (e) {
       setIsLoading(false);
@@ -196,16 +198,14 @@ export default function MembersLayout({
                 ))}
               </tr>
                <RemoveAccessModal
-                    open={isOpen}
-                    onClose={() => setIsOpen(false)}
-                    title="Remove Jane from your workspace?"
-                    description="This user won't be able to view or work in the workspace once removed. You can add them later from Settings → Users."
-                    buttonText="Remove from workspace"
-                    handleRemove={() => handleRemove(row.original)}
-                  />
-
+                  open={isOpen}
+                  onClose={() => setIsOpen(false)}
+                  title={`Remove ${row.original.name} from your workspace?`}
+                  description="This user won't be able to view or work in the workspace once removed. You can add them later from Settings → Users."
+                  buttonText="Remove from workspace"
+                  handleRemove={() => handleRemove(row.original)}
+                />
               </>
-
             ))}
                  
           </tbody>

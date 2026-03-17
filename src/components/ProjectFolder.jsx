@@ -5,7 +5,7 @@ import StatusDropdown from "./StatusDropdown";
 import ProjectMoreMenu from "./ProjectMoreMenu";
 import { PlusIcon } from "../assets/svgs/SvgComponents";
 import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
-import { getMuxGif } from "../helpers/muxHelpers";
+import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { constants } from "../helpers/enum";
 import AssignEditorsModal from "./modals/AssignEditorsModal";
@@ -13,6 +13,7 @@ import { addUserToProjectApi } from "../services/api";
 import { showSuccessToast } from "../helpers/showToast";
 import ShareModal from "./modals/ShareModal";
 import { formatDuration } from "../helpers/common";
+import timerIcon from "../assets/svgs/timer.svg";
 
 const formatDateTime = (isoString) => {
   if (!isoString) return "-";
@@ -95,12 +96,13 @@ export default function ProjectFolder({
   const [showDelete, setShowDelete] = useState(false);
   const [openAssign, setOpenAssign] = useState(false);
   const [openShare, setOpenShare] = useState(false);
-  console.log(project, 'project');
-  
+  const [isHovered, setIsHovered] = useState(false);
+
   const { userAccess, workspaceUsers } = useWorkspace();
 
   const latestVersion = project?.versions[project.versions?.length - 1];
-  console.log(latestVersion, 'latestVersion', formatDuration(latestVersion?.videoDuration));
+  
+  console.log(latestVersion, 'latestVersion');
   
   
 const handleAssignEditors = async (editors) => {
@@ -132,10 +134,19 @@ const handleAssignEditors = async (editors) => {
       onClick={onClick}
     >
       {/* Thumbnail */}
-      <div style={{ position:'relative' }} className="rounded-2xl overflow-hidden border border-[#2A2A2A] bg-black aspect-[16/9]">
+      <div 
+        style={{ position:'relative' }} 
+        className="rounded-2xl overflow-hidden border border-[#2A2A2A] bg-black aspect-[16/9]"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <img
           loading="lazy"
-          src={getMuxGif(project?.versions[0]?.muxPlaybackID)}
+            src={
+              isHovered
+                ? getMuxGif(latestVersion?.muxPlaybackID)
+                : getMuxThumbnail(latestVersion?.muxPlaybackID)
+            }
           alt={project.name}
           className="w-full h-full object-cover"
         />
@@ -198,6 +209,9 @@ const handleAssignEditors = async (editors) => {
                 <img src={message} />
                 <span>{commentCount}</span>
               </div>
+              {/* <img src={timerIcon} width={16} height={16} className="mr-1" /> */}
+              {/* <span className="text-[#999]">{formatDuration(folder.totalVideoDuration)} mins</span> */}
+              {/* <span className="text-[#999]">{'1'} mins</span> */}
             </div>
           </div>
           <div
