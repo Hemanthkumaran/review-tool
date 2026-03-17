@@ -1,4 +1,4 @@
-import { formatClockTime, formatRelative } from "../../../helpers/common";
+import { formatClockTime, formatClockTime2, formatRelative } from "../../../helpers/common";
 
 export default function CommentHeader({
   time,
@@ -18,7 +18,7 @@ export default function CommentHeader({
           // onClick={onGo}
           className="text-[#F9F046] cursor-pointer"
         >
-          {formatClockTime(time)}
+          {formatClockTime2(time)}
         </span>
         <span className="text-gray-400">•</span>
         <span className="text-gray-300">#{sNo}</span>

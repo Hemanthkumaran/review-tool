@@ -100,9 +100,16 @@ const reactSelectStyles = {
 };
 
 const reactSelectStyles2 = {
-    menuPortal: (base) => ({
+  menuPortal: (base) => ({
   ...base,
   zIndex: 9999 
+}),
+placeholder: (base) => ({
+  ...base,
+  position: "absolute",   // 🔥 key fix
+  left: 0,
+  margin: 0,
+  pointerEvents: "none",
 }),
   control: (base) => ({
     ...base,
@@ -125,6 +132,7 @@ const reactSelectStyles2 = {
     gap: 6,
     display: "flex",
     flexWrap: "wrap",
+    position: "relative",
   }),
   input: (base) => ({
     ...base,
@@ -157,10 +165,6 @@ menuList: (base) => ({
     paddingTop: 8,
     paddingBottom: 8,
     cursor: "pointer",
-  }),
-  placeholder: (base) => ({
-    ...base,
-    color: "#6B6B72",
   }),
   dropdownIndicator: () => null,  // ❌ no chevron
   clearIndicator: () => null,     // ❌ no global clear

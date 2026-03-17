@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import OutlineInput from "../../../textInputs/OutlineInput";
 import EditableAvatar from "../../components/EditAvatar/EditableAvatar";
 import Button from "../../../UI/Button";
@@ -7,7 +7,6 @@ import { updateUserProfileApi } from "../../../../services/api";
 import { useUser } from "../../../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../../routes/paths";
-import { clearAuth } from "../../../../helpers/storage";
 
 const Profile = ({ onClose }) => {
   const { user, refreshUserProfile } = useUser();
@@ -49,7 +48,6 @@ const Profile = ({ onClose }) => {
 
       await updateUserProfileApi(formData);
 
-      // 🔥 refresh global user state
       await refreshUserProfile();
     } catch (err) {
       console.error(err);

@@ -6,7 +6,7 @@ import { showSuccessToast } from "../../../../helpers/showToast";
 
 const ROLES = ["Collaborator", "Team member"];
 
-export default function InviteMembersLayout({ onBack = () => {}, activeWorkspace, fetchWorkspaceUsers }) {
+export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace, fetchWorkspaceUsers }) {
   const [emails, setEmails] = useState([]);
   const [value, setValue] = useState("");
   const [role, setRole] = useState("Collaborator");
@@ -51,11 +51,11 @@ export default function InviteMembersLayout({ onBack = () => {}, activeWorkspace
       emails,
       "permissionType": role == "Team member" ? "member" : role.toLowerCase()
     }
-    inviteUserToWorkspace(activeWorkspace._id, data)
+    inviteUserToWorkspace(ownerWorkspace._id, data)
     .then(res => {
       setEmails([]);
       setValue("");
-      fetchWorkspaceUsers(activeWorkspace._id);
+      fetchWorkspaceUsers(ownerWorkspace._id);
       showSuccessToast("The invitation was sent to the user");
     })
     .catch(err => {

@@ -1,6 +1,5 @@
 .brand-wrapper {
-  width: 90%;
-  /* max-width: 520px; */
+  width: 150px;
   font-family: "Inter", sans-serif;
   color: #ffffff;
   position: relative;
@@ -10,7 +9,6 @@
 
 .brand-label {
   display: block;
-
   margin-bottom: 14px;
 }
 
@@ -18,8 +16,8 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 18px;
-  background: linear-gradient(180deg, #1b1b1b 0%, #141414 100%);
+  padding: 12px;
+  background: #131313;
   border-radius: 14px;
   border: 1px solid #2a2a2a;
   cursor: pointer;

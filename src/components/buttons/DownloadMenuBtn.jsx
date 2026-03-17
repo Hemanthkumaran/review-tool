@@ -54,7 +54,7 @@ export default function DownloadMenuButton({ onAction, projectDetail, onRefresh 
           transition-colors
         "
       >
-        {/* <span><DownloadOriginalTick/></span> */}
+        {projectDetail?.downloadLink && <span><DownloadOriginalTick/></span>}
         {projectDetail?.downloadLink ?
           <span style={{ fontFamily:'Gilroy-Light'}}>Download original</span> :
           <span style={{ fontFamily:'Gilroy-Light'}}>Add final video link</span>

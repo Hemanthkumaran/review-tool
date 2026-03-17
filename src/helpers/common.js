@@ -12,6 +12,13 @@ export function formatDuration(duration) {
     .padStart(2, "0")}`;
 }
 
+export function formatMinutesOnly(duration) {
+  if (!duration || duration <= 0) return "0 min";
+
+  const minutes = Math.floor(duration);
+  return `${minutes} ${duration > 1 ? 'mins' : 'min'}`;
+}
+
 export const DateFormat = (value) => {
   if (!value) return null;
 

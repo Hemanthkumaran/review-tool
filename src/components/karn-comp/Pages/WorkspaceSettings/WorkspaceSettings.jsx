@@ -9,38 +9,37 @@ import Button from "../../../UI/Button";
 import { useWorkspace } from "../../../../context/WorkspaceContext";
 import { createAddonPaymentApi, updateWorkspaceApi } from "../../../../services/api";
 import { useRazorpay } from "../../../../hooks/useRazorpay";
+import FeatureLockedModal from "../../../modals/FeatureLockedModal";
+import { Confetti, FeatureLockIcon } from "../../../../assets/svgs/SvgComponents";
 
 const WorkspaceSettings = ({ onClose }) => {
-  const {
-    activeWorkspace,
-    refreshWorkspace,
-  } = useWorkspace();
 
   const [workspaceName, setWorkspaceName] = useState("");
   const [logoFile, setLogoFile] = useState(null);
   const [logoUrl, setLogoUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [brandColor, setBrandColor] = useState(null)
+  const [successModal, setSuccessModal] = useState(false)
 
   const { openCheckout } = useRazorpay();
-  const { workspacePlan, refreshWorkspacePlan } = useWorkspace();
-  console.log(workspacePlan, 'pland');
+  const { workspacePlan, refreshWorkspacePlan, ownerWorkspace, activeWorkspace, refreshWorkspace } = useWorkspace();
   
   const subscription = workspacePlan?.subscription;
-  console.log(subscription, 'subscription');
 
   const addOnStatus = subscription?.status;
   
 
   // 🔁 Prefill data
   useEffect(() => {
-    if (!activeWorkspace) return;
-    setBrandColor(activeWorkspace?.colourCode);
-    setWorkspaceName(activeWorkspace.name || "");
-    setLogoUrl(activeWorkspace.logo?.url || null);
-  }, [activeWorkspace]);
+    if (!ownerWorkspace) return;
+    setBrandColor(ownerWorkspace?.colourCode);
+    setWorkspaceName(ownerWorkspace.name || "");
+    setLogoUrl(ownerWorkspace.logo?.url || null);
+  }, [ownerWorkspace]);
 
   const handleUnlockBranding = async () => {
+    setShowModal(false);
     const payload = {
       activePlan: subscription?.activePlan,
       interval: subscription?.interval,
@@ -58,8 +57,8 @@ const WorkspaceSettings = ({ onClose }) => {
       currency: order.currency,
       name: activeWorkspace.name,
       onSuccess: async () => {
-        alert("add on unlocked!!");
         refreshWorkspacePlan(activeWorkspace._id);
+        setSuccessModal(true);
       },
     });
 
@@ -117,17 +116,18 @@ const WorkspaceSettings = ({ onClose }) => {
           border: "2px solid #2a2a2a",
           width: "80%",
           padding: "24px",
+          borderRadius:12
         }}
       />
 
 
       <br />
 
-      <div className="w-[80%] pt-6 pl-6 pb-4 border-[#2a2a2a] border-2 rounded-lg bg-[#131313]">
+      <div onClick={() => addOnStatus != 'active' ? setShowModal(true) : null} style={{ background: addOnStatus != 'active' ? "#181818" : "#131313" }} className="w-[80%] cursor-pointer pt-6 pl-6 pb-4 border-[#2a2a2a] border-2 rounded-2xl">
         <div className="flex justify-between mb-4">
           <div>Logo</div>
           {addOnStatus != 'active' ? 
-          <div onClick={handleUnlockBranding} className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
+          <div onClick={() => setShowModal(true)} className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
             <img height="20" width="20" src={lock} alt="" />
           </div> : null}
         </div>
@@ -142,14 +142,14 @@ const WorkspaceSettings = ({ onClose }) => {
       </div>
 
       <div className="domain">
-        <div style={{ opacity:0.3 }} className="domain-head">
+        <div className="domain-head">
           <div className="mr-4">Custom Domain</div>
           <Button
             content="coming soon"
-            width="80px"
-            bgColor="yellow"
-            textColor="black"
-            styles={{ fontSize:10 }}
+            width="100px"
+            bgColor="#323232"
+            textColor="#000"
+            styles={{ fontSize:11 }}
           />
         </div>
 
@@ -161,6 +161,7 @@ const WorkspaceSettings = ({ onClose }) => {
               border: "2px solid #2a2a2a",
               width: "100%",
               padding: "24px",
+              borderRadius: 12
             }}
           />
           <img
@@ -174,12 +175,13 @@ const WorkspaceSettings = ({ onClose }) => {
 
         <div className="flex justify-end mt-8">
           <Button
-            width="120px"
+            width="110px"
             content="Cancel"
             textColor="white"
-            bgColor="black"
+            bgColor="#131313"
             marginRight="8px"
             onClick={onClose}
+            styles={{ border:"1px solid #2B2B2B"}}
           />
           <Button
             width="120px"
@@ -191,6 +193,24 @@ const WorkspaceSettings = ({ onClose }) => {
           />
         </div>
       </div>
+      <FeatureLockedModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title="Feature locked"
+        subtitle="Custom branding is part of a $5/month add-on. Once added, you can upload a logo and change accent colors instantly."
+        buttonTitle="Activate add-on"
+        ModalImg={<FeatureLockIcon />}
+        onBtnClick={handleUnlockBranding}
+      />
+      <FeatureLockedModal
+        open={successModal}
+        onClose={() => setSuccessModal(false)}
+        title="Custom Branding Activated!"
+        subtitle="Yayy! Your payment went through. Add your logo and customize the color theme of the tool."
+        buttonTitle="Customize UI"
+        ModalImg={<Confetti />}
+        onBtnClick={() => setSuccessModal(false)}
+      />
     </div>
   );
 };

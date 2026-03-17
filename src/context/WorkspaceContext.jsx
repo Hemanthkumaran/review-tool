@@ -8,6 +8,7 @@ const WorkspaceContext = createContext(null);
 export const WorkspaceProvider = ({ children }) => {
 
   const [workspaces, setWorkspaces] = useState([]);
+  const [ownerWorkspace, setOwnerWorkspace] = useState(null);
   const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [workspaceUsers, setWorkspaceUsers] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -48,7 +49,11 @@ export const WorkspaceProvider = ({ children }) => {
       const res = await getAllUserWorkspace();
       
       const list = res.data.workspaceArray || [];
-
+      const ownerWorkspaces = list.filter(
+        (ws) => ws.permissionType === constants.OWNER
+      );
+      setOwnerWorkspace(ownerWorkspaces[0]);
+      
       setWorkspaces(list);
 
       // setActiveWorkspace(prev => prev || list[0] || null);
@@ -153,6 +158,7 @@ export const WorkspaceProvider = ({ children }) => {
         setSubscriptionStatus,
         trialUsed,
         setTrialUsed,
+        ownerWorkspace
       }}
     >
       {children}

@@ -13,6 +13,7 @@ import { constants } from "../../helpers/enum";
 import { formatClockTime, formatClockTime2, formatClockTimeMMSS } from "../../helpers/common";
 import Spinner from "../common/Spinner";
 import VoicePreviewModal from "../modals/VoicePreviewModal";
+import VoiceNotePlayer from "./VoiceNotePlayer";
 
 
 /**
@@ -198,7 +199,7 @@ sendingComment ||
       />
       {/* image previews */}
       {attachments.length > 0 && (
-          <div className="bg-[#101213] border-x border-[#1F1F21] px-4 py-2 w-full flex justify-end gap-2 overflow-x-auto">
+          <div className="bg-[#101213] border-x border-[#1F1F21] px-4 py-2 w-full flex justify-start gap-2 overflow-x-auto">
           {attachments.map((att) => (
             <div
               key={att.url}
@@ -220,7 +221,34 @@ sendingComment ||
           ))}
         </div>
       )}
-
+    {showVoicePreview && (
+      <div
+        className="
+          absolute
+          bottom-[70px]
+          left-1/2
+          -translate-x-1/2
+          w-[320px]
+          bg-[#111216]
+          border border-[#2A2B2E]
+          rounded-xl
+          px-3 py-2
+          shadow-xl
+          z-50
+        "
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-gray-300">Voice note preview</span>
+          <button
+            className="text-gray-400 hover:text-white"
+            onClick={() => setShowVoicePreview(false)}
+          >
+            ✕
+          </button>
+        </div>
+        <VoiceNotePlayer src={pendingVoiceUrl} />
+      </div>
+    )}
       {/* bottom bar */}
       <div
         style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
@@ -389,11 +417,11 @@ sendingComment ||
           </button>
         </div>
       </div>
-      <VoicePreviewModal
+      {/* <VoicePreviewModal
         isOpen={showVoicePreview}
         onClose={() => setShowVoicePreview(false)}
         audioUrl={pendingVoiceUrl}
-      />
+      /> */}
     </div>
   );
 }

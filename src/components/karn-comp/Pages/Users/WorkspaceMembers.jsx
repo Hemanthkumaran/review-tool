@@ -6,7 +6,7 @@ import { useWorkspace } from "../../../../context/WorkspaceContext";
 export default function WorkspaceMembersPage({ activeWorkspace }) {
   const [view, setView] = useState("members");
   const [loading, setLoading] = useState(true);
-  const { fetchWorkspaceUsers, workspaceUsers, workspacePlan } = useWorkspace();
+  const { fetchWorkspaceUsers, workspaceUsers, workspacePlan, ownerWorkspace } = useWorkspace();
 
   useEffect(() => {
     handleFetchUsers();
@@ -32,11 +32,11 @@ export default function WorkspaceMembersPage({ activeWorkspace }) {
   return (
     <>
       {view === "members" && (
-        <MembersLayout onInvite={() => setView("invite")} workspacePlan={workspacePlan} fetchWorkspaceUsers={handleFetchUsers} workspaceUsers={workspaceUsers} activeWorkspace={activeWorkspace}/>
+        <MembersLayout onInvite={() => setView("invite")} workspacePlan={workspacePlan} fetchWorkspaceUsers={handleFetchUsers} workspaceUsers={workspaceUsers} ownerWorkspace={ownerWorkspace}/>
       )}
 
       {view === "invite" && (
-        <InviteMembersLayout onBack={() => setView("members")} workspacePlan={workspacePlan} fetchWorkspaceUsers={handleFetchUsers} activeWorkspace={activeWorkspace}/>
+        <InviteMembersLayout onBack={() => setView("members")} workspacePlan={workspacePlan} fetchWorkspaceUsers={handleFetchUsers} ownerWorkspace={ownerWorkspace}/>
       )}
     </>
   );

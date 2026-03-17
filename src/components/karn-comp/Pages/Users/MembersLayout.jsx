@@ -12,10 +12,10 @@ import AppLoader from "../../../common/AppLoader";
 
 export default function MembersLayout({
   onInvite = () => {},
-  activeWorkspace,
   fetchWorkspaceUsers,
   workspaceUsers,
-  workspacePlan
+  workspacePlan,
+  ownerWorkspace
 }) {
 
   const [isOpen, setIsOpen] = useState(false);
@@ -109,7 +109,7 @@ export default function MembersLayout({
       "email": rowItem.email
     }
     try {
-      const res = await removeUserFromWorkspace(activeWorkspace._id, data);
+      const res = await removeUserFromWorkspace(ownerWorkspace._id, data);
       fetchWorkspaceUsers();
       setIsOpen(false);
       setIsLoading(false);
@@ -137,8 +137,11 @@ export default function MembersLayout({
       <div className="members-bar">
         <div>
           <div className="members-count">{data.length} members</div>
-          <div className="members-meta">
+          {/* <div className="members-meta">
             {teamCount} team members · {collaboratorCount} collaborator
+          </div> */}
+          <div className="members-meta">
+            {teamCount}/{maxUsers} team members · {collaboratorCount} collaborator
           </div>
         </div>
 

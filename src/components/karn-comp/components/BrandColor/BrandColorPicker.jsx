@@ -8,8 +8,7 @@ export default function BrandColorPicker({ disabled, brandColor, setBrandColor }
 
   return (
     <div className="brand-wrapper">
-      <label className="brand-label">Branding Colour</label>
-
+      <label style={{ fontFamily:'Gilroy-Regular'}} className="brand-label">Branding Colour</label>
       <div
         className={`brand-input ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
         onClick={() => {

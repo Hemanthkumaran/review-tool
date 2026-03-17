@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const Billing = () => {
 
-  const { workspacePlan, billingLoading, activeWorkspace, refreshWorkspace, refreshWorkspacePlan, trialUsed } = useWorkspace();
+  const { workspacePlan, billingLoading, ownerWorkspace, refreshWorkspace, refreshWorkspacePlan, trialUsed } = useWorkspace();
 
   const [chosenPlan, setChosenPlan] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -46,7 +46,7 @@ const Billing = () => {
       <div>
         <SubscriptionCard
           subscription={subscription}
-          activeWorkspace={activeWorkspace}
+          ownerWorkspace={ownerWorkspace}
           costPerMinute={workspacePlan.costPerMinute}
           refreshWorkspace={refreshWorkspace}
           refreshWorkspacePlan={refreshWorkspacePlan}

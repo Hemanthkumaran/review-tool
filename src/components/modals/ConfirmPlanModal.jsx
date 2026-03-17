@@ -45,7 +45,7 @@ export default function ConfirmPlanModal({
         <div className="plan-c-card">
           <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
             <div>
-              <span style={{ textTransform:'capitalize'}}>{workspacePlan.subscription.activePlan} plan </span>
+              <span style={{ textTransform:'capitalize'}}>{workspacePlan?.subscription?.activePlan} plan </span>
               <span>({" " + basePlanStorage + " " + 'mins' + " "}) </span>
             </div>
             <div>{`$ ${basePlanCost}/mo`}</div>
@@ -70,10 +70,10 @@ export default function ConfirmPlanModal({
         <div style={{ border:"1px solid #F9EF38" }} className="plan-c-card">
           <div style={{ color:"#BFBFBF", fontSize:14, marginTop:5 }} className="flex justify-between mb-4">
             <div>
-              <span style={{ textTransform:'capitalize'}}>{workspacePlan.subscription.activePlan} plan </span>
-              <span>({" " + workspacePlan.subscription.baseStorageMinutes + " " + 'mins' + " "}) </span>
+              <span style={{ textTransform:'capitalize'}}>{workspacePlan?.subscription?.activePlan} plan </span>
+              <span>({" " + workspacePlan?.subscription?.baseStorageMinutes + " " + 'mins' + " "}) </span>
             </div>
-            <div>{`$ ${workspacePlan.subscription.baseStorageMinutes * workspacePlan.costPerMinute}/mo`}</div>
+            <div>{`$ ${workspacePlan?.subscription?.baseStorageMinutes * workspacePlan?.costPerMinute}/mo`}</div>
           </div>
           <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
             <div>

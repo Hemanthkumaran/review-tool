@@ -10,7 +10,7 @@ import RemoveAccessModal from "../../../../modals/RemoveAccessModal";
 export default function SubscriptionCard({
   subscription,
   costPerMinute,
-  activeWorkspace,
+  ownerWorkspace,
   refreshWorkspace,
   refreshWorkspacePlan,
   minutesUsed
@@ -44,9 +44,9 @@ export default function SubscriptionCard({
 
   const handleCancelAddon = async () => {
     setLoading(true);
-    await cancelAddonApi(activeWorkspace._id);
+    await cancelAddonApi(ownerWorkspace._id);
     await refreshWorkspace();
-    await refreshWorkspacePlan(activeWorkspace._id);
+    await refreshWorkspacePlan(ownerWorkspace._id);
     setLoading(true);
     setIsOpen(false);
   };

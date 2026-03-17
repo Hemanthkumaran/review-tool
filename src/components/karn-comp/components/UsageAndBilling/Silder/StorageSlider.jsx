@@ -13,7 +13,7 @@ const MAX = 2000;
 
 export default function StorageSlider() {
   const { openCheckout } = useRazorpay();
-  const { activeWorkspace, workspacePlan, billingLoading } = useWorkspace();
+  const { ownerWorkspace, workspacePlan, billingLoading } = useWorkspace();
 
   const [values, setValues] = useState([MIN]);
   const [loading, setLoading] = useState(false);
@@ -59,12 +59,12 @@ export default function StorageSlider() {
 
   const handleUpgrade = async () => {
 
-    if (!activeWorkspace?._id) return;
+    if (!ownerWorkspace?._id) return;
 
     setLoading(true);
 
     try {
-      const res = await createPaymentOrderApi(activeWorkspace._id, {
+      const res = await createPaymentOrderApi(ownerWorkspace._id, {
         activePlan: workspacePlan.subscription.activePlan,
         interval: workspacePlan.subscription.interval,
         additionalStorageMinutes: increaseMinutes,
@@ -77,7 +77,7 @@ export default function StorageSlider() {
         orderId: order.orderID,
         amount: order.amount,
         currency: order.currency,
-        name: activeWorkspace.name,
+        name: ownerWorkspace.name,
         onSuccess: () => window.location.reload(),
       });
     } catch (e) {
