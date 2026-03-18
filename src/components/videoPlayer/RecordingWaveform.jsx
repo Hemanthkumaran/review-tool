@@ -27,7 +27,7 @@ export default function RecordingWaveform({ analyserRef }) {
         const v = dataArray[i] / 255;
         const h = v * canvas.height;
 
-        ctx.fillStyle = "#F9F046";
+        ctx.fillStyle = "var(--brand-color)";
         ctx.fillRect(x, canvas.height - h, barWidth, h);
         x += barWidth + gap;
 

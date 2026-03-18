@@ -11,6 +11,7 @@ export const WorkspaceProvider = ({ children }) => {
   const [ownerWorkspace, setOwnerWorkspace] = useState(null);
   const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [workspaceUsers, setWorkspaceUsers] = useState(null);
+  const [brandingColor, setBrandingColor] = useState('#F9EF38');
   const [loading, setLoading] = useState(false);
 
   const [workspacePlan, setWorkspacePlan] = useState(null);
@@ -68,6 +69,7 @@ export const WorkspaceProvider = ({ children }) => {
       if (!next) next = list[0] || null;
 
       setActiveWorkspace(next);
+      setBrandingColor(next?.colourCode ?? '#F9EF38');
 
       // 3) If URL missing or invalid → fix it
       if (next && next._id !== workspaceIdFromUrl) {
@@ -158,7 +160,8 @@ export const WorkspaceProvider = ({ children }) => {
         setSubscriptionStatus,
         trialUsed,
         setTrialUsed,
-        ownerWorkspace
+        ownerWorkspace,
+        brandingColor
       }}
     >
       {children}

@@ -13,7 +13,7 @@ const MAX = 2000;
 
 export default function StorageSlider() {
   const { openCheckout } = useRazorpay();
-  const { ownerWorkspace, workspacePlan, billingLoading } = useWorkspace();
+  const { ownerWorkspace, workspacePlan, billingLoading, brandingColor } = useWorkspace();
 
   const [values, setValues] = useState([MIN]);
   const [loading, setLoading] = useState(false);
@@ -79,6 +79,7 @@ export default function StorageSlider() {
         currency: order.currency,
         name: ownerWorkspace.name,
         onSuccess: () => window.location.reload(),
+        brandingColor: brandingColor
       });
     } catch (e) {
       alert("Payment failed");

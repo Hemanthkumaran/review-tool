@@ -99,10 +99,8 @@ export default function ProjectFolder({
   const [isHovered, setIsHovered] = useState(false);
 
   const { userAccess, workspaceUsers } = useWorkspace();
-
-  const latestVersion = project?.versions[project.versions?.length - 1];
   
-  console.log(latestVersion, 'latestVersion');
+  const latestVersion = project?.versions[project.versions?.length - 1];
   
   
 const handleAssignEditors = async (editors) => {
@@ -124,13 +122,13 @@ const handleAssignEditors = async (editors) => {
 
   return (
     <div
-        className="
+        className={`
         relative rounded-[20px] p-2 bg-black cursor-pointer
         border border-transparent
-        hover:border-[#F9EF38]
+        hover:border-[var(--brand-color)]
         group
         transition
-      "
+      `}
       onClick={onClick}
     >
       {/* Thumbnail */}

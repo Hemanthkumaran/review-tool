@@ -42,7 +42,7 @@ export default function ReplyInput({
           disabled={sending || !value.trim()}
           className="
             px-4 py-[4px] rounded-full
-            bg-[#FEEA3B] text-black font-medium
+            bg-[var(--brand-color)] text-black font-medium
             disabled:opacity-40 disabled:cursor-default
           "
         >

@@ -31,8 +31,8 @@ export default function AddProject({
   const [params] = useSearchParams();
   const folderId = params.get("folder");
   const folderName = params.get("folderName");
-  const { activeWorkspace, userAccess, refreshWorkspacePlan, setSubscriptionStatus, setTrialUsed } = useWorkspace();
-
+  const { activeWorkspace, brandingColor, userAccess, refreshWorkspacePlan, setSubscriptionStatus, setTrialUsed } = useWorkspace();
+  
   useEffect(() => {
       if (activeWorkspace !== null) {
         getAllProjects();
@@ -129,7 +129,7 @@ export default function AddProject({
   
   if (loading) {
     return <div className='flex items-center justify-center mt-30'>
-        <Spinner size={46} color="#F9EF38" />
+        <Spinner size={46} color={brandingColor} />
     </div>
   }
 
@@ -164,7 +164,7 @@ export default function AddProject({
                 e.stopPropagation();  
                 setAddProjectOpen(true);
               }}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[#F9EF38] text-black px-4 py-2 hover:opacity-90"
+              className="cursor-pointer inline-flex items-center gap-2 rounded-full bg-[var(--brand-color)] text-black px-4 py-2 hover:opacity-90"
             >
               <PlusThin className="h-4 w-4" />
               <span>Add project</span>

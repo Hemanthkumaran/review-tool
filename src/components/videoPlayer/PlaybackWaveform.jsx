@@ -66,7 +66,7 @@ export default function PlaybackWaveform({ audioUrl }) {
           style={{ width: `${progress * 100}%` }}
         >
           {Array.from({ length: 80 }).map((_, i) => (
-            <div key={i} className="w-[3px] bg-[#F9F046] rounded-full" />
+            <div key={i} className="w-[3px] bg-[var(--brand-color)] rounded-full" />
           ))}
         </div>
 

@@ -127,7 +127,7 @@ export default function VoiceNotePlayer({ src }) {
         <div className="w-full h-[8px] rounded-full bg-[#202124]" />
         {/* filled portion */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 h-[8px] rounded-full bg-[#F9F046]"
+          className="absolute top-1/2 -translate-y-1/2 h-[8px] rounded-full bg-[var(--brand-color)]"
           style={{ width: `${progressPct}%` }}
         />
         {/* thumb */}

@@ -9,14 +9,14 @@ const STATUS_OPTIONS = [
   { value: "approved", label: "Approved" },
 ];
 
-export default function StatusDropdown({ value, onChange, py = 2.5, mt = 2, bgColor="#101013", editable = true }) {
+export default function StatusDropdown({ value, onChange, py = 2.5, mt = 2, bgColor="#101013", disabled = false }) {
   const current =
     STATUS_OPTIONS.find((s) => s.value === value) || STATUS_OPTIONS[0];
 
   return (
     <DropdownMenu.Root>
       {/* Trigger */}
-      <DropdownMenu.Trigger disabled={editable} asChild>
+      <DropdownMenu.Trigger disabled={disabled} asChild>
         <button
           className={`px-4 py-${py}
             rounded-full

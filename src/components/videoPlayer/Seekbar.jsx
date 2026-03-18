@@ -88,7 +88,7 @@ export default function SeekBar({
       >
         {/* played portion */}
         <div
-          className="absolute left-0 top-0 h-full rounded-full bg-[#FEEA3B]"
+          className="absolute left-0 top-0 h-full rounded-full bg-[var(--brand-color)]"
           style={{ width: `${pct || 0}%` }}
         />
 
@@ -116,7 +116,7 @@ export default function SeekBar({
             <div className="flex flex-col items-center">
               <button
                 type="button"
-                className="w-7 h-7 rounded-full border-[2px] border-[#FEEA3B] overflow-hidden shadow-md"
+                className="w-7 h-7 rounded-full border-[2px] border-[var(--brand-color)] overflow-hidden shadow-md"
                 onClick={() => onSeek(m.time)}
               >
                 <img

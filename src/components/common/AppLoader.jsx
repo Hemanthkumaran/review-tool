@@ -1,17 +1,18 @@
-// src/components/common/AppLoader.jsx
-import React from "react";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 const spinnerBase =
   "inline-block w-6 h-6 border-2 border-transparent rounded-full animate-spin";
 
-const yellow = "#FEEA3B";
 
 export default function AppLoader({
   visible = false,
   message = "Loading…",
-  variant = "overlay", // "overlay" | "inline"
+  variant = "overlay",
   className = "",
 }) {
+
+  const { brandingColor } = useWorkspace();
+  
   if (!visible) return null;
 
   if (variant === "inline") {
@@ -20,8 +21,8 @@ export default function AppLoader({
         <span
           className={spinnerBase}
           style={{
-            borderTopColor: yellow,
-            borderRightColor: yellow,
+            borderTopColor: brandingColor,
+            borderRightColor: brandingColor,
             borderBottomColor: "transparent",
             borderLeftColor: "transparent",
           }}
@@ -49,8 +50,8 @@ export default function AppLoader({
             width: "32px",
             height: "32px",
             borderWidth: "3px",
-            borderTopColor: yellow,
-            borderRightColor: yellow,
+            borderTopColor: brandingColor,
+            borderRightColor: brandingColor,
             borderBottomColor: "transparent",
             borderLeftColor: "transparent",
           }}

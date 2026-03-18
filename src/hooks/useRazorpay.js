@@ -9,6 +9,7 @@ export function useRazorpay() {
     purpose = "upgrade",
     onSuccess,
     onFailure,
+    brandingColor
   }) => {
     if (!window.Razorpay) {
       alert("Razorpay SDK not loaded");
@@ -34,7 +35,7 @@ export function useRazorpay() {
       },
 
       theme: {
-        color: "#FEEA3B",
+        color: brandingColor,
       },
 
       handler(response) {

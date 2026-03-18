@@ -99,7 +99,7 @@ export default function MuxUploader({ muxUploadURL, onUploaded }) {
         <div className="flex flex-col items-center gap-2 text-[13px] text-gray-200">
           <div className="w-40 h-1 rounded-full bg-[#222] overflow-hidden">
             <div
-              className="h-full bg-[#FEEA3B] transition-all"
+              className="h-full bg-[var(--brand-color)] transition-all"
               style={{ width: `${progress ?? 0}%` }}
             />
           </div>

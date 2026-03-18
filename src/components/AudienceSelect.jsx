@@ -72,14 +72,14 @@ export default function AudienceSelect({
                   setOpen(false);
                 }}
                 className={`relative w-full px-6 py-2 cursor-pointer text-left text-sm transition
-                  ${isActive ? "text-[#FEEA3B]" : "text-gray-300 hover:text-white"}
+                  ${isActive ? "text-[var(--brand-color)]" : "text-gray-300 hover:text-white"}
                 `}
               >
                 {opt?.label}
 
                 {/* underline for active */}
                 {isActive && (
-                  <span className="absolute left-6 right-6 bg-[#FEEA3B]" />
+                  <span className="absolute left-6 right-6 bg-[var(--brand-color)]" />
                 )}
               </button>
             );

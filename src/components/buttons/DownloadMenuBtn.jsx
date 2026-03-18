@@ -44,13 +44,13 @@ export default function DownloadMenuButton({ onAction, projectDetail, onRefresh 
           inline-flex items-center gap-2
           cursor-pointer
           rounded-full
-          bg-[#F9EF38]
+          bg-[var(--brand-color)]
           px-4 py-2
           text-sm font-medium
           text-black
           shadow-[0_2px_4px_rgba(0,0,0,0.25)]
-          border border-[#F9EF38]
-          hover:bg-[#FFEE5A]
+          border border-[var(--brand-color)]
+          hover:bg-[var(--brand-color)]
           transition-colors
         "
       >

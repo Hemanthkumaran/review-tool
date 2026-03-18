@@ -23,7 +23,7 @@ const WorkspaceSettings = ({ onClose }) => {
   const [successModal, setSuccessModal] = useState(false)
 
   const { openCheckout } = useRazorpay();
-  const { workspacePlan, refreshWorkspacePlan, ownerWorkspace, activeWorkspace, refreshWorkspace } = useWorkspace();
+  const { workspacePlan, refreshWorkspacePlan, brandingColor, ownerWorkspace, activeWorkspace, refreshWorkspace } = useWorkspace();
   
   const subscription = workspacePlan?.subscription;
 
@@ -60,6 +60,7 @@ const WorkspaceSettings = ({ onClose }) => {
         refreshWorkspacePlan(activeWorkspace._id);
         setSuccessModal(true);
       },
+      brandingColor: brandingColor
     });
 
     } catch (err) {
@@ -187,7 +188,7 @@ const WorkspaceSettings = ({ onClose }) => {
             width="120px"
             content={loading ? "Saving..." : "Save"}
             textColor="black"
-            bgColor="yellow"
+            bgColor={brandingColor}
             disabled={workspaceName.length > 2 ? false : true}
             onClick={handleSave}
           />

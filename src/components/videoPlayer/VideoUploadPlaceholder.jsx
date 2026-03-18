@@ -147,7 +147,7 @@ useEffect(() => {
       {/* Outer video frame – blue border, full width, rounded corners */}
       <div
         className={`relative w-full h-[80vh] rounded-3xl overflow-hidden
-          ${isDragging ? "ring-2 ring-[#FEEA3B] bg-[#0f1208]" : "bg-[#050608]"}
+          ${isDragging ? "ring-2 ring-[var(--brand-color)] bg-[#0f1208]" : "bg-[#050608]"}
         `}
         onDragEnter={(e) => {
           e.preventDefault();

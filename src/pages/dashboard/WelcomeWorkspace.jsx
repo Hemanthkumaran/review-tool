@@ -30,7 +30,7 @@ export default function WelcomeWorkspace({
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
-  const { activeWorkspace, loading: workspaceLoading, userAccess, billingLoading, setSubscriptionStatus, trialUsed, setTrialUsed } = useWorkspace();
+  const { activeWorkspace, brandingColor, loading: workspaceLoading, userAccess, billingLoading, setSubscriptionStatus, trialUsed, setTrialUsed } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [chosenPlan, setChosenPlan] = useState(null);
@@ -44,7 +44,6 @@ export default function WelcomeWorkspace({
   const navigate = useNavigate();
   const { modalStep, setModalStep } = useOutletContext();
 
-  const brandingColor = activeWorkspace?.colourCode ?? '#F9EF38';
   
   useEffect(() => {
     if (workspaceLoading) return;
@@ -53,6 +52,16 @@ export default function WelcomeWorkspace({
     getAllFolders();
 
   }, [workspaceLoading, activeWorkspace?._id, filters]);
+
+  useEffect(() => {
+    if (brandingColor) {
+      document.documentElement.style.setProperty(
+        "--brand-color",
+        brandingColor
+      );
+    }
+  }, [brandingColor]);
+
 
   useEffect(() => {
     if (activeTab !== "projects") {
@@ -157,12 +166,6 @@ export default function WelcomeWorkspace({
   }
   const isLoading = workspaceLoading || foldersLoading || billingLoading;
 
-  // if (isDoneLoading) {
-  //   return <div className='flex items-center justify-center mt-30'>
-  //       <Spinner size={46} color="#F9EF38" />
-  //   </div>
-  // }
-
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
       <main className="px-6 md:px-8">
@@ -182,7 +185,7 @@ export default function WelcomeWorkspace({
               {(userAccess == constants.OWNER || userAccess == constants.MEMBER) &&
                 <button
                 onClick={handleCreate}
-                style={{ background: brandingColor}}
+                style={{ background: brandingColor }}
                 className={`cursor-pointer inline-flex items-center gap-2 rounded-full text-black px-4 py-2 hover:opacity-90`}
               >
                 <PlusThin className="h-4 w-4" />
@@ -236,7 +239,7 @@ export default function WelcomeWorkspace({
         {
           isLoading ?
           <div className='flex items-center justify-center mt-30'>
-            <Spinner size={46} color="#F9EF38" />
+            <Spinner size={46} color={brandingColor} />
           </div> :
           getActiveContent()
         }

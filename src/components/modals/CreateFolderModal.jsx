@@ -4,6 +4,7 @@ import Modal from "react-modal";
 import Button from "../UI/Button";
 import cancelIcon from "../../assets/svgs/cancel.svg";
 import OutlineInput from "../textInputs/OutlineInput";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 
 const modalStyles = {
@@ -24,6 +25,7 @@ const modalStyles = {
 export default function CreateFolderModal({ isOpen, onClose, handleCreate, loading }) {
 
   const [folderName, setFolderName] = useState("");
+  const { brandingColor } = useWorkspace();
 
 
   return (
@@ -72,7 +74,7 @@ export default function CreateFolderModal({ isOpen, onClose, handleCreate, loadi
             content="Create"
             width="180px"
             textColor="black"
-            bgColor="yellow"
+            bgColor={brandingColor}
             onClick={() => handleCreate(folderName)}
             loading={loading}
           />

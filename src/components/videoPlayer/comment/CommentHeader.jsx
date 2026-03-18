@@ -16,7 +16,7 @@ export default function CommentHeader({
       <div className="flex items-center gap-2 text-[14px]">
         <span
           // onClick={onGo}
-          className="text-[#F9F046] cursor-pointer"
+          className="text-[var(--brand-color)] cursor-pointer"
         >
           {formatClockTime2(time)}
         </span>
@@ -36,7 +36,7 @@ export default function CommentHeader({
             cursor-pointer
             ${
               isResolved
-                ? "bg-[#FEEA3B] border-[#FEEA3B]"
+                ? "bg-[var(--brand-color)] border-[var(--brand-color)]"
                 : "border-white/30 hover:border-white/70"
             }
             ${resolving ? "opacity-50 pointer-events-none" : ""}

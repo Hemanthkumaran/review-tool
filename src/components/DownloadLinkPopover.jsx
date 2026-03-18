@@ -83,7 +83,7 @@ export default function FinalLinkPopover({
           text-gray-200
           placeholder-gray-500
           outline-none
-          focus:border-[#FEEA3B]/60
+          focus:border-[var(--brand-color)]/60
         "
       />
 
@@ -130,7 +130,7 @@ export default function FinalLinkPopover({
     className="
       px-8 py-1.5
       rounded-full
-      bg-[#FDF45C]
+      bg-[var(--brand-color)]
       text-black
       font-medium
       disabled:opacity-40

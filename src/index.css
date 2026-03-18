@@ -53,7 +53,7 @@ body, html {
 }
 
 .notes-editor ul[data-type="taskList"] li input[type="checkbox"] {
-  accent-color: #feea3b;
+  accent-color: var(--brand-color);
 }
 
 /* regular unordered lists */

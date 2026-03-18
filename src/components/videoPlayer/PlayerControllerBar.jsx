@@ -16,7 +16,7 @@ const IconButton = ({ onClick, title, children, active }) => (
     onClick={onClick}
     title={title}
     className={`w-8 h-8 rounded-full cursor-pointer flex items-center justify-center hover:bg-white/10 ${
-      active ? "text-[#FEEA3B]" : "text-gray-200"
+      active ? "text-[var(--brand-color)]" : "text-gray-200"
     }`}
   >
     {children}
@@ -201,7 +201,7 @@ export default function PlayerControlsBar({
                   className={`w-full text-left px-3 py-1.5 text-[12px] hover:bg-white/10 ${
                     (qualityLabel === "Auto" && q.value === "auto") ||
                     qualityLabel === q.label
-                      ? "text-[#FEEA3B]"
+                      ? "text-[var(--brand-color)]"
                       : "text-gray-200"
                   }`}
                 >

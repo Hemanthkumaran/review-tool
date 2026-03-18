@@ -246,7 +246,7 @@
 }
 
 .invite-btn {
-  background: #f5e600;
+  background: var(--brand-color);
   color: #000;
   border: none;
   border-radius: 999px;

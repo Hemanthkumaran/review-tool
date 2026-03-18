@@ -332,7 +332,7 @@ const FormatButton = ({ children, onClick, active }) => (
     }}
     className={`h-8 min-w-8 px-3 flex items-center justify-center rounded-full transition
       ${active 
-        ? "bg-[#FEEA3B] text-black" 
+        ? "bg-[var(--brand-color)] text-black" 
         : "text-white/70 hover:bg-white/10 hover:text-white"}
     `}
   >
@@ -364,7 +364,7 @@ const ToolbarButton = ({
         h-8 min-w-8 px-3 flex items-center justify-center 
         rounded-full transition-all duration-150 cursor-pointer
         ${active 
-          ? "bg-[#FEEA3B] text-black" 
+          ? "bg-[var(--brand-color)] text-black" 
           : "text-white/70 hover:bg-white/10 hover:text-white"}
       `}
     >
@@ -395,7 +395,7 @@ const ToolbarButton = ({
                 {s.label}
 
                 {active && (
-                  <div className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-[#FEEA3B] rounded-full" />
+                  <div className="absolute left-0 right-0 -bottom-[1px] h-[2px] bg-[var(--brand-color)] rounded-full" />
                 )}
               </button>
             );
@@ -471,7 +471,7 @@ const ToolbarButton = ({
         }}
         className={`h-8 min-w-8 px-3 flex items-center justify-center rounded-full transition
           ${isLink
-            ? "bg-[#FEEA3B] text-black"
+            ? "bg-[var(--brand-color)] text-black"
             : "text-white/70 hover:bg-white/10 hover:text-white"}
         `}
       >
@@ -494,7 +494,7 @@ const ToolbarButton = ({
                 onClick={handleSave}
                 disabled={isSaving}
                 style={{ borderRadius:8, fontFamily:'Gilroy-Light', fontSize:14 }}
-                className="px-6 py-[6px] bg-[#FEEA3B] text-black disabled:opacity-40"
+                className="px-6 py-[6px] bg-[var(--brand-color)] text-black disabled:opacity-40"
               >
                 {isSaving ? "Saving…" : "Save"}
               </button>

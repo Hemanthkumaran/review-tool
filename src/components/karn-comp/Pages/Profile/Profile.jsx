@@ -7,9 +7,11 @@ import { updateUserProfileApi } from "../../../../services/api";
 import { useUser } from "../../../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../../../routes/paths";
+import { useWorkspace } from "../../../../context/WorkspaceContext";
 
 const Profile = ({ onClose }) => {
   const { user, refreshUserProfile } = useUser();
+  const { brandingColor } = useWorkspace();
 
   const [form, setForm] = useState({
     firstName: "",
@@ -145,7 +147,7 @@ const Profile = ({ onClose }) => {
         <Button
           width="120px"
           content={loading ? "Saving..." : "Save"}
-          bgColor="yellow"
+          bgColor={brandingColor}
           textColor="black"
           border="2px solid #2a2a2a"
           marginRight="24px"

@@ -2,8 +2,11 @@ import Button from "../../UI/Button";
 import Card from "../../UI/Card";
 import "./CreateFolder.css";
 import cancelIcon from "../../assets/icons/cancel.svg";
+import { useWorkspace } from "../../../../context/WorkspaceContext";
 
 const CreateFolder = () => {
+  const { brandingColor } = useWorkspace();
+
   return (
     <Card width="40%" padding="24px 24px">
       <div style={{ color: "white" }}>
@@ -46,7 +49,7 @@ const CreateFolder = () => {
             content="Click"
             width="180px"
             textColor="black"
-            bgColor="yellow"
+            bgColor={brandingColor}
           />
         </div>
       </div>

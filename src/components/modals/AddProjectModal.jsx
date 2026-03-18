@@ -5,6 +5,7 @@ import trashIcon from "../../assets/svgs/trash.svg";
 import { useRef, useState } from "react";
 import Modal from "react-modal";
 import OutlineInput from "../textInputs/OutlineInput";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 const modalStyles = {
   overlay: {
@@ -40,6 +41,7 @@ const AddProjectModal = ({ isOpen, onClose, handleCreate, createLoading }) => {
   const [videoDuration, setVideoDuration] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
+  const { brandingColor } = useWorkspace();
 
   const handleClickUpload = () => {
     fileInputRef.current?.click();
@@ -200,7 +202,7 @@ const handleDrop = (e) => {
       <div
         style={{
           padding: "24px 0",
-          border: dragOver ? "2px solid #FEEA3B" : "2px dotted gray",
+          border: dragOver ? "2px solid var(--brand-color)" : "2px dotted gray",
           borderRadius: "18px",
           display: "flex",
           flexDirection: "column",
@@ -226,7 +228,7 @@ const handleDrop = (e) => {
             style={{
               textDecoration: "underline",
               cursor: "pointer",
-              color: "#FEEA3B",
+              color: "var(--brand-color)",
             }}
           >
             Click to upload
@@ -318,7 +320,7 @@ const handleDrop = (e) => {
             content="Create project"
             width="180px"
             textColor="black"
-            bgColor="yellow"
+            bgColor={brandingColor}
             onClick={onCreateClick}
             loading={createLoading}
           />

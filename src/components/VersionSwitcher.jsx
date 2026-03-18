@@ -165,7 +165,7 @@ export default function VersionSwitcher({
                     </div>
                     <div className="pl-2">
                       {isActive ? (
-                        <div className="w-5 h-5 rounded-full bg-[#FEEA3B] flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-[var(--brand-color)] flex items-center justify-center">
                           <svg
                             viewBox="0 0 16 16"
                             className="w-3 h-3"
@@ -328,7 +328,7 @@ function ManageVersionsModal({
                     className="mr-2"
                   >
                     {isActive ? (
-                      <div className="w-4 h-4 rounded-full bg-[#FEEA3B] flex items-center justify-center">
+                      <div className="w-4 h-4 rounded-full bg-[var(--brand-color)] flex items-center justify-center">
                         <svg
                           viewBox="0 0 16 16"
                           className="w-3 h-3"
@@ -393,7 +393,7 @@ function ManageVersionsModal({
               onClose();
               onAddNewVersion && onAddNewVersion();
             }}
-            className="cursor-pointer flex-[1.2] px-6 py-3 rounded-full bg-[#FEEA3B] text-black text-[14px] font-[Gilroy-Medium] hover:bg-[#f7e22c]"
+            className="cursor-pointer flex-[1.2] px-6 py-3 rounded-full bg-[var(--brand-color)] text-black text-[14px] font-[Gilroy-Medium] hover:bg-[#f7e22c]"
           >
             Upload new version
           </button>

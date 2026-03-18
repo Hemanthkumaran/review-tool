@@ -26,7 +26,7 @@
 }
 
 .main-box:hover .small-box {
-  background: #F9EF38;
+  background: var(--brand-color);
   transition: .7s;
 }
 

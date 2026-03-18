@@ -47,7 +47,7 @@
   height: 80px;
   width: 4px;
   cursor: pointer;
-  background-color: #feeA3b;
+  background-color: var(--brand-color);
 }
 
 .volume-slider::-webkit-slider-thumb {
@@ -55,7 +55,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #feeA3b;
+  background: var(--brand-color);
   cursor: pointer;
 }
 

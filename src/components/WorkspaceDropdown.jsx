@@ -1,6 +1,10 @@
 import ownerLogo from '../assets/svgs/owner.svg';
+import { useWorkspace } from '../context/WorkspaceContext';
 
 export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSelect }) {
+
+  const { brandingColor } = useWorkspace();
+  
   return (
     <div
       className="
@@ -29,7 +33,7 @@ export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSelec
           >
             {/* Active yellow indicator */}
             {isActive && (
-              <div className="absolute left-0 top-3 bottom-3 w-[4px] rounded-full bg-[#F9EF38]" />
+              <div style={{ background:brandingColor }} className="absolute left-0 top-3 bottom-3 w-[4px] rounded-full" />
             )}
 
             <div className="flex items-center gap-4">

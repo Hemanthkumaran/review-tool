@@ -110,7 +110,7 @@ export default function CustomSeekBar({
       >
         {/* PROGRESS */}
         <div
-          className="absolute left-0 top-0 h-2 rounded-full bg-[#FEEA3B]"
+          className="absolute left-0 top-0 h-2 rounded-full bg-[var(--brand-color)]"
           style={{ width: `${pct * 100}%` }}
         />
 
@@ -144,7 +144,7 @@ export default function CustomSeekBar({
                 onClick={() => onSeek?.(m.time)}
               >
 
-              <div className="w-4 h-4 rounded-full border border-[#FEEA3B] overflow-hidden bg-black mb-[6px]">
+              <div className="w-4 h-4 rounded-full border border-[var(--brand-color)] overflow-hidden bg-black mb-[6px]">
                 <img
                   src={
                     m.user?.avatarUrl ||

@@ -165,7 +165,7 @@ const closeMoreMenu = () => setOpen(false);
             /> */}
             <div style={{ margin:"0 10px" }}>
               <StatusDropdown
-                editable={userAccess == constants.REVIEWER}
+                disabled={userAccess == constants.REVIEWER}
                 value={projectStatus}
                 onChange={(status) => onStatusChange?.(projectDetail._id, status)}
                 py={2}
@@ -181,13 +181,13 @@ const closeMoreMenu = () => setOpen(false);
                   inline-flex items-center gap-2
                   cursor-pointer
                   rounded-full
-                  bg-[#F9EF38]
+                  bg-[var(--brand-color)]
                   px-4 py-2
                   text-sm font-medium
                   text-black
                   shadow-[0_2px_4px_rgba(0,0,0,0.25)]
-                  border border-[#F9EF38]
-                  hover:bg-[#FFEE5A]
+                  border border-[var(--brand-color)]
+                  hover:bg-[var(--brand-color)]
                   transition-colors
                 "
               >

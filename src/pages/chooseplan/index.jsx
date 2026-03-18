@@ -31,7 +31,7 @@ const PLAN_LIMITS = {
 };
 
 export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, buttonLabel, trialUsed, additionalStorageMinutes = 0, showClose = false }) {
-  const { activeWorkspace, refreshWorkspacePlan, workspacePlan } = useWorkspace();
+  const { activeWorkspace, refreshWorkspacePlan, workspacePlan, brandingColor } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
   const { openCheckout } = useRazorpay();
@@ -107,7 +107,7 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
         amount: order.amount,
         currency: order.currency,
         name: activeWorkspace.name,
-
+        brandingColor: brandingColor,
         onSuccess: async () => {
           await refreshWorkspacePlan(activeWorkspace._id);
           setChosenPlan(planKey);
@@ -308,9 +308,10 @@ function PricingCard({ title,
               <button
                 disabled={loading}
                 onClick={onClick}
+                style={{ background:brandingColor }}
                 className={`w-full sm:w-auto px-8 py-3 rounded-full font-medium transition
                   ${loading ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
-                  bg-[#F9EF38] text-black hover:opacity-90`}
+                  text-black hover:opacity-90`}
               >
                 {loading ? "Starting..." : buttonLabel}
               </button>

@@ -366,7 +366,7 @@ sendingComment ||
                 Cancel
               </button>
               <button
-                className="ml-2 px-2 py-[2px] rounded-full bg-[#FEEA3B] text-black text-[11px] font-medium"
+                className="ml-2 px-2 py-[2px] rounded-full bg-[var(--brand-color)] text-black text-[11px] font-medium"
                 onClick={onStopVoice}
               >
                 Stop
@@ -408,7 +408,7 @@ sendingComment ||
 
           {/* Send */}
           <button
-            className="w-8 h-8 rounded-full bg-[#FEEA3B] flex items-center justify-center shadow-sm disabled:opacity-40 disabled:cursor-default"
+            className="w-8 h-8 rounded-full bg-[var(--brand-color)] flex items-center justify-center shadow-sm disabled:opacity-40 disabled:cursor-default"
             onClick={handleSend}
             title="Add comment at current time"
             disabled={disabledSend}

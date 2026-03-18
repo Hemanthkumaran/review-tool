@@ -104,7 +104,7 @@ export default function ProjectStatusDropdown({
             className={`
               w-full px-4 py-2.5 text-left text-sm
               hover:bg-white/5
-              ${status === "in progress" ? "text-[#FEEA3B]" : "text-gray-200"}
+              ${status === "in progress" ? "text-[var(--brand-color)]" : "text-gray-200"}
             `}
           >
             In progress
@@ -115,7 +115,7 @@ export default function ProjectStatusDropdown({
             className={`
               w-full px-4 py-2.5 text-left text-sm
               hover:bg-white/5
-              ${status === "completed" ? "text-[#FEEA3B]" : "text-gray-200"}
+              ${status === "completed" ? "text-[var(--brand-color)]" : "text-gray-200"}
             `}
           >
             Completed

@@ -44,7 +44,7 @@
   left: 0;
   top: 1.5px;
   height: 7px;
-  background: #ffe94a;
+  background: var(--brand-color);
   border-radius: 6px;
 }
 
@@ -128,7 +128,7 @@
 }
 
 .highlight {
-  color: #f5e600;
+  color:var(--brand-color);
   font-weight: 700;
 }
 
@@ -148,7 +148,7 @@
 }
 
 .change-btn {
-  background: #f5e600;
+  background: var(--brand-color);
   color: #000;
   border: none;
   padding: 12px 22px;

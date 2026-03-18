@@ -3,8 +3,11 @@ import Card from "./karn-comp/UI/Card";
 import "./AddProject.css";
 import cancelIcon from "../../assets/icons/cancel.svg";
 import uploadIcon from "../../assets/icons/upload.svg";
+import { useWorkspace } from "../context/WorkspaceContext";
 
 const AddProject = () => {
+  const { brandingColor } = useWorkspace();
+
   return (
     <Card width="45%" padding="24px 24px">
       <div style={{ color: "white" }}>
@@ -68,7 +71,7 @@ const AddProject = () => {
             content="Click"
             width="180px"
             textColor="black"
-            bgColor="yellow"
+            bgColor={brandingColor}
           />
         </div>
       </div>

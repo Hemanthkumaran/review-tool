@@ -3,7 +3,7 @@ import React from "react";
 export default function Spinner({
   size = 20,
   thickness = 2,
-  color = "#FEEA3B",
+  color = "var(--brand-color)",
   className = ""
 }) {
   return (

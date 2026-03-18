@@ -166,7 +166,7 @@
 .sub-faq-link {
   background: none;
   border: none;
-  color: #ffe94a;
+  color: var(--brand-color);
   cursor: pointer;
   font-size: 15px;
   padding: 0;
