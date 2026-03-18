@@ -1,10 +1,8 @@
-// VideoPlayerWithSeekbar.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import PlayerControlsBar from "./PlayerControllerBar";
-import MuxUploader from "./MuxUploader";
-import { getOneProjectApi } from "../../services/api";
-
+import playIcon from "../../assets/svgs/play.svg";
+import pauseIcon from "../../assets/svgs/pause.svg";
 
 export default function VideoPlayerWithSeekbar({
   src,
@@ -13,7 +11,7 @@ export default function VideoPlayerWithSeekbar({
   duration,
   isPlaying,
   annotationMode,
-  pendingAnnotation, // from parent
+  pendingAnnotation,
   onTimeUpdate,
   onLoadedMetadata,
   onTogglePlay,
@@ -22,64 +20,61 @@ export default function VideoPlayerWithSeekbar({
   onCancelAnnotation,
   onAnnotationDraftChange,
   markers = [],
-  projectId
+  // projectId
 }) {
   const annotationCanvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingAnnotation, setDrawingAnnotation] = useState(null); // { strokes: [{ points: [{xPct,yPct}]}] }
   const [isLooping, setIsLooping] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [projectDetail, setProjectDetail] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
   const [quality, setQuality] = useState("auto"); // "auto" | "480p" | "720p" | "1080p"
   const lastVolumeRef = useRef(1);
-
+  const [showOverlayIcon, setShowOverlayIcon] = useState(false);
   const [volume, setVolume] = useState(1);
+  const [lastAction, setLastAction] = useState("play");
 
-    useEffect(() => {
-      if (!playerRef.current) return;
-      playerRef.current.volume = volume;
-      playerRef.current.muted = isMuted;
-    }, [volume, isMuted]);
+  useEffect(() => {
+    if (!playerRef.current) return;
+    playerRef.current.volume = volume;
+    playerRef.current.muted = isMuted;
+  }, [volume, isMuted]);
 
-    useEffect(() => {
-      const el = playerRef.current;
-      if (!el) return;
 
-      const handlePlay = () => onTogglePlay?.(true);
-      const handlePause = () => onTogglePlay?.(false);
+  useEffect(() => {
+    const onKey = (e) => {
+  if (e.repeat) return;
+  if (e.key !== " ") return;
 
-      el.addEventListener("play", handlePlay);
-      el.addEventListener("pause", handlePause);
+  const el = document.activeElement;
+  const isTyping =
+    el?.tagName === "INPUT" ||
+    el?.tagName === "TEXTAREA" ||
+    el?.isContentEditable;
 
-      return () => {
-        el.removeEventListener("play", handlePlay);
-        el.removeEventListener("pause", handlePause);
-      };
-    }, []);
+  if (isTyping) return;
 
-useEffect(() => {
-  const onKey = (e) => {
-    if (e.repeat) return; // avoid stuck key
-    if (e.key !== " ") return; // use key, not code
+  e.preventDefault();
+  e.stopPropagation(); 
 
-    const el = e.target;
-    const isTyping =
-      el.tagName === "INPUT" ||
-      el.tagName === "TEXTAREA" ||
-      el.isContentEditable;
+  const player = playerRef.current;
+  if (!player) return;
 
-    if (isTyping) return; // never interfere with inputs
+  if (player.paused) {
+    player.play();
+    setLastAction("play");
+  } else {
+    player.pause();
+    setLastAction("pause");
+  }
 
-    e.preventDefault();
-    handleTogglePlay();
-  };
+  setShowOverlayIcon(true);
+  setTimeout(() => setShowOverlayIcon(false), 500);
+};
 
-  window.addEventListener("keydown", onKey, { passive: false });
-  return () => window.removeEventListener("keydown", onKey);
-}, []);
-
+    window.addEventListener("keydown", onKey, { passive: false });
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
 
 
@@ -109,18 +104,6 @@ useEffect(() => {
       }
     });
   };
-
-  useEffect(() => {
-    getOneProjectApi(projectId)
-      .then((res) => {
-        console.log(res, "ririe");
-        setProjectDetail(res.data.project);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, []);
 
 
   useEffect(() => {
@@ -288,16 +271,27 @@ const muxPlayerStyle = {
 };
 
 
-  const handleTogglePlay = () => {
-    if (!playerRef.current) return;
-    const el = playerRef.current;
-    if (el.paused) {
-      el.play?.();
-    } else {
-      el.pause?.();
-    }
-    onTogglePlay?.();
-  };
+const handleTogglePlay = () => {
+  if (!playerRef.current) return;
+
+  const el = playerRef.current;
+
+  if (el.paused) {
+    el.play?.();
+    setLastAction("play");
+  } else {
+    el.pause?.();
+    setLastAction("pause");
+  }
+
+  // 👇 THIS IS THE IMPORTANT FIX
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+
+  setShowOverlayIcon(true);
+  setTimeout(() => setShowOverlayIcon(false), 500);
+};
 
   const handleLoopToggle = () => {
     if (!playerRef.current) return;
@@ -322,9 +316,6 @@ const muxPlayerStyle = {
     }
   };
 
-  if (loading) {
-    return <div>loading...</div>;
-  }
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-lg">
@@ -337,7 +328,23 @@ const muxPlayerStyle = {
                 alt=""
               />
             )}
-            <div onClick={() => handleTogglePlay()} className="w-full h-full flex items-center justify-center bg-black">
+
+            <div onClick={() => handleTogglePlay()} tabIndex={-1} className="w-full h-full flex items-center justify-center bg-black">
+                        <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+              >
+                <div
+                  className={`transition-all duration-200 ${
+                    showOverlayIcon ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                  }`}
+                >
+                  {lastAction === "play" ? (
+                    <img src={playIcon} style={{ height: 50, width: 50 }} />
+                  ) : (
+                    <img src={pauseIcon} style={{ height: 50, width: 50 }} />
+                  )}
+                </div>
+              </div>
             <MuxPlayer
               key={activeVersionId}
               ref={playerRef}
@@ -347,12 +354,15 @@ const muxPlayerStyle = {
               playbackId={src}
               controls={false}
               style={muxPlayerStyle}
-              className="max-h-full max-w-full object-contain"
+              className="max-h-full max-w-full object-contain z-10"
               onTimeUpdate={onTimeUpdate}
               onLoadedMetadata={(e) => {
                 setReady(true);
                 onLoadedMetadata?.(e);
               }}
+              onPlay={() => onTogglePlay?.(true)}
+              onPause={() => onTogglePlay?.(false)}
+              // onEnded={() => onTogglePlay?.(false)}
               maxResolution={quality === "auto" ? undefined : quality}
             />
           </div>
@@ -391,6 +401,7 @@ const muxPlayerStyle = {
         </div>
       </div>
       <PlayerControlsBar
+        playerRef={playerRef}
         duration={duration}
         currentTime={currentTime}
         markers={markers}

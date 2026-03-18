@@ -7,7 +7,7 @@ import speakerIcon from "../../assets/svgs/speaker.svg";
 import fullscreenIcon from "../../assets/svgs/fullscreen.svg";
 import { LoopIcon } from "../../assets/svgs/SvgComponents";
 import { MutedOutlined } from "@ant-design/icons";
-import { formatClockTime, formatClockTime2 } from "../../helpers/common";
+import { formatClockTime2 } from "../../helpers/common";
 
 
 const IconButton = ({ onClick, title, children, active }) => (
@@ -30,14 +30,14 @@ const VolumeIcon = ({ muted }) =>
   muted ? <MutedOutlined color="#fff" /> : <img src={speakerIcon} />;
 
 export default function PlayerControlsBar({
+  playerRef,
   duration,
   currentTime,
   markers,
   isPlaying,
-  onTogglePlay,
   onSeek,
-  onToggleLoop,
-  isLooping,
+  // onToggleLoop,
+  // isLooping,
   onToggleMute,
   isMuted,
   qualityLabel = "1080p",
@@ -84,6 +84,16 @@ export default function PlayerControlsBar({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [qualityMenuOpen]);
 
+  const handlePlayPause = () => {
+    const player = playerRef?.current;
+    if (!player) return;
+
+    if (player.paused) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  };
 
 
   return (
@@ -102,7 +112,7 @@ export default function PlayerControlsBar({
         {/* left cluster */}
         <div className="flex items-center gap-3">
           <IconButton
-            onClick={onTogglePlay}
+            onClick={handlePlayPause}
             title={isPlaying ? "Pause" : "Play"}
           >
             <PlayIcon playing={isPlaying} />

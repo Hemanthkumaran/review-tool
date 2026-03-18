@@ -100,7 +100,7 @@ const closeMoreMenu = () => setOpen(false);
 
 
   return (
-    <div style={{ marginLeft:40}} className="flex items-center justify-between mb-6">
+    <div style={{ marginLeft:40}} className="select-none flex items-center justify-between mb-6">
         <div className="flex items-center">
             <img onClick={goBack} style={{ height:20, width:20, cursor:'pointer' }} src={LeftArrow} />
             <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>

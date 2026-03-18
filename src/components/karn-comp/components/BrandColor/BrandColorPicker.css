@@ -1,45 +1,71 @@
 .brand-wrapper {
-  width: 150px;
-  font-family: "Inter", sans-serif;
-  color: #ffffff;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-
-
 
 .brand-label {
-  display: block;
-  margin-bottom: 14px;
+  color: #cfcfcf;
+  font-size: 14px;
 }
 
+/* container */
 .brand-input {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px;
-  background: #131313;
-  border-radius: 14px;
-  border: 1px solid #2a2a2a;
+  /* gap: 10px; */
+  background:#131313; 
+  /* background: #0b0b0d; */
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 8px;
+  width: 140px;
+}
+
+/* color preview */
+.color-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
   cursor: pointer;
 }
 
-.color-box {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+.color-input {
+  /* background:#131313;  */
+  /* border: 1px solid rgba(255,255,255,0.08); */
+  outline: none;
+  color: #e5e5e5;
+  font-size: 14px;
+  letter-spacing: 2px;
+  font-family: 'Gilroy-Regular';
+  padding: 6px 10px;
+  border-radius: 8px;
+  width: 90px;         
 }
 
-.color-text {
-  font-size: 18px;
-  letter-spacing: 1px;
-  color: #cfcfcf;
-}
-
+/* popover ABOVE */
 .picker-popover {
-  margin-top: 12px;
-  background: #141414;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  padding: 12px;
-  width: fit-content;
+  position: absolute;
+  bottom: 110%; /* 👈 key change */
+  left: 0;
+  z-index: 50;
+
+  background: #050507;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  padding: 10px;
+
+  animation: fadeUp 0.15s ease;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -10,7 +10,6 @@ import { addCommentApi, addReplyApi, deleteProjectVersionApi, getOneProjectApi, 
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 import { getVideoDuration, uploadToMux } from "../../helpers/muxHelpers";
-import { useWorkspace } from "../../context/WorkspaceContext";
 import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
 import { getAuthToken, getGuestIdentity, setGuestIdentity } from "../../helpers/storage.js";
 import { constants } from "../../helpers/enum.js";
@@ -283,8 +282,12 @@ function fetchProject(storedGuest = null) {
     setMarkers((arr) => [...arr, marker].sort((a, b) => a.time - b.time));
   };
 
-  const handleTogglePlay = () => {
-    setIsPlaying((prev) => !prev);
+  // const handleTogglePlay = () => {
+  //   setIsPlaying((prev) => !prev);
+  // };
+
+  const handleTogglePlay = (playing) => {
+    setIsPlaying(playing);
   };
 
   const handleTimeUpdate = (e) => {
@@ -418,23 +421,6 @@ function fetchProject(storedGuest = null) {
   );
 
     const versionId = activeVersion?._id;
-
-    // reuse your existing function that refetches project + remaps markers
-    // e.g. fetchProjectDetail();
-
-    // const handleAddReply = async (commentId, text) => {
-    //   const trimmed = text?.trim();
-    //   if (!trimmed || !projectId || !versionId) return;
-
-    //   try {
-    //     await addReplyApi(projectId, versionId, commentId, { text: trimmed });
-    //     // refresh project data so replies show up
-    //     fetchProject();
-    //   } catch (err) {
-    //     console.error("Failed to add reply", err);
-    //     // optional: show toast
-    //   }
-    // };
 
     const handleAddReply = async (commentId, text) => {
       const trimmed = text?.trim();
@@ -805,7 +791,7 @@ const handleNewVersionFile = async (e) => {
     style={{ height: "calc(100vh - 160px)" }}
   >
     {/* ================= COLUMN 1 ================= */}
-    <div className="flex flex-col min-w-0 h-full">
+    <div className="flex flex-col min-w-0 h-full select-none">
       {/* Video container */}
       <div className="relative w-full flex-1 rounded-3xl bg-black min-h-0">
         {showVideo ? (
@@ -863,7 +849,7 @@ const handleNewVersionFile = async (e) => {
     </div>
 
     {/* ================= COLUMN 2 ================= */}
-    <div className="relative h-full overflow-hidden flex flex-col">
+    <div className="select-none relative h-full overflow-hidden flex flex-col">
       <CommentsColumn
         isOpen={isCommentsOpen}
         onToggle={() => setIsCommentsOpen((v) => !v)}
