@@ -10,16 +10,15 @@ import { useState } from "react";
 
 const Billing = () => {
 
-  const { workspacePlan, billingLoading, ownerWorkspace, refreshWorkspace, refreshWorkspacePlan, trialUsed } = useWorkspace();
+  const { ownerWorkspacePlan, billingLoading, ownerWorkspace, refreshWorkspace, refreshOwnerWorkspacePlan, trialUsed } = useWorkspace();
 
   const [chosenPlan, setChosenPlan] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   
   if (billingLoading) return null;
 
-  const subscription = workspacePlan?.subscription;
+  const subscription = ownerWorkspacePlan?.subscription;
   if (!subscription) return null;
-  console.log(subscription, 'workspacePlan?.subscription');
   
   return (
     <>
@@ -47,9 +46,9 @@ const Billing = () => {
         <SubscriptionCard
           subscription={subscription}
           ownerWorkspace={ownerWorkspace}
-          costPerMinute={workspacePlan.costPerMinute}
+          costPerMinute={ownerWorkspacePlan.costPerMinute}
           refreshWorkspace={refreshWorkspace}
-          refreshWorkspacePlan={refreshWorkspacePlan}
+          refreshWorkspacePlan={refreshOwnerWorkspacePlan}
         />
 
         <div style={{ margin: "24px 0 0 0" }}>

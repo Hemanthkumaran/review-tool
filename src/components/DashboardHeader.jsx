@@ -8,6 +8,7 @@ import SettingsModal from "./karn-comp/Layout/Settings/SettingsModal";
 import { constants } from "../helpers/enum";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
+import { useWorkspace } from "../context/WorkspaceContext";
 
 function Plus({ className = "" }) {
   return (
@@ -26,6 +27,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { setBrandingColor } = useWorkspace();
 
   const [openProfile, setOpenProfile] = useState(false);
   const [openWorkspace, setOpenWorkspace] = useState(false);
@@ -48,8 +50,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
 
     setActiveWorkspace(workspace);
     setOpenWorkspace(false);
-    console.log(location.pathname, 'location.pathname');
-    
+    setBrandingColor(workspace?.colourCode ?? '#F9EF38');
     if (location.pathname === "/dashboard/add-project") {
       navigate(`${PATHS.DASHBOARD}?ws=${activeWorkspace?._id}`)
     }

@@ -9,6 +9,7 @@ export const WorkspaceProvider = ({ children }) => {
 
   const [workspaces, setWorkspaces] = useState([]);
   const [ownerWorkspace, setOwnerWorkspace] = useState(null);
+  const [ownerWorkspacePlan, setOwnerWorkspacePlan] = useState(null);
   const [activeWorkspace, setActiveWorkspace] = useState(null);
   const [workspaceUsers, setWorkspaceUsers] = useState(null);
   const [brandingColor, setBrandingColor] = useState('#F9EF38');
@@ -25,15 +26,61 @@ export const WorkspaceProvider = ({ children }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const workspaceIdFromUrl = searchParams.get("ws");
 
+    /* -----------------------------
+   * Fetch workspaces after auth
+   * ---------------------------- */
+  useEffect(() => {
+    fetchWorkspaces();
+  }, []);
+
+
+  /* -----------------------------
+   * Fetch members when workspace changes
+   * ---------------------------- */
+  useEffect(() => {
+    if (!activeWorkspace?._id) return;
+    fetchWorkspacePlan(activeWorkspace._id);
+    fetchOwnerWorkspacePlan();
+    fetchWorkspaceUsers(activeWorkspace._id);
+    setSubscriptionStatus(null);
+    setTrialUsed(false);
+
+  }, [activeWorkspace?._id]);
+
+
+  useEffect(() => {
+    if (!workspaces.length) return;
+    if (!workspaceIdFromUrl) return;
+
+    const found = workspaces.find(w => w._id === workspaceIdFromUrl);
+    if (found && found._id !== activeWorkspace?._id) {
+      setActiveWorkspace(found);
+    }
+  }, [workspaceIdFromUrl, workspaces]);
+
+  const fetchOwnerWorkspacePlan = async () => {
+    if (!ownerWorkspace) return;
+
+    try {
+      setBillingLoading(true);
+      const ownerWorkspacePlan = await getWorkspacePlanApi(ownerWorkspace._id);
+      setOwnerWorkspacePlan(ownerWorkspacePlan.data);
+    } catch (err) {
+      console.error("Failed to fetch plan", err);
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
   const fetchWorkspacePlan = async (workspaceId) => {
     
     if (!workspaceId) return;
 
     try {
       setBillingLoading(true);
-
+      
       const res = await getWorkspacePlanApi(workspaceId);
-
+      
       setWorkspacePlan(res.data);
 
     } catch (err) {
@@ -42,6 +89,7 @@ export const WorkspaceProvider = ({ children }) => {
       setBillingLoading(false);
     }
   };
+  
 
   const fetchWorkspaces = async () => {
     try {
@@ -54,7 +102,6 @@ export const WorkspaceProvider = ({ children }) => {
         (ws) => ws.permissionType === constants.OWNER
       );
       setOwnerWorkspace(ownerWorkspaces[0]);
-      
       setWorkspaces(list);
 
       // setActiveWorkspace(prev => prev || list[0] || null);
@@ -103,37 +150,6 @@ export const WorkspaceProvider = ({ children }) => {
     }
   };
 
-  /* -----------------------------
-   * Fetch workspaces after auth
-   * ---------------------------- */
-  useEffect(() => {
-    fetchWorkspaces();
-  }, []);
-
-
-  /* -----------------------------
-   * Fetch members when workspace changes
-   * ---------------------------- */
-  useEffect(() => {
-    if (!activeWorkspace?._id) return;
-    fetchWorkspacePlan(activeWorkspace._id);
-    fetchWorkspaceUsers(activeWorkspace._id);
-    setSubscriptionStatus(null);
-    setTrialUsed(false);
-
-  }, [activeWorkspace?._id]);
-
-
-  useEffect(() => {
-    if (!workspaces.length) return;
-    if (!workspaceIdFromUrl) return;
-
-    const found = workspaces.find(w => w._id === workspaceIdFromUrl);
-    if (found && found._id !== activeWorkspace?._id) {
-      setActiveWorkspace(found);
-    }
-  }, [workspaceIdFromUrl, workspaces]);
-
 
   return (
     <WorkspaceContext.Provider
@@ -156,12 +172,16 @@ export const WorkspaceProvider = ({ children }) => {
         workspacePlan,
         billingLoading,
         refreshWorkspacePlan: fetchWorkspacePlan,
+        refreshOwnerWorkspacePlan: fetchOwnerWorkspacePlan,
         subscriptionStatus,
         setSubscriptionStatus,
         trialUsed,
         setTrialUsed,
         ownerWorkspace,
-        brandingColor
+        brandingColor,
+        setBrandingColor,
+        ownerWorkspacePlan,
+        setOwnerWorkspacePlan
       }}
     >
       {children}

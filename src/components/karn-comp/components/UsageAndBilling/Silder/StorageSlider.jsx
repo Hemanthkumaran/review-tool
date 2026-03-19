@@ -13,19 +13,19 @@ const MAX = 2000;
 
 export default function StorageSlider() {
   const { openCheckout } = useRazorpay();
-  const { ownerWorkspace, workspacePlan, billingLoading, brandingColor } = useWorkspace();
+  const { ownerWorkspace, ownerWorkspacePlan, billingLoading, brandingColor } = useWorkspace();
 
   const [values, setValues] = useState([MIN]);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  const subscription = workspacePlan?.subscription;
+  
+  const subscription = ownerWorkspacePlan?.subscription;
   
   const baseStorage = subscription?.baseStorageMinutes ?? MIN;
   const additionalStorage = subscription?.additionalStorageMinutes ?? 0;
   const currentTotalStorage = baseStorage + additionalStorage;
 
-  const costPerMinute = workspacePlan?.costPerMinute;
+  const costPerMinute = ownerWorkspacePlan?.costPerMinute;
   const basePlanCost = baseStorage * costPerMinute;
   const currentAdditionalCost = additionalStorage * costPerMinute;
   const currentMonthlyTotal = basePlanCost + currentAdditionalCost;
@@ -65,8 +65,8 @@ export default function StorageSlider() {
 
     try {
       const res = await createPaymentOrderApi(ownerWorkspace._id, {
-        activePlan: workspacePlan.subscription.activePlan,
-        interval: workspacePlan.subscription.interval,
+        activePlan: ownerWorkspacePlan.subscription.activePlan,
+        interval: ownerWorkspacePlan.subscription.interval,
         additionalStorageMinutes: increaseMinutes,
         purpose: "upgrade",
       });
@@ -82,7 +82,7 @@ export default function StorageSlider() {
         brandingColor: brandingColor
       });
     } catch (e) {
-      alert("Payment failed");
+      alert("Payment failed", e);
     }
 
     setLoading(false);
@@ -222,7 +222,7 @@ export default function StorageSlider() {
       <ConfirmPlanModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
-        workspacePlan={workspacePlan}
+        workspacePlan={ownerWorkspacePlan}
         onConfirm={handleUpgrade}
         currentStorage={currentTotalStorage}
         basePlanStorage={baseStorage}

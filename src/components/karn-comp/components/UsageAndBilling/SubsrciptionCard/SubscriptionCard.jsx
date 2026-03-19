@@ -24,7 +24,7 @@ export default function SubscriptionCard({
     subscriptionEndAt,
     totalAmount,
   } = subscription;
-  console.log(subscription,'subscription' );
+
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const totalMinutes =
