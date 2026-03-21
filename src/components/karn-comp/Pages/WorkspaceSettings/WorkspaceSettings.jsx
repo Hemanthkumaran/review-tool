@@ -128,7 +128,7 @@ const WorkspaceSettings = ({ onClose }) => {
         <div className="flex justify-between mb-4">
           <div>Logo</div>
           {addOnStatus != 'active' ? 
-          <div onClick={() => setShowModal(true)} className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
+          <div className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
             <img height="20" width="20" src={lock} alt="" />
           </div> : null}
         </div>
@@ -136,6 +136,7 @@ const WorkspaceSettings = ({ onClose }) => {
         <EditableAvatar
           imageUrl={logoUrl}
           onImageSelect={setLogoFile}
+          addOnStatus={addOnStatus}
         />
 
         <br />

@@ -363,3 +363,36 @@ export const FeatureLockIcon = (props) => (
     />
   </svg>
 )
+
+export const UpgradeIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={100}
+    height={100}
+    fill="none"
+    {...props}
+  >
+    <path
+      stroke="#F9EF38"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2.5}
+      d="M36.7 39.95A16.61 16.61 0 0 0 33.335 50c0 9.2 7.467 16.667 16.667 16.667 9.2 0 16.666-7.466 16.666-16.666s-7.466-16.667-16.666-16.667"
+    />
+    <path
+      stroke="#F9EF38"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2.5}
+      d="M38.334 50c0 6.45 5.217 11.667 11.667 11.667s11.666-5.216 11.666-11.666-5.216-11.667-11.666-11.667"
+    />
+    <path
+      stroke="#F9EF38"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2.5}
+      d="M50 56.667a6.665 6.665 0 0 0 6.667-6.666A6.665 6.665 0 0 0 50 43.334"
+    />
+    <circle cx={50} cy={50} r={50} fill="#F9EF38" opacity={0.1} />
+  </svg>
+)

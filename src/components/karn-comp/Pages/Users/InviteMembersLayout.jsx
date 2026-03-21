@@ -4,14 +4,14 @@ import "./InviteMembersLayout.css";
 import { inviteUserToWorkspace } from "../../../../services/api";
 import { showSuccessToast } from "../../../../helpers/showToast";
 
-const ROLES = ["Collaborator", "Team member"];
 
-export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace, fetchWorkspaceUsers }) {
+
+export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace, fetchWorkspaceUsers, ownerWorkspacePlan }) {
   const [emails, setEmails] = useState([]);
   const [value, setValue] = useState("");
-  const [role, setRole] = useState("Collaborator");
+  const [role, setRole] = useState(ownerWorkspacePlan?.subscription?.activePlan === 'team_plus' ? "Collaborator" : "Team member");
   const [open, setOpen] = useState(false);
-
+  const [roles, setRoles] = useState(["Team member"]);
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -37,6 +37,9 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
 
   // Close dropdown on outside click
   useEffect(() => {
+    if (ownerWorkspace && ownerWorkspacePlan?.subscription?.activePlan === 'team_plus') {
+      setRoles(["Collaborator", "Team member"]);
+    }
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setOpen(false);
@@ -44,7 +47,7 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  }, [ownerWorkspace]);
 
   function handleInvite() {
     const data = {
@@ -96,24 +99,23 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
             {role}
             <ChevronDown size={16} />
           </button>
-        {open && (
-          <div className="role-menu">
-            {ROLES.map((r) => (
-              <button
-                key={r}
-                className={`role-item ${r === role ? "active" : ""}`}
-                onClick={() => {
-                  setRole(r);
-                  setOpen(false);
-                }}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
+          {open && (
+            <div className="role-menu">
+              {roles.map((r) => (
+                <button
+                  key={r}
+                  className={`role-item ${r === role ? "active" : ""}`}
+                  onClick={() => {
+                    setRole(r);
+                    setOpen(false);
+                  }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       <br />
 
       {/* Email input */}

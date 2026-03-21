@@ -4,7 +4,7 @@ import { FaPen } from "react-icons/fa";
 import "./EditableAvatar.css";
 import EditIcon from "../../assets/icons/edit.svg"
 
-const EditableAvatar = ({ imageUrl, onImageSelect, user }) => {
+const EditableAvatar = ({ imageUrl, onImageSelect, user, addOnStatus }) => {
   const [preview, setPreview] = useState(imageUrl || null);
   
   const getInitials = (firstName = "", lastName = "") =>
@@ -43,7 +43,7 @@ const EditableAvatar = ({ imageUrl, onImageSelect, user }) => {
       <div className="d-flex justify-center align-center">
         <div style={{ fontSize:24, marginTop:-15, fontWeight:'bold' }}>{getInitials(user?.firstName, user?.lastName)}</div>
       </div>}
-      <button type="button" className="edit-btn" onClick={open}>
+      <button type="button" className="edit-btn" onClick={addOnStatus != 'active' ? null : open}>
         <img height="24px" width="20px" src={EditIcon} alt="" />
       </button>
     </div>

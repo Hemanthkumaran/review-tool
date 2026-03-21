@@ -14,6 +14,43 @@ import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
 import { getAuthToken, getGuestIdentity, setGuestIdentity } from "../../helpers/storage.js";
 import { constants } from "../../helpers/enum.js";
 
+const getFileFromUrl = async (url, index) => {
+  try {
+    // ✅ DATA URL
+    if (url.startsWith("data:")) {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return new File([blob], `comment-image-${index + 1}.png`, {
+        type: blob.type,
+      });
+    }
+
+    // ✅ BLOB URL
+    if (url.startsWith("blob:")) {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      return new File([blob], `comment-image-${index + 1}.jpg`, {
+        type: blob.type || "image/jpeg",
+      });
+    }
+
+    // ⚠️ REMOTE URL (CORS risk)
+    const res = await fetch(url, { mode: "cors" });
+    const blob = await res.blob();
+
+    if (!blob || blob.size === 0) {
+      throw new Error("Empty blob");
+    }
+
+    return new File([blob], `comment-image-${index + 1}.jpg`, {
+      type: blob.type || "image/jpeg",
+    });
+  } catch (err) {
+    console.error("Image conversion failed:", url, err);
+    return null;
+  }
+};
+
 export default function VideoReview() {
   const playerRef = useRef(null);
   const navigate = useNavigate();
@@ -514,34 +551,50 @@ function fetchProject(storedGuest = null) {
 
 
 
-  // images: each URL -> Blob -> File, appended as "images"
   if (imageUrls.length) {
     try {
-      const blobs = await Promise.all(
-        imageUrls.map((url) =>
-          fetch(url)
-            .then((r) => r.blob())
-            .catch((err) => {
-              console.error("Failed to fetch image blob for", url, err);
-              return null;
-            })
-        )
+      const files = await Promise.all(
+        imageUrls.map((url, idx) => getFileFromUrl(url, idx))
       );
 
-      blobs.forEach((blob, idx) => {
-        if (!blob) return;
-        const imgFile = new File(
-          [blob],
-          `comment-image-${idx + 1}.jpg`,
-          { type: blob.type || "image/jpeg" }
-        );
-        formData.append("images", imgFile);
+      files.forEach((file) => {
+        if (!file) return;
+        formData.append("images", file);
       });
     } catch (err) {
       console.error("Failed to attach images", err);
     }
   }
 
+  // images: each URL -> Blob -> File, appended as "images"
+  // if (imageUrls.length) {
+  //   try {
+  //     const blobs = await Promise.all(
+  //       imageUrls.map((url) =>
+  //         fetch(url)
+  //           .then((r) => r.blob())
+  //           .catch((err) => {
+  //             console.error("Failed to fetch image blob for", url, err);
+  //             return null;
+  //           })
+  //       )
+  //     );
+
+  //     blobs.forEach((blob, idx) => {
+  //       if (!blob) return;
+  //       const imgFile = new File(
+  //         [blob],
+  //         `comment-image-${idx + 1}.jpg`,
+  //         { type: blob.type || "image/jpeg" }
+  //       );
+  //       formData.append("images", imgFile);
+  //     });
+  //   } catch (err) {
+  //     console.error("Failed to attach images", err);
+  //   }
+  // }
+
+  
   
 
   try {
@@ -552,6 +605,7 @@ function fetchProject(storedGuest = null) {
     console.warn("Missing projectID or versionID");
     return;
   }
+
 
   if (isEdit) {
     const res = await updateCommentApi(
@@ -587,6 +641,9 @@ function fetchProject(storedGuest = null) {
     if (getGuestIdentity() == constants.REVIEWER) {
       reviewer = getGuestIdentity();
     }
+    for (let [key, value] of formData.entries()) {
+  console.log(key, value);
+}
     const res = await addCommentApi(projectID, versionID, formData, reviewer);
     const backendComment = res.data.comment;
     setProjectDetail(prev => {

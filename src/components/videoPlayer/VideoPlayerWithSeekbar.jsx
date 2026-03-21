@@ -33,7 +33,36 @@ export default function VideoPlayerWithSeekbar({
   const [showOverlayIcon, setShowOverlayIcon] = useState(false);
   const [volume, setVolume] = useState(1);
   const [lastAction, setLastAction] = useState("play");
+  
+//   useEffect(() => {
+//     if (!playerRef.current) return;
+//     const video = playerRef.current?.media;
+//     if (!video || !video.requestVideoFrameCallback) return;
 
+//     let lastTime = 0;
+//     let frames = 0;
+
+//     const loop = (now) => {
+//       frames++;
+
+//       if (!lastTime) lastTime = now;
+
+//       const diff = now - lastTime;
+
+//       if (diff >= 1000) {
+//         const fps = (frames * 1000) / diff;
+//         console.log("FPS:", fps.toFixed(2));
+
+//         frames = 0;
+//         lastTime = now;
+//       }
+
+//       video.requestVideoFrameCallback(loop);
+//     };
+
+//     video.requestVideoFrameCallback(loop);
+// }, []);
+  
   useEffect(() => {
     if (!playerRef.current) return;
     playerRef.current.volume = volume;

@@ -5,7 +5,7 @@ import playIcon from "../../assets/svgs/play.svg";
 import pauseIcon from "../../assets/svgs/pause.svg";
 import speakerIcon from "../../assets/svgs/speaker.svg";
 import fullscreenIcon from "../../assets/svgs/fullscreen.svg";
-import { LoopIcon } from "../../assets/svgs/SvgComponents";
+// import { LoopIcon } from "../../assets/svgs/SvgComponents";
 import { MutedOutlined } from "@ant-design/icons";
 import { formatClockTime2 } from "../../helpers/common";
 
@@ -106,7 +106,6 @@ export default function PlayerControlsBar({
         onSeek={onSeek}
         playbackId={playbackId}
       />
-
       {/* controls row */}
       <div className="mt-3 flex items-center justify-between text-[13px] text-gray-200">
         {/* left cluster */}
@@ -117,7 +116,6 @@ export default function PlayerControlsBar({
           >
             <PlayIcon playing={isPlaying} />
           </IconButton>
-
           {/* <IconButton
             onClick={onToggleLoop}
             title="Loop"
@@ -125,49 +123,48 @@ export default function PlayerControlsBar({
           >
             <LoopIcon color={isLooping ? "#FEEA3B" : "#fff"} />
           </IconButton> */}
-<div className="relative">
-  {/* Volume button */}
-  <IconButton
-    onClick={() => {
-      onToggleMute();
-      setVolumeOpen(true); // keep slider open
-    }}
-    title={isMuted || volume === 0 ? "Unmute" : "Mute"}
-    active={isMuted || volume === 0}
-  >
-    <VolumeIcon muted={isMuted || volume === 0} volume={volume} />
-  </IconButton>
-
-  {/* Volume popover */}
-  {volumeOpen && (
-    <div
-      className="
-        absolute bottom-10 left-1/2 -translate-x-1/2
-        h-28 w-8 rounded-full
-        bg-[#050507]/95
-        border border-white/10
-        shadow-lg
-        flex items-center justify-center
-        z-40
-      "
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      <input
-        type="range"
-        min="0"
-        max="1"
-        step="0.01"
-        value={isMuted ? 0 : volume}
-        onChange={(e) => {
-          const v = Number(e.target.value);
-          onVolumeChange(v);
-        }}
-        className="volume-slider"
-        orient="vertical"
-      />
-    </div>
-  )}
-</div>
+          <div className="relative">
+            {/* Volume button */}
+            <IconButton
+              onClick={() => {
+                onToggleMute();
+                setVolumeOpen(true); // keep slider open
+              }}
+              title={isMuted || volume === 0 ? "Unmute" : "Mute"}
+              active={isMuted || volume === 0}
+            >
+              <VolumeIcon muted={isMuted || volume === 0} volume={volume} />
+            </IconButton>
+            {/* Volume popover */}
+            {volumeOpen && (
+              <div
+                className="
+                  absolute bottom-10 left-1/2 -translate-x-1/2
+                  h-28 w-8 rounded-full
+                  bg-[#050507]/95
+                  border border-white/10
+                  shadow-lg
+                  flex items-center justify-center
+                  z-40
+                "
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={isMuted ? 0 : volume}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    onVolumeChange(v);
+                  }}
+                  className="volume-slider"
+                  orient="vertical"
+                />
+              </div>
+            )}
+          </div>
         </div>
         {/* center time */}
         <div className="min-w-[120px] text-center tracking-wide">
@@ -176,7 +173,6 @@ export default function PlayerControlsBar({
             / {formatClockTime2(Number.isFinite(duration) ? duration : 0)}
           </span>
         </div>
-
         {/* right cluster */}
         <div className="flex items-center gap-4 relative">
           {/* Quality selector */}
@@ -190,7 +186,6 @@ export default function PlayerControlsBar({
             <span className="text-[10px] text-gray-400">HD</span>
             <span className="ml-1 text-[9px] text-gray-400">▾</span>
           </button>
-
           {qualityMenuOpen && (
             <div ref={qualityRef} className="absolute right-0 bottom-9 w-28 rounded-xl bg-[#050507]/95 border border-white/10 shadow-lg py-1 z-40">
               {QUALITY_OPTIONS.map((q) => (
@@ -210,7 +205,6 @@ export default function PlayerControlsBar({
               ))}
             </div>
           )}
-
           <IconButton onClick={onFullscreen} title="Fullscreen">
             <img src={fullscreenIcon} />
           </IconButton>

@@ -6,21 +6,28 @@ import { useWorkspace } from "../../../../../context/WorkspaceContext";
 import AppLoader from "../../../../common/AppLoader";
 import ConfirmPlanModal from "../../../../modals/ConfirmPlanModal";
 import "./StorageSlider.css";
+import FeatureLockedModal from "../../../../modals/FeatureLockedModal";
+import { UpgradeIcon } from "../../../../../assets/svgs/SvgComponents";
 
 const STEP = 10;
 const MIN = 100;
 const MAX = 2000;
 
-export default function StorageSlider() {
+export default function StorageSlider({ setActive }) {
   const { openCheckout } = useRazorpay();
-  const { ownerWorkspace, ownerWorkspacePlan, billingLoading, brandingColor } = useWorkspace();
+  const { ownerWorkspace, ownerWorkspacePlan, billingLoading, brandingColor, refreshOwnerWorkspacePlan } = useWorkspace();
 
   const [values, setValues] = useState([MIN]);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   
   const subscription = ownerWorkspacePlan?.subscription;
-  
+  const addons = subscription?.addons || [];
+
+  const addonsTotal = addons
+    .filter(item => item.status === "active")
+    .reduce((sum, item) => sum + (item.amount || 0), 0);
   const baseStorage = subscription?.baseStorageMinutes ?? MIN;
   const additionalStorage = subscription?.additionalStorageMinutes ?? 0;
   const currentTotalStorage = baseStorage + additionalStorage;
@@ -28,8 +35,9 @@ export default function StorageSlider() {
   const costPerMinute = ownerWorkspacePlan?.costPerMinute;
   const basePlanCost = baseStorage * costPerMinute;
   const currentAdditionalCost = additionalStorage * costPerMinute;
-  const currentMonthlyTotal = basePlanCost + currentAdditionalCost;
-
+  const currentMonthlyTotal = basePlanCost + currentAdditionalCost + addonsTotal;
+  console.log(subscription, 'subscription');
+  
   const selectedStorage = values[0];
 
   // Prevent sliding below baseStorage (500 min)
@@ -46,7 +54,7 @@ export default function StorageSlider() {
   const extraCost = increaseMinutes * costPerMinute;
   const selectedAdditionalCost = safeSelectedAdditionalMinutes * costPerMinute;
 
-  const newMonthlyTotal = basePlanCost + selectedAdditionalCost;
+  const newMonthlyTotal = basePlanCost + selectedAdditionalCost + addonsTotal;
 
   const currentPercent = ((currentTotalStorage - MIN) / (MAX - MIN)) * 100;
   const selectedPercent = ((selectedStorage - MIN) / (MAX - MIN)) * 100;
@@ -60,7 +68,7 @@ export default function StorageSlider() {
   const handleUpgrade = async () => {
 
     if (!ownerWorkspace?._id) return;
-
+    setShowConfirm(false)
     setLoading(true);
 
     try {
@@ -78,7 +86,10 @@ export default function StorageSlider() {
         amount: order.amount,
         currency: order.currency,
         name: ownerWorkspace.name,
-        onSuccess: () => window.location.reload(),
+        onSuccess: () => {
+          refreshOwnerWorkspacePlan();
+          setShowModal(true);
+        },
         brandingColor: brandingColor
       });
     } catch (e) {
@@ -169,15 +180,24 @@ export default function StorageSlider() {
           <div className="divider" />
 
           <div className="plan-row">
-            <span>Base plan storage ({baseStorage} min)</span>
+            <span>Base plan ({baseStorage} min)</span>
             <span>${basePlanCost}</span>
           </div>
 
+              {addons
+                .filter(item => item.status === "active")
+                .map(item => (
+                  <div className="plan-row" key={item._id}>
+                    <span>{'Custom Branding Addon'}</span>
+                    <span>${item.amount}</span>
+                  </div>
+              ))}
+          
           {/* Show current additional storage */}
-          <div className="plan-row">
-            <span>Current additional storage ({additionalStorage} min)</span>
+          {additionalStorage ? <div className="plan-row">
+            <span>Additional storage purchased ({additionalStorage} min)</span>
             <span>${(currentAdditionalCost).toFixed(2)}</span>
-          </div>
+          </div> : null}
 
           {/* Show increase if selected */}
           {increaseMinutes > 0 && (
@@ -190,7 +210,7 @@ export default function StorageSlider() {
           {/* Show decrease warning */}
             {decreaseMinutes > 0 && (
               <div className="plan-row" style={{ color: "#ff4d4f" }}>
-                <span>Storage decrease ({decreaseMinutes} min)</span>
+                <span>Additional storage ({decreaseMinutes} min)</span>
                 <span>
                   -${(decreaseMinutes * costPerMinute).toFixed(2)}
                 </span>
@@ -235,6 +255,16 @@ export default function StorageSlider() {
         currentMonthlyTotal={currentMonthlyTotal}
         decreaseMinutes={decreaseMinutes}
         costPerMinute={costPerMinute}
+        addons={addons}
+      />
+      <FeatureLockedModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title="Storage upgrade successful!"
+        subtitle="Yayy! Your payment went through. Enjoy your upgraded storage minutes."
+        buttonTitle="Go to Billing"
+        ModalImg={<UpgradeIcon />}
+        onBtnClick={() => setActive('billing')}
       />
     </div>
   );

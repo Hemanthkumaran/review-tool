@@ -1,5 +1,4 @@
-// src/components/VersionSwitcher.jsx
-import React, { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import addVersion from '../assets/svgs/add-version.svg';
 import manageVersion from '../assets/svgs/manage-version.svg';
@@ -9,31 +8,6 @@ import { constants } from "../helpers/enum";
 import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
 import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
 import { formatDuration } from "../helpers/common";
-
-// Small helpers --------------------------------------------------
-
-function formatDateTime(dt) {
-  if (!dt) return "";
-  const d = typeof dt === "string" ? new Date(dt) : dt;
-  return d.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-// function formatDuration(sec) {
-//   if (!sec && sec !== 0) return "";
-//   const s = Math.floor(sec % 60)
-//     .toString()
-//     .padStart(2, "0");
-//   const m = Math.floor(sec / 60)
-//     .toString()
-//     .padStart(2, "0");
-//   return `${m}:${s} min`;
-// }
 
 
 export default function VersionSwitcher({
@@ -48,6 +22,24 @@ export default function VersionSwitcher({
 }) {
   const [open, setOpen] = useState(false);
   const [showManage, setShowManage] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const current = useMemo(() => {
     if (!versions.length) return null;
@@ -63,10 +55,10 @@ export default function VersionSwitcher({
       ? `v${versions.findIndex((v) => v._id === current._id) + 1}`
       : "v1");
 
-  // --- basic pill in header ------------------------------------
+      
   return (
     <>
-      <div className="relative ml-2">
+      <div ref={containerRef} className="relative ml-2">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -190,7 +182,7 @@ export default function VersionSwitcher({
             </div>
 
             {/* Manage versions footer */}
-            <button
+            {versions.length ? <button
               type="button"
               onClick={() => {
                 setOpen(false);
@@ -199,13 +191,12 @@ export default function VersionSwitcher({
               className="w-full flex items-center gap-3 px-4 py-3 border-t border-white/5 hover:bg-white/5 text-left"
             >
               <div className="w-5 h-5 flex items-center justify-center">
-                {/* tiny sliders icon */}
                 <img src={manageVersion}/>
               </div>
               <div style={{ fontFamily:'Gilroy-Light'}} className="text-[14px] cursor-pointer">
                 Manage versions
               </div>
-            </button>
+            </button> : null}
           </div>
         )}
       </div>

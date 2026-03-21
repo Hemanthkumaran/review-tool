@@ -50,7 +50,7 @@ export default function SettingsModal({ isOpen, onClose, activeWorkspace, active
       case "users":
         return <WorkspaceMembersPage onClose={onClose} activeWorkspace={activeWorkspace}/>;
       case "usage":
-        return <Usage onClose={onClose} />;
+        return <Usage setActive={setActive} onClose={onClose} />;
       case "billing":
         return <Billing onClose={onClose} />;
       default:

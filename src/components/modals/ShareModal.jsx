@@ -287,16 +287,15 @@ const filteredSuggestions = useMemo(() => {
   };
   
   return (
-    <Modal
-  isOpen={open}
-  onRequestClose={onClose}
-  shouldCloseOnOverlayClick
-  shouldCloseOnEsc
-  overlayClassName="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-  className="outline-none"
-  aria={{ modal: true }}
->
-
+      <Modal
+        isOpen={open}
+        onRequestClose={onClose}
+        shouldCloseOnOverlayClick
+        shouldCloseOnEsc
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+        className="outline-none"
+        aria={{ modal: true }}
+      >
       <div onClick={(e) => e.stopPropagation()} className="w-[500px] bg-[#131313] rounded-[32px] border border-[#27272F] shadow-2xl text-gray-100 relative overflow-hidden">
         {/* header */}
         <div className="flex items-start justify-between px-8 pt-6 pb-4">

@@ -17,11 +17,11 @@ export default function ConfirmPlanModal({
   newAdditionalStorage,
   newMonthlyTotal,
   decreaseMinutes,
-  costPerMinute
+  costPerMinute,
+  addons
 }) {
   
   const payNow = newAdditonalCost > 0;
-
 
   return (
     <Modal
@@ -50,12 +50,20 @@ export default function ConfirmPlanModal({
             </div>
             <div>{`$ ${basePlanCost}/mo`}</div>
           </div>
-          <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
+          {addons
+            .filter(item => item.status === "active")
+            .map(item => (
+              <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4" key={item._id}>
+                <span>{'Custom Branding Addon'}</span>
+                <span>${item.amount}</span>
+              </div>
+          ))}
+          {additionalStorage ? <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
             <div>
               <span style={{ textTransform:'capitalize'}}>{`Additional Storage Cost (${additionalStorage}  mins)`} </span>
             </div>
             <div>{`$ ${currentAdditionalCost}/mo`}</div>
-          </div>
+          </div> : null}
           <div style={{ height:1, backgroundColor:"#2B2B2B", marginBottom:10 }}/>
           <div className="flex justify-between">
             <div style={{ color:"#BFBFBF", fontFamily:'Gilroy-Bold' }}>Total monthly cost</div>
@@ -75,14 +83,17 @@ export default function ConfirmPlanModal({
             </div>
             <div>{`$ ${workspacePlan?.subscription?.baseStorageMinutes * workspacePlan?.costPerMinute}/mo`}</div>
           </div>
-          <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
-            <div>
-              <span style={{ textTransform:'capitalize'}}>{`Current Additional Storage Cost (${additionalStorage}  mins)`} </span>
-            </div>
-            <div>{`$ ${currentAdditionalCost}/mo`}</div>
-          </div>
+          {/* addon */}
+          {addons
+            .filter(item => item.status === "active")
+            .map(item => (
+              <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4" key={item._id}>
+                <span>{'Custom Branding Addon'}</span>
+                <span>${item.amount}</span>
+              </div>
+          ))}
           {newAdditionalStorage > 0 && (
-            <div className="plan-row">
+            <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
               <span>Additional storage (+{newAdditionalStorage} min)</span>
               <span>+${newAdditonalCost.toFixed(2)}</span>
             </div>
@@ -90,8 +101,8 @@ export default function ConfirmPlanModal({
 
           {/* Show decrease warning */}
             {decreaseMinutes > 0 && (
-              <div className="plan-row" style={{ color: "#ff4d4f" }}>
-                <span>Storage decrease ({decreaseMinutes} min)</span>
+              <div style={{ color: "#ff4d4f", fontSize:14 }} className="flex justify-between mb-4">
+                <span>Additional storage ({decreaseMinutes} min)</span>
                 <span>
                   -${(decreaseMinutes * costPerMinute).toFixed(2)}
                 </span>
@@ -108,7 +119,7 @@ export default function ConfirmPlanModal({
       {/* Charge note */}
       <p className="note">
         {/* You will only be charged ${extraCost} this time. */}
-        Changes will be reflected from next billing cycle
+        You will only be charged ${newAdditonalCost} this time.
       </p>
 
       {/* Actions */}
@@ -116,11 +127,11 @@ export default function ConfirmPlanModal({
         <button className="cancel-btn" onClick={onClose}>
           Cancel
         </button>
-<button className="confirm-btn" onClick={onConfirm}>
-  {payNow
-    ? `Pay $${newAdditonalCost.toFixed(2)} to upgrade`
-    : "Confirm changes"}
-</button>
+        <button className="confirm-btn" onClick={onConfirm}>
+          {payNow
+            ? `Pay $${newAdditonalCost.toFixed(2)} to upgrade`
+            : "Confirm changes"}
+        </button>
       </div>
     </Modal>
   );

@@ -1,6 +1,5 @@
-// src/components/videoPlayer/CustomSeekBar.jsx
-import React, { useCallback, useState } from "react";
-import { formatClockTime, formatClockTime2 } from "../../helpers/common";
+import { useCallback, useState } from "react";
+import { formatClockTime2 } from "../../helpers/common";
 
 
 function getMuxThumbnail(playbackId, time) {
@@ -9,14 +8,12 @@ function getMuxThumbnail(playbackId, time) {
   )}&width=320`;
 }
 
-/* ---------- component ---------- */
-
 export default function CustomSeekBar({
   currentTime = 0,
   duration = 0,
   onSeek,
   markers = [],
-  playbackId, // ✅ REQUIRED
+  playbackId,
 }) {
   const [hoverTime, setHoverTime] = useState(null);
   const [hoverX, setHoverX] = useState(0);
@@ -25,8 +22,6 @@ export default function CustomSeekBar({
     Number.isFinite(duration) && duration > 0 ? duration : 0;
 
   const pct = safeDuration ? Math.min(currentTime / safeDuration, 1) : 0;
-
-  /* ---------- hover logic ---------- */
 
   const handleMouseMove = (e) => {
     if (!safeDuration) return;
@@ -92,8 +87,6 @@ export default function CustomSeekBar({
     [onSeek, safeDuration]
   );
 
-  /* ---------- thumbnail positioning ---------- */
-
   const thumbLeft = Math.min(
     Math.max(hoverX - 80, 0),
     window.innerWidth - 160
@@ -105,8 +98,8 @@ export default function CustomSeekBar({
       <div
         className="absolute left-0 right-0 bottom-0 h-2 rounded-full bg-[#252525] cursor-pointer"
         onClick={handleClickTrack}
-        onMouseMove={handleMouseMove}   // ✅ ATTACHED
-        onMouseLeave={handleMouseLeave} // ✅ ATTACHED
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         {/* PROGRESS */}
         <div
