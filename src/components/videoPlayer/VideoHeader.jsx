@@ -194,7 +194,7 @@ const closeMoreMenu = () => setOpen(false);
                   <span style={{ fontFamily:'Gilroy-Light'}}>Download original</span>
               </button> :
                <div style={{ margin:"0 10px" }}>
-                <DownloadMenuButton projectDetail={projectDetail} onAction={closeMoreMenu} onRefresh={fetchProject}/>
+                <DownloadMenuButton projectDetail={projectDetail} onAction={closeMoreMenu} onRefresh={fetchProject} userAccess={userAccess}/>
               </div>
               }
             <div className="relative">

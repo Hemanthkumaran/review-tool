@@ -87,8 +87,8 @@ export const getOneProjectApi = (projId, params) => {
   return axiosClient.get(`/project/getOneProject?projectID=${projId}`, { params });
 };
 
-export const getVideoUploadUrl = (projId, videoDuration) => {
-  return axiosClient.get(`/project/getUploadVideoLink?projectID=${projId}&videoDuration=${videoDuration}`);
+export const getVideoUploadUrl = (projId, videoDuration, fileName) => {
+  return axiosClient.get(`/project/getUploadVideoLink?projectID=${projId}&videoDuration=${videoDuration}&fileName=${fileName}`);
 };
 
 export const addCommentApi = (

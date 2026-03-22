@@ -13,6 +13,7 @@ import { getVideoDuration, uploadToMux } from "../../helpers/muxHelpers";
 import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
 import { getAuthToken, getGuestIdentity, setGuestIdentity } from "../../helpers/storage.js";
 import { constants } from "../../helpers/enum.js";
+import { useWorkspace } from "../../context/WorkspaceContext.jsx";
 
 const getFileFromUrl = async (url, index) => {
   try {
@@ -83,7 +84,7 @@ export default function VideoReview() {
   const [guest, setGuest] = useState(null);
   const commentInputRef = useRef(null);
   
-
+  const { brandingColor } =useWorkspace();
   // annotation draft (from canvas)
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
   const annotationStartTimeRef = useRef(0);
@@ -110,7 +111,14 @@ const muxStatus = activeRawVersion?.muxStatus;
     avatarUrl: "https://i.pravatar.cc/40?u=john",
   };
 
-  
+    useEffect(() => {
+    if (brandingColor) {
+      document.documentElement.style.setProperty(
+        "--brand-color",
+        brandingColor
+      );
+    }
+  }, [brandingColor]);
 
   useEffect(() => {
     if (!getAuthToken()) {
@@ -638,12 +646,9 @@ function fetchProject(storedGuest = null) {
   } else {
     let reviewer = null;
 
-    if (getGuestIdentity() == constants.REVIEWER) {
+    if (projectAccess == constants.REVIEWER) {
       reviewer = getGuestIdentity();
     }
-    for (let [key, value] of formData.entries()) {
-  console.log(key, value);
-}
     const res = await addCommentApi(projectID, versionID, formData, reviewer);
     const backendComment = res.data.comment;
     setProjectDetail(prev => {
@@ -755,7 +760,7 @@ const handleNewVersionFile = async (e) => {
     setUploadPct(0);
 
     const duration = await getVideoDuration(file);
-    const uploadRes = await getVideoUploadUrl(projectId, duration);
+    const uploadRes = await getVideoUploadUrl(projectId, duration, file.name);
     const { muxUploadURL } = uploadRes.data;
 
     await uploadToMux(muxUploadURL, file, (pct) => {

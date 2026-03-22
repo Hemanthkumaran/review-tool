@@ -46,7 +46,7 @@ export default function CommentsColumn({
   const [commentFilters, setCommentFilters] = useState([constants.MEMBER, constants.COLLABORATOR, constants.REVIEWER]);
   const [user, setUser] = useState(null);
   const filterBtnRef = useRef(null);
-
+  
   useEffect(() => {
     fetchUserProfile();
   }, [])

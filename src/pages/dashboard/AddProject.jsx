@@ -69,13 +69,12 @@ export default function AddProject({
         folderID: folderId,
         name,
         hasFile: !!selectedFile,
-        // videoDuration: duration
       };
 
       if (selectedFile) {
         duration = await getVideoDuration(selectedFile);
         data['videoDuration'] = duration;
-        console.log("Video duration:", duration, folderId);
+        data['fileName'] = selectedFile.name;
       }
 
       // 1) Create project immediately

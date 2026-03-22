@@ -199,7 +199,6 @@ const handleAssignEditors = async (editors) => {
                 {project.name}
               </div>
             )}
-
             <div className="flex items-center text-[12px] text-[#BFBFBF] mt-1">
               <span>{createdAtLabel}</span>
               <img src={dot} className="mx-2" />
@@ -207,9 +206,10 @@ const handleAssignEditors = async (editors) => {
                 <img src={message} />
                 <span>{commentCount}</span>
               </div>
-              {/* <img src={timerIcon} width={16} height={16} className="mr-1" /> */}
-              {/* <span className="text-[#999]">{formatDuration(folder.totalVideoDuration)} mins</span> */}
-              {/* <span className="text-[#999]">{'1'} mins</span> */}
+            </div>
+            <div className="flex items-center mt-2">
+              <img src={timerIcon} width={16} height={16} className="mr-1" />
+              <span className="text-[12px] text-[#BFBFBF] mt-1">{formatDuration(project.totalVideoDuration)} mins</span>
             </div>
           </div>
           <div

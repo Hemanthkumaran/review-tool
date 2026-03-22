@@ -36,6 +36,20 @@ export default function FinalLinkPopover({
     window.open(formattedLink, "_blank", "noopener,noreferrer");
   };
 
+  const handleClear = async () => {
+
+    setLink("");
+    onSave(""); 
+    try {
+      await onSave("");
+      onClose?.();
+    } catch (err) {
+      console.error("Failed to clear link", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!link.trim() || saving) return;
 
@@ -107,10 +121,7 @@ export default function FinalLinkPopover({
 
   <button
     type="button"
-    onClick={() => {
-      setLink("");
-      onSave(""); // remove link instantly
-    }}
+    onClick={handleClear}
     className="
       px-6 py-1.5
       rounded-full

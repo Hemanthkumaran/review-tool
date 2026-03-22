@@ -121,10 +121,10 @@ useEffect(() => {
     setError("");
     setIsUploading(true);
     setProgress(0);
-
+    console.log("File name:", file.name);
     try {
       const duration = await getVideoDuration(file);
-      const res = await getVideoUploadUrl(projectId, duration);
+      const res = await getVideoUploadUrl(projectId, duration, file.name);
       const { muxUploadURL } = res.data || {};
 
       if (!muxUploadURL) throw new Error("No muxUploadURL returned");

@@ -37,7 +37,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const minutesCap =
   workspacePlan?.subscription?.baseStorageMinutes +
   workspacePlan?.subscription?.additionalStorageMinutes;
-  const minutesUsed = Math.ceil(workspacePlan?.subscription?.storageMinutesUsed);
+  const minutesUsed = workspacePlan?.subscription?.storageMinutesUsed.toFixed(2);
 
   const usagePercent = minutesCap
   ? Math.min(100, (minutesUsed / minutesCap) * 100)

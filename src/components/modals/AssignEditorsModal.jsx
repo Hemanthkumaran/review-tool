@@ -16,7 +16,6 @@ export default function AssignEditorsModal({
   projectAccess
 }) {
   const people = useMemo(() => mapPermissions(permissions), [permissions]);
-  console.log(people,permissions, 'people');
   
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState([]);
@@ -189,7 +188,7 @@ export default function AssignEditorsModal({
 
         {/* People with access */}
         <div className="px-7 mt-4">
-          <h4 className="text-sm mb-3 text-white/80">
+          {/* <h4 className="text-sm mb-3 text-white/80">
             People assigned to this project
           </h4>
           <div className="space-y-3">
@@ -214,7 +213,7 @@ export default function AssignEditorsModal({
                 </div>
               </>
             })}
-          </div>
+          </div> */}
           <RemoveAccessModal
             open={!!removeTarget}
             onClose={() => setRemoveTarget(null)}
@@ -243,7 +242,6 @@ export default function AssignEditorsModal({
   );
 }
 
-/* helpers */
 function mapPermissions(permissions = []) {
   return permissions
     .filter(p => p.permissionType !== "owner") 
@@ -255,7 +253,7 @@ function mapPermissions(permissions = []) {
         p.permissionType === "member"
           ? "Team member"
           : "Collaborator",
-      avatar: `https://i.pravatar.cc/64?u=${p.email}`,
+      avatar: p?.profileImage?.url ?? `https://i.pravatar.cc/64?u=${p.email}`,
     }));
 }
 

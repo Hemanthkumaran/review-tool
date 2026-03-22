@@ -147,11 +147,13 @@ export default function CommentCard({
         {!isEditingComment ? (
           <>
             <p className="whitespace-pre-line">{marker.text}</p>
-            {(type === "voice" || type === "mixed") && audioUrl && (
+            {(audioUrl || images.length > 0) && (
             <div className="mt-1">
-              <VoiceNotePlayer src={audioUrl}/>
+              {audioUrl && (
+                <VoiceNotePlayer src={audioUrl} />
+              )}
               {images.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-1">
+                <div className="flex flex-wrap gap-3 mt-2">
                   {images.map((src, i) => (
                     <div
                       key={`${src}-${i}`}
@@ -170,8 +172,8 @@ export default function CommentCard({
                   ))}
                 </div>
               )}
-            </div>
-          )}
+              </div>
+            )}
             {/* footer row */}
                 <div className="mt-3 flex items-center justify-between">
                   {/* Reply */}

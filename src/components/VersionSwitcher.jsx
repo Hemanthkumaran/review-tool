@@ -115,7 +115,7 @@ export default function VersionSwitcher({
                 }).replace(",", "");
                 const dateTextFormatted = dateText.replace(/AM|PM/, (m) => m.toLowerCase());
                 const durationText = v._raw.videoDuration
-                  ? `${formatDuration(v._raw.videoDuration)} min`
+                  ? `${formatDuration(v._raw.videoDuration)}`
                   : "";
                 const meta = [dateTextFormatted, durationText]
                   .filter(Boolean)
@@ -147,7 +147,7 @@ export default function VersionSwitcher({
                     </div>
                     <div className="flex-1">
                       <div style={{ fontFamily:'Gilroy-Regular' }} className="text-[13px] truncate">
-                        {projectName}
+                        {v._raw.fileName}
                       </div>
                       {meta && (
                         <div className="text-[11px] text-gray-400 mt-[2px]">
@@ -276,7 +276,7 @@ function ManageVersionsModal({
               }).replace(",", "");
               const dateTextFormatted = dateText.replace(/AM|PM/, (m) => m.toLowerCase());
               const durationText = v._raw.videoDuration
-                ? `${formatDuration(v._raw.videoDuration)} min`
+                ? `${formatDuration(v._raw.videoDuration)}`
                 : "";
               const meta = [dateTextFormatted, durationText]
                 .filter(Boolean)
@@ -303,7 +303,7 @@ function ManageVersionsModal({
                   </div>
                   <div className="flex-1">
                     <div className="text-[14px] font-[Gilroy-Medium]">
-                      {projectName}
+                      {v._raw.fileName}
                     </div>
                     {meta && (
                       <div className="text-[12px] text-gray-400 mt-[2px]">
