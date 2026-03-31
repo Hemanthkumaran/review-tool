@@ -124,8 +124,21 @@ export default function CommentCard({
   };
 
   return (
-    <div onClick={onGo} className="cursor-pointer group/comment relative  bg-[#050506] rounded-2xl border border-black px-4 py-3 mb-3 last:mb-0 text-[13px]">
-      <CommentHeader
+    <div onClick={onGo}   className="
+    cursor-pointer 
+    group/comment 
+    relative  
+    bg-[#050506] 
+    rounded-2xl 
+    border border-black 
+    px-4 py-3 mb-3 last:mb-0 
+    text-[13px]
+
+    transition-colors duration-250
+    hover:bg-[#121212] 121212
+    active:bg-[#0a0a0b]
+  ">
+      <a
         time={time}
         index={index}
         sNo={marker.sNo}

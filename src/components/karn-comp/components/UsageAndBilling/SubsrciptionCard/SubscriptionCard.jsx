@@ -135,20 +135,25 @@ export default function SubscriptionCard({
         </div>
       )}
 
-      <div className="sub-divider"></div>
+      {/* <div className="sub-divider"></div> */}
 
       <div>
         <div className="sub-addon-name mb-2">
           Active Add-ons
         </div>
-        {subscription?.addons?.map(item => {
+        { subscription?.addons.length ?
+        subscription?.addons?.map(item => {
           if (item.status == "active") {
             return <div className="flex align-center">
               <div id={item._id} style={{ fontFamily:'Gilroy-Regular', color:"#BFBFBF", fontSize:16, marginRight:10 }}>{`Custom UI Branding - $ ${item.amount}/month`}</div>
               <div onClick={() => setIsOpen(true)} style={{cursor:'pointer'}}><CancelRedCircle/></div>
             </div>
           }
-        })}
+        }) :
+        <div style={{ fontSize:16 }} className="sub-addon-name mb-2">
+          None
+        </div>
+      }
       </div>
       <div className="sub-divider"></div>
 
