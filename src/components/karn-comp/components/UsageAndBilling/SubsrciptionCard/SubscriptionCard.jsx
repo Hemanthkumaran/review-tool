@@ -60,7 +60,7 @@ export default function SubscriptionCard({
           <span className="sub-plan-name">
             {activePlan.charAt(0).toUpperCase() + activePlan.slice(1)}
           </span>
-          <span className="sub-status-pill">ACTIVE</span>
+          <span className="sub-status-pill">{subscription.status == "trialing" ? "Free trial" : subscription.status}</span>
         </div>
 
         <div className="sub-end-right">

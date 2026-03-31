@@ -124,7 +124,7 @@ const WorkspaceSettings = ({ onClose }) => {
 
       <br />
 
-      <div onClick={() => addOnStatus != 'active' ? setShowModal(true) : null} style={{ background: addOnStatus != 'active' ? "#181818" : "#131313" }} className="w-[80%] cursor-pointer pt-6 pl-6 pb-4 border-[#2a2a2a] border-2 rounded-2xl">
+      <div onClick={() => (addOnStatus != 'active' && addOnStatus != 'trialing') ? setShowModal(true) : null} style={{ background: addOnStatus != 'active' ? "#181818" : "#131313" }} className="w-[80%] cursor-pointer pt-6 pl-6 pb-4 border-[#2a2a2a] border-2 rounded-2xl">
         <div className="flex justify-between mb-4">
           <div>Logo</div>
           {addOnStatus != 'active' ? 

@@ -36,7 +36,6 @@ export default function StorageSlider({ setActive }) {
   const basePlanCost = baseStorage * costPerMinute;
   const currentAdditionalCost = additionalStorage * costPerMinute;
   const currentMonthlyTotal = basePlanCost + currentAdditionalCost + addonsTotal;
-  console.log(subscription, 'subscription');
   
   const selectedStorage = values[0];
 
@@ -98,6 +97,8 @@ export default function StorageSlider({ setActive }) {
 
     setLoading(false);
   };
+
+  const isDisabled = subscription?.status == "trialing";
 
   if (billingLoading) return <AppLoader />;
 
@@ -229,10 +230,10 @@ export default function StorageSlider({ setActive }) {
 
         <div className="plan-action">
           <button
-            disabled={loading}
+            disabled={isDisabled}
             onClick={() => setShowConfirm(true)}
             className="change-btn"
-            style={{ fontFamily:'Gilroy-SemiBold' }}
+            style={{ fontFamily:'Gilroy-SemiBold', opacity: isDisabled ? 0.5 : 1 }}
           >
              Change plan
           </button>
