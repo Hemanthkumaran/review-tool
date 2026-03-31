@@ -92,11 +92,8 @@ export default function WelcomeWorkspace({
   allFoldersApi("createdAt", "desc", activeWorkspace._id, filters)
     .then((res) => {
       const status = res.data.subscriptionStatus;
-
-      setSubscriptionStatus(res.data.subscriptionStatus);
+      setSubscriptionStatus(status);
       setTrialUsed(res.data.trialUsed);
-
-
       setAllFolders(res.data.folderArray);
 
       // ⭐ AFTER CHECKOUT SUCCESS
@@ -134,6 +131,14 @@ export default function WelcomeWorkspace({
 
   function getActiveContent() {
     if (activeTab === "allFolders" && userAccess !== constants.REVIEWER) {
+      if (allFolders.length == 0) {
+        return <div style={{ color:"#5C5C5C" }} className="flex items-center justify-center mt-20">
+          <div className="text-center text-[#5C5C5C]">
+            <div>There are no folders here</div>
+            <div>Please create a new folder to get started</div>
+          </div>
+        </div>
+      }
       return <div className="flex gap-4 mt-3 flex-wrap">
         {allFolders.map((item) => (
           <Folder
@@ -148,6 +153,13 @@ export default function WelcomeWorkspace({
       </div>
     }
      else {
+      if (allFolders.length == 0) {
+        return <div style={{ color:"#5C5C5C" }} className="flex items-center justify-center mt-20">
+          <div className="text-center text-[#5C5C5C]">
+            <div>There are no projects here</div>
+          </div>
+        </div>
+      }
       return <Accordion.Root
           type="multiple"
           value={openFolders}
@@ -255,7 +267,7 @@ export default function WelcomeWorkspace({
         loading={createLoading}
       />
       <ChoosePlanModal
-        open={modalStep === "choosePlan"}
+        open={modalStep == "choosePlan"}
         setChosenPlan={(plan) => {
           setChosenPlan(plan);
           setModalStep(null)
@@ -292,7 +304,7 @@ export default function WelcomeWorkspace({
       {modalStep === "trialStarted" && (
         <SubscriptionModal
           open={true}
-          title={`Welcome to your ${chosenPlan || ""} trial`}
+          title={`Welcome to your ${chosenPlan ?? "new"} trial`}
           subtitle="Your free trial is active. Feel free to try every feature and see what works best for you."
           buttonTitle="Go to dashboard"
           onBtnClick={() => setModalStep(null)}

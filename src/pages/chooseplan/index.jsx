@@ -5,6 +5,7 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import { createPaymentOrderApi, startTrialApi } from "../../services/api";
 import SubscriptionModal from "../../components/modals/SubscriptionModal";
 import { useRazorpay } from "../../hooks/useRazorpay";
+import { Tooltip } from "react-tooltip";
 
 const modalStyles = {
   overlay: {
@@ -30,14 +31,21 @@ const PLAN_LIMITS = {
   team_plus: 1000,
 };
 
+const PLAN_ORDER = {
+  freelancer: 1,
+  team: 2,
+  team_plus: 3,
+};
+
 export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, buttonLabel, trialUsed, additionalStorageMinutes = 0, showClose = false }) {
   const { activeWorkspace, refreshWorkspacePlan, workspacePlan, brandingColor } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
   const { openCheckout } = useRazorpay();
 
-  const priceTeam = isAnnual ? 25 : 250;
-  const priceAgency = isAnnual ? 50 : 500;
+  const priceFreelancer = isAnnual ? 6 : 7;
+  const priceTeam = isAnnual ? 20 : 25;
+  const priceAgency = isAnnual ? 36 : 45;
 
   const subscription = activeWorkspace?.subscription || workspacePlan?.subscription;
 
@@ -54,19 +62,27 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
     return minutesUsed <= limit;
   };
 
-  const getPlanState = (planKey) => {
+
+ const getPlanState = (planKey) => {
   const isCurrent = currentPlan === planKey;
-  const overLimit = !canSwitchTo(planKey);
+
+  const isDowngrade =
+    PLAN_ORDER[planKey] < PLAN_ORDER[currentPlan];
+
+  const overLimit =
+    isDowngrade || !canSwitchTo(planKey);
 
   return {
     isCurrent,
     overLimit,
-    buttonLabel: isCurrent
-      ? "Continue with Current Plan"
-      : overLimit
+    buttonLabel: overLimit
       ? "Over limits"
+      : !trialUsed
+      ? "Start free trial"
+      : isCurrent
+      ? "Continue with Current Plan"
       : "Switch Plan",
-    disabled: isCurrent || overLimit,
+    disabled: overLimit,
   };
 };
 
@@ -170,15 +186,15 @@ const overLimit = !canSwitchTo("freelancer");
         {/* Header */}
         <div className="text-center">
           <h1 style={{ fontFamily: "Gilroy-SemiBold", fontSize: 24 }}>
-            Choose how you'd like to start
+            { trialUsed ? "Choose a plan that fits your workflow" : "Choose how you'd like to start" }
           </h1>
           <p style={{ fontSize: 12 }}>
-            Try any plan for 7 days with no card required.
+             { trialUsed ? null : "Try any plan for 7 days with no card required." }
           </p>
         </div>
 
         {/* Toggle */}
-        <div className="flex items-center justify-end mt-6">
+        <div className={`flex items-center ${trialUsed ? 'justify-center' : 'justify-end'} mt-2`}>
           <div
             style={{
               fontFamily: "Gilroy-Light",
@@ -186,7 +202,7 @@ const overLimit = !canSwitchTo("freelancer");
               marginRight: 10,
             }}
           >
-            Annual
+            {trialUsed ? 'Annual (20% off)' : 'Annual'}
           </div>
           <ToggleButton
             checked={isAnnual}
@@ -198,10 +214,11 @@ const overLimit = !canSwitchTo("freelancer");
         {/* Pricing cards */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <PricingCard
-          planKey="freelancer"
+            brandingColor={brandingColor}
+            planKey="freelancer"
             title="Freelancer"
-            price={priceTeam}
-            period={isAnnual ? "year" : "month"}
+            price={priceFreelancer}
+            period={isAnnual ? "month, billed annually" : "month"}
             features={[
               { text: "1 user", enabled: true },
               { text: "100 mins of storage + Storage addons", enabled: true },
@@ -211,12 +228,12 @@ const overLimit = !canSwitchTo("freelancer");
             onClick={() => handleChoosePlan("freelancer")}
             highlight={false}
           />
-
           <PricingCard
             planKey="team"
             title="Team"
-            price={priceAgency}
-            period={isAnnual ? "year" : "month"}
+            price={priceTeam}
+            brandingColor={brandingColor}
+            period={isAnnual ? "month, billed annually" : "month"}
             features={[
               { text: "Upto 5 team members", enabled: true },
               { text: "500 mins of storage + Storage addons", enabled: true },
@@ -234,10 +251,11 @@ const overLimit = !canSwitchTo("freelancer");
           />
 
           <PricingCard
+          brandingColor={brandingColor}
             planKey="team_plus"
             title="Team Plus"
             price={priceAgency}
-            period={isAnnual ? "year" : "month"}
+            period={isAnnual ? "month, billed annually" : "month"}
             features={[
               { text: "Upto 10 team members", enabled: true },
               { text: "Unlimited Collaborators ( Freelancers )", enabled: true },
@@ -270,6 +288,7 @@ function PricingCard({ title,
   features,
   buttonLabel,
   highlight,
+  brandingColor,
   disabled,
   onClick,
   loading, }) {
@@ -285,13 +304,13 @@ function PricingCard({ title,
           <div style={{ fontFamily:'Gilroy-Light', fontSize:24, textAlign:'center' }}>{title}</div>
           {/* Price */}
           <div className="mt-2 flex items-baseline justify-center gap-2">
-            <span className="text-[#F9EF38] text-4xl font-semibold">${price}</span>
+            <span className="text-[var(--brand-color)] text-4xl font-semibold">${price}</span>
             <span className="text-sm text-[#bfbfbf]">/ {period}</span>
           </div>
           {/* Divider */}
           <div className="mt-5 h-px w-full bg-gradient-to-r from-transparent via-[#2a2b2f] to-transparent" />
           {/* Included */}
-          <div className="mt-4 text-white/90 text-sm">Everythign in Team, but :</div>
+          <div className="mt-4 text-white/90 text-sm">Everything in Team, but :</div>
 
           <ul className="mt-3 space-y-3 mb-4">
             {features.map((f, idx) => (
@@ -306,20 +325,42 @@ function PricingCard({ title,
           {/* Button */}
             <div className="mt-10 mt-auto flex justify-center ">
               <button
-                disabled={loading}
+                data-tooltip-id={`tooltip-${title}`}
+                data-tooltip-content={
+                  buttonLabel === "Over limits"
+                    ? "You currently have more team members or storage than this plan allows for"
+                    : ""
+                }
+                disabled={disabled || loading}
                 onClick={onClick}
-                style={{ background:brandingColor }}
+                style={!disabled ? { background: brandingColor } : {}}
                 className={`w-full sm:w-auto px-8 py-3 rounded-full font-medium transition
-                  ${loading ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
-                  text-black hover:opacity-90`}
+                  ${disabled
+                    ? "bg-[#2a2a2a] text-gray-400 cursor-not-allowed"
+                    : "text-black hover:opacity-90 cursor-pointer"
+                  }`}
               >
                 {loading ? "Starting..." : buttonLabel}
               </button>
-              {disabled && buttonLabel === "Over limits" && (
+              {buttonLabel === "Over limits" && (
+                <Tooltip
+                  id={`tooltip-${title}`}
+                  place="top"
+                  style={{
+                    backgroundColor: "#2a2a2a",
+                    color: "#fff",
+                    borderRadius: "8px",
+                    maxWidth: "250px", 
+                    fontSize: "12px",
+                    padding: "8px 12px",
+                  }}
+                />
+              )}
+              {/* {disabled && buttonLabel === "Over limits" && (
                   <div className="mt-3 text-xs text-gray-400 text-center">
                     You currently have more storage usage than this plan allows
                   </div>
-                )}
+                )} */}
             </div>
         </div>
       </div>
@@ -330,7 +371,7 @@ function PricingCard({ title,
 /* Icons */
 function IconCheck() {
   return (
-    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#F9EF38]">
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-color)]">
       <svg viewBox="0 0 20 20" fill="none" className="h-3.5 w-3.5">
         <path d="M5 10l3 3 7-7" stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>

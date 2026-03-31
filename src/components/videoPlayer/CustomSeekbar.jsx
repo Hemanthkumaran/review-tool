@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { formatClockTime2 } from "../../helpers/common";
+import { formatClockTime2, getInitials } from "../../helpers/common";
 
 
 function getMuxThumbnail(playbackId, time) {
@@ -17,7 +17,8 @@ export default function CustomSeekBar({
 }) {
   const [hoverTime, setHoverTime] = useState(null);
   const [hoverX, setHoverX] = useState(0);
-
+  console.log(markers, 'marker');
+  
   const safeDuration =
     Number.isFinite(duration) && duration > 0 ? duration : 0;
 
@@ -136,15 +137,13 @@ export default function CustomSeekBar({
                 }}
                 onClick={() => onSeek?.(m.time)}
               >
-
-              <div className="w-4 h-4 rounded-full border border-[var(--brand-color)] overflow-hidden bg-black mb-[6px]">
+              <div  className="w-4 h-4 rounded-full border border-[var(--brand-color)] overflow-hidden bg-black mb-[6px]">
+                { m.user?.avatarUrl ? 
                 <img
-                  src={
-                    m.user?.avatarUrl ||
-                    "https://i.pravatar.cc/40?u=default-marker"
-                  }
+                  src={m.user?.avatarUrl}
                   className="w-full h-full object-cover cursor-pointer"
-                />
+                /> :
+                <div className="flex align-items justify-center" style={{ color:"#fff", zIndex:100, fontSize:8 }}>{getInitials(m?._raw?.userData.firstName, "")}</div> }
               </div>
               <div className="w-[2px] h-2 bg-[#27C46A]" />
             </button>

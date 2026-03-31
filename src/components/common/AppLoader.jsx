@@ -1,7 +1,7 @@
 import { useWorkspace } from "../../context/WorkspaceContext";
 
 const spinnerBase =
-  "inline-block w-6 h-6 border-2 border-transparent rounded-full animate-spin";
+  "inline-block w-6 h-6 border-2 border-transparent rounded-full animate-spin z-100000000";
 
 
 export default function AppLoader({

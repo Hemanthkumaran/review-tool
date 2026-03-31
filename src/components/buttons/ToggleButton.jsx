@@ -33,7 +33,7 @@ export default function ToggleButton({
         relative rounded-full transition-colors duration-300 cursor-pointer
         focus:outline-none
         ${s.track}
-        ${checked ? "bg-[#F9EF38]" : "bg-[#BFBFBF]"}
+        ${checked ? "bg-[var(--brand-color)]" : "bg-[#BFBFBF]"}
       `}
     >
       {/* Knob */}

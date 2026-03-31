@@ -65,3 +65,49 @@ export function getVideoDuration(file) {
   });
 }
 
+export const getVideoFPS = (file) => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.src = URL.createObjectURL(file);
+    video.muted = true;
+    video.playsInline = true;
+
+    let frameCount = 0;
+    let startTime = null;
+
+    video.onloadeddata = async () => {
+      try {
+        await video.play();
+
+        const measureDuration = 1000; // 1 second
+
+        const loop = (now) => {
+          if (!startTime) startTime = now;
+
+          frameCount++;
+
+          const elapsed = now - startTime;
+
+          if (elapsed >= measureDuration) {
+            const fps = frameCount / (elapsed / 1000);
+            video.pause();
+            resolve(Math.round(fps));
+            return;
+          }
+
+          video.requestVideoFrameCallback(loop);
+        };
+
+        if (video.requestVideoFrameCallback) {
+          video.requestVideoFrameCallback(loop);
+        } else {
+          reject("requestVideoFrameCallback not supported");
+        }
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    video.onerror = (e) => reject(e);
+  });
+};

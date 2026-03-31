@@ -33,6 +33,18 @@ export const WorkspaceProvider = ({ children }) => {
     fetchWorkspaces();
   }, []);
 
+  const colorFromUrl = searchParams.get("color");
+
+  useEffect(() => {
+    if (!colorFromUrl) return;
+
+    const normalizeColor = (color) => {
+      if (!color) return null;
+      return color.startsWith("#") ? color : `#${color}`;
+    };
+
+    setBrandingColor(normalizeColor(colorFromUrl));
+  }, [colorFromUrl]);
 
   /* -----------------------------
    * Fetch members when workspace changes
@@ -116,14 +128,38 @@ export const WorkspaceProvider = ({ children }) => {
       if (!next) next = list[0] || null;
 
       setActiveWorkspace(next);
-      setBrandingColor(next?.colourCode ?? '#F9EF38');
+        const colorFromUrl = searchParams.get("color");
+        const normalizeColor = (color) => {
+          if (!color) return null;
+          return color.startsWith("#") ? color : `#${color}`;
+        };
+
+        const finalColor =
+          normalizeColor(next?.colourCode) ||
+          normalizeColor(colorFromUrl) ||
+          "#F9EF38";
+
+      setBrandingColor(finalColor);
 
       // 3) If URL missing or invalid → fix it
-      if (next && next._id !== workspaceIdFromUrl) {
-        const params = new URLSearchParams(searchParams);
-        params.set("ws", next._id);
-        setSearchParams(params, { replace: true });
-      }
+if (next) {
+  const params = new URLSearchParams(searchParams);
+
+  // ✅ ensure workspace is correct
+  if (next._id !== workspaceIdFromUrl) {
+    params.set("ws", next._id);
+  }
+
+  // ✅ ensure color is always present
+  if (!params.get("color")) {
+    const colorToSet = next?.colourCode || colorFromUrl;
+    if (colorToSet) {
+      params.set("color", colorToSet);
+    }
+  }
+
+  setSearchParams(params, { replace: true });
+}
     } catch (e) {
       console.error("Failed to fetch workspaces", e);
     } finally {
@@ -166,6 +202,7 @@ export const WorkspaceProvider = ({ children }) => {
         },
         workspaceUsers,
         loading,
+        setLoading,
         refreshWorkspace: fetchWorkspaces,
         fetchWorkspaceUsers,
         userAccess,  

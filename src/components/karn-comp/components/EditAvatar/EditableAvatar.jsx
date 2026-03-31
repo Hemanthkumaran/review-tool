@@ -3,12 +3,11 @@ import { useDropzone } from "react-dropzone";
 import { FaPen } from "react-icons/fa";
 import "./EditableAvatar.css";
 import EditIcon from "../../assets/icons/edit.svg"
+import { getInitials } from "../../../../helpers/common";
 
 const EditableAvatar = ({ imageUrl, onImageSelect, user, addOnStatus }) => {
   const [preview, setPreview] = useState(imageUrl || null);
   
-  const getInitials = (firstName = "", lastName = "") =>
-  `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
 
   useEffect(() => {
     setPreview(imageUrl);

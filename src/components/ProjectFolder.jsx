@@ -67,7 +67,7 @@ function AssignedEditorsRow({
             e.stopPropagation();
             onOpenAssign();
         }}
-          className="-ml-2 w-8 h-8 rounded-full bg-[#D1D5DB]
+          className="-ml-2 w-8 h-8 rounded-full bg-[#BFBFBF]
             text-black flex items-center justify-center text-sm font-medium cursor-pointer"
         >
           { 

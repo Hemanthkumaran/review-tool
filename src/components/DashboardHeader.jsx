@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 // import bellIcon from "../assets/svgs/bell.svg";
 import arrowDown from "../assets/svgs/arrow-down.svg";
 // import ownerLogo from "../assets/svgs/owner.svg";
@@ -9,6 +9,7 @@ import { constants } from "../helpers/enum";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 import { useWorkspace } from "../context/WorkspaceContext";
+import { getInitials } from "../helpers/common";
 
 function Plus({ className = "" }) {
   return (
@@ -28,6 +29,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const location = useLocation();
   const navigate = useNavigate();
   const { setBrandingColor } = useWorkspace();
+  const workspaceRef = useRef(null);
 
   const [openProfile, setOpenProfile] = useState(false);
   const [openWorkspace, setOpenWorkspace] = useState(false);
@@ -43,11 +45,25 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   ? Math.min(100, (minutesUsed / minutesCap) * 100)
   : 0;
 
-  const getInitials = (firstName = "", lastName = "") =>
-  `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
+
+  useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (
+      workspaceRef.current &&
+      !workspaceRef.current.contains(event.target)
+    ) {
+      setOpenWorkspace(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
   const handleWorkspaceChange = (workspace) => {
-
     setActiveWorkspace(workspace);
     setOpenWorkspace(false);
     setBrandingColor(workspace?.colourCode ?? '#F9EF38');
@@ -59,9 +75,12 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   return (
     <header className="flex items-center justify-between px-2 md:px-2">
       {/* LEFT: WORKSPACE */}
-      <div className="relative">
+      <div className="relative" ref={workspaceRef}>
         <div
-          onClick={() => setOpenWorkspace((v) => !v)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpenWorkspace((v) => !v);
+          }}
           className="flex items-center gap-3 rounded-full bg-[#151618] border border-[#101213] px-3 py-2 cursor-pointer"
         >
           {activeWorkspace?.logo?.url ?

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { deleteReplyApi, updateReplyApi } from "../../../services/api";
 import ReplyInput from "./ReplyInput";
-import { formatRelative } from "../../../helpers/common";
+import { formatRelative, getInitials } from "../../../helpers/common";
 import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
 import { getGuestIdentity } from "../../../helpers/storage";
 
@@ -25,8 +25,6 @@ export default function ReplyItem({
   const [isHovered, setIsHovered] = useState(false);
   const [showReplyBox, setShowReplyBox] = useState(false);
   
-  const getInitials = (firstName = "", lastName = "") =>
-  `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();
   
 const guest = getGuestIdentity();
 

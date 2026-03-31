@@ -14,6 +14,8 @@ import { formatClockTime, formatClockTime2, formatClockTimeMMSS } from "../../he
 import Spinner from "../common/Spinner";
 import VoicePreviewModal from "../modals/VoicePreviewModal";
 import VoiceNotePlayer from "./VoiceNotePlayer";
+import { CommentSendIcon } from "../../assets/svgs/SvgComponents";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 
 /**
@@ -51,6 +53,8 @@ export default function CommentBar({
   const fileInputRef = useRef(null);
   const [audience, setAudience] = useState("everyone");
   const [showVoicePreview, setShowVoicePreview] = useState(false);
+
+  const { brandingColor } = useWorkspace();
   
   const emojiBtnRef = useRef(null);
   const emojiPickerRef = useRef(null);
@@ -234,7 +238,7 @@ sendingComment ||
           rounded-xl
           px-3 py-2
           shadow-xl
-          z-50
+          z-500
         "
       >
         <div className="flex items-center justify-between mb-2">
@@ -413,7 +417,9 @@ sendingComment ||
             title="Add comment at current time"
             disabled={disabledSend}
           >
-            {sendingComment ? <Spinner size={16} color="#000" /> : <img src={sendIcon} />}
+            {sendingComment ? <Spinner size={16} color="#000" /> : 
+            <CommentSendIcon color={brandingColor}/>
+            }
           </button>
         </div>
       </div>

@@ -13,11 +13,20 @@ export function formatDuration(duration) {
 }
 
 export function formatMinutesOnly(duration) {
-  if (!duration || duration <= 0) return "0 min";
+  if (!duration || duration <= 0) return "0 sec";
 
-  const minutes = Math.floor(duration);
-  return `${minutes} ${duration > 1 ? 'mins' : 'min'}`;
+  const totalSeconds = Math.floor(duration * 60);
+
+  // if less than 1 min → show seconds
+  if (totalSeconds < 60) {
+    return `${totalSeconds} ${totalSeconds === 1 ? "sec" : "secs"}`;
+  }
+
+  // otherwise show minutes
+  const minutes = Math.floor(totalSeconds / 60);
+  return `${minutes} ${minutes === 1 ? "min" : "mins"}`;
 }
+
 
 export const DateFormat = (value) => {
   if (!value) return null;
@@ -66,7 +75,7 @@ export function formatClockTime(t = 0) {
   );
 }
 
-export function formatClockTime2(t = 0, fps = 30) {
+export function formatClockTime2(t = 0, fps = 59) {
   if (!Number.isFinite(t)) t = 0;
 
   const totalSeconds = Math.floor(t);
@@ -119,3 +128,16 @@ export function logout() {
   window.__APP_AUTH__ = null;
   window.location.replace("/"); 
 }
+
+export const truncateText = (text, maxLength = 50) => {
+  if (!text) return "";
+
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return text.slice(0, maxLength).trimEnd() + "...";
+};
+
+export const getInitials = (firstName = "", lastName = "") =>
+  `${firstName.trim()[0] || ""}${lastName.trim()[0] || ""}`.toUpperCase();

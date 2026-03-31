@@ -39,7 +39,6 @@ export default function AddProject({
       }
     }, [activeWorkspace]);
 
-
   const handleUpdateProject = async (id, payload) => {
     try {
       await updateProjectApi(id, payload);

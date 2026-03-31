@@ -76,7 +76,7 @@ export default function CommentFilterDropdown({
               border border-[#3A3A3A]
               flex items-center justify-center
               ${selected.includes(item.value)
-                ? "bg-[#F9EF38] border-[#F9EF38]"
+                ? "bg-[var(--brand-color)] border-[var(--brand-color)]"
                 : ""}
             `}
           >

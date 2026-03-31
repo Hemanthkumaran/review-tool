@@ -52,13 +52,13 @@ export default function SubscriptionModal({
             {title}
           </h2>
           {/* Subtitle */}
-          <p className="text-sm text-[#BFBFBF]">
+          <p style={{ marginTop:-10 }} className="text-sm text-[#BFBFBF]">
             {subtitle}
           </p>
           {/* CTA */}
           {showBtn && <button
             onClick={onBtnClick}
-            className="mt-6 w-full rounded-full bg-[#F9EF38] px-6 py-3 text-sm font-medium text-black hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#F9EF38]/40"
+            className="mt-6 w-full cursor-pointer rounded-full bg-[var(--brand-color)] px-6 py-3 text-sm font-medium text-black hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#F9EF38]/40"
           >
             {buttonTitle}
           </button>}

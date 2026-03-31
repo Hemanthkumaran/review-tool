@@ -1,9 +1,8 @@
 // src/components/ShareModal.jsx
 import React, { useMemo, useState } from "react";
-import Select, { components } from "react-select";
+import Select from "react-select";
 import Modal from "react-modal";
 
-import arrowDown from '../../assets/svgs/arrow-down.svg';
 
 import closeCircle from "../../assets/svgs/close-with-circle.svg"
 import RemoveAccessModal from "./RemoveAccessModal";
@@ -11,6 +10,7 @@ import { addUserToProjectApi, removeUserFromProjectApi } from "../../services/ap
 import { constants } from "../../helpers/enum";
 import PublicLinkAccessCard from "../PublicLinkAccessCard";
 import { showSuccessToast } from "../../helpers/showToast";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 const ROLE_OPTIONS = [
   { value: "collaborator", label: "Collaborator" },
@@ -227,18 +227,19 @@ const CustomMultiValue = (props) => {
   );
 };
 
-export default function ShareModal({ open = true, onClose, permissions, projectAccess, projectID, onRefresh }) {
-  const [role, setRole] = useState(ROLE_OPTIONS[0]);
+export default function ShareModal({ open = true, onClose, permissions, projectID, onRefresh }) {
+  const [role, setRole] = useState(ROLE_OPTIONS[1]);
   const [inputValue, setInputValue] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]);
   const [removeTarget, setRemoveTarget] = useState(null);
   const [selectedEmail, setSelectedEmail] = useState(null);
-    const [passwordRequired, setPasswordRequired] = useState(false);
+  const [passwordRequired, setPasswordRequired] = useState(false);
+
+  const { activeWorkspace } = useWorkspace();
 
   const handleTogglePassword = () => {
     setPasswordRequired((prev) => !prev);
   };
-  console.log(permissions, 'permissions');
   
 const emailOptions = (permissions || [])
   .filter((p) => p.permissionType !== "owner") // 🚫 exclude owner
@@ -276,9 +277,17 @@ const filteredSuggestions = useMemo(() => {
     onRefresh?.();
   };
 
+  // function handleCopy() {
+  //   showSuccessToast("Link copied!")
+  //   navigator.clipboard.writeText(`${window.location.origin}/video-review/${projectID}`)
+  // }
+
   function handleCopy() {
-    showSuccessToast("Link copied!")
-    navigator.clipboard.writeText(`${window.location.origin}/video-review/${projectID}`)
+    console.log(activeWorkspace, 'activeWorkspace');
+    
+    const url = `${window.location.origin}/video-review/${projectID}?ws=${activeWorkspace?._id}&color=${encodeURIComponent(activeWorkspace?.colourCode || "")}`;
+    navigator.clipboard.writeText(url);
+    showSuccessToast("Link copied!");
   }
 
   const handleRemove = async (email) => {

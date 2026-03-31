@@ -76,7 +76,7 @@ function LoginAccount({ setCurrentScreen }) {
               value={form.password}
               onChange={handleChange}
           />
-          <div onClick={() => setCurrentScreen("resetPassword")} className='text-right text-[#F9EF38] cursor-pointer'>Forget password</div>
+          <div onClick={() => setCurrentScreen("resetPassword")} className='text-right text-[#F9EF38] cursor-pointer'>Forgot password</div>
             {errorMsg && (
               <div className="text-[#FF8F8F] text-left text-sm mt-2">
                 {errorMsg}

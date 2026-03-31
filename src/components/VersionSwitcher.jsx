@@ -7,7 +7,7 @@ import trashIcon from '../assets/svgs/trash-icon.svg';
 import { constants } from "../helpers/enum";
 import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
 import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
-import { formatDuration } from "../helpers/common";
+import { formatDuration, truncateText } from "../helpers/common";
 
 
 export default function VersionSwitcher({
@@ -146,8 +146,8 @@ export default function VersionSwitcher({
                       )}
                     </div>
                     <div className="flex-1">
-                      <div style={{ fontFamily:'Gilroy-Regular' }} className="text-[13px] truncate">
-                        {v._raw.fileName}
+                      <div style={{ fontFamily:'Gilroy-Regular' }} className="truncate text-[13px] truncate">
+                        {truncateText(v._raw.fileName, 25)}
                       </div>
                       {meta && (
                         <div className="text-[11px] text-gray-400 mt-[2px]">
@@ -303,7 +303,7 @@ function ManageVersionsModal({
                   </div>
                   <div className="flex-1">
                     <div className="text-[14px] font-[Gilroy-Medium]">
-                      {v._raw.fileName}
+                      {truncateText(v._raw.fileName, 25)}
                     </div>
                     {meta && (
                       <div className="text-[12px] text-gray-400 mt-[2px]">
