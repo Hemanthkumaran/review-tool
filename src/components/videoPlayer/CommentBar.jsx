@@ -184,13 +184,15 @@ sendingComment ||
   );
 
   return (
-    <div style={{ width: "60%", margin: "0 auto", paddingBottom:20 }}>
-      {/* text input */}
+   <div className="w-[60%] mx-auto pb-5">
+  <div className="bg-[#101213] border border-[#1F1F21] rounded-2xl p-3">
+
+    {/* ================= TOP: INPUT + INLINE CHIPS ================= */}
+    <div className="flex flex-wrap items-center gap-2">
       <input
         ref={commentInputRef}
-        style={{ borderBottomRightRadius: 0, borderBottomLeftRadius: 0 }}
-        className="bg-[#101213] rounded-2xl border border-[#1F1F21] px-4 py-3 w-full outline-none placeholder-[#58595A] text-sm"
-        placeholder="Enter your comments here..."
+        className="flex-1 bg-transparent outline-none text-sm placeholder-[#666]"
+        placeholder="Add a comment..."
         value={text}
         onFocus={pauseVideo}
         onChange={(e) => setText(e.target.value)}
@@ -201,233 +203,195 @@ sendingComment ||
           }
         }}
       />
-      {/* image previews */}
-      {attachments.length > 0 && (
-          <div className="bg-[#101213] border-x border-[#1F1F21] px-4 py-2 w-full flex justify-start gap-2 overflow-x-auto">
-          {attachments.map((att) => (
-            <div
-              key={att.url}
-              className="relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-black/40 border border-[#1F1F21]"
-            >
-              <img
-                src={att.url}
-                alt={att.name}
-                className="w-full h-full object-cover"
-              />
-              <button
-                type="button"
-                className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/70 text-[10px] flex items-center justify-center"
-                onClick={() => removeAttachment(att.url)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
+
+      {/* Drawing chip */}
+      {hasPendingAnnotation && (
+        <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
+          <span>Drawing ready</span>
+          <button onClick={onCancelAnnotation}>✕</button>
         </div>
       )}
-    {showVoicePreview && (
-      <div
-        className="
-          absolute
-          bottom-[70px]
-          left-1/2
-          -translate-x-1/2
-          w-[320px]
-          bg-[#111216]
-          border border-[#2A2B2E]
-          rounded-xl
-          px-3 py-2
-          shadow-xl
-          z-500
-        "
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-gray-300">Voice note preview</span>
+
+      {/* Voice chip */}
+      {hasPendingVoice && !isRecording && (
+        <div
+          className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px] cursor-pointer"
+          onClick={() => setShowVoicePreview(true)}
+        >
+          <span>Voice ready</span>
           <button
-            className="text-gray-400 hover:text-white"
-            onClick={() => setShowVoicePreview(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCancelVoice();
+            }}
           >
             ✕
           </button>
         </div>
-        <VoiceNotePlayer src={pendingVoiceUrl} />
+      )}
+    </div>
+
+    {/* ================= ATTACHMENTS ================= */}
+    {attachments.length > 0 && (
+      <div className="flex gap-2 mt-2 overflow-x-auto">
+        {attachments.map((att) => (
+          <div
+            key={att.url}
+            className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#1F1F21]"
+          >
+            <img
+              src={att.url}
+              alt={att.name}
+              className="w-full h-full object-cover"
+            />
+            <button
+              className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/70 text-[10px]"
+              onClick={() => removeAttachment(att.url)}
+            >
+              ×
+            </button>
+          </div>
+        ))}
       </div>
     )}
-      {/* bottom bar */}
-      <div
-        style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-        className="flex items-center justify-between bg-[#101213] rounded-2xl border border-[#1F1F21] px-4 py-2 w-full text-sm"
-      >
-        {/* left: time + audience */}
-        <div className="flex items-center gap-1">
-          <div className="flex items-center gap-1 mr-1 py-[3px] rounded-full bg-[#111111] text-[11px]">
-            <img src={clockIcon} />
-            <span>{formatClockTime2(currentTime)}</span>
-          </div>
-          <AudienceSelect
-            value={audience}
-            onChange={setAudience}
-            userAccess={userAccess}
-          />
+
+    {/* ================= BOTTOM BAR ================= */}
+    <div className="flex items-center justify-between mt-3">
+
+      {/* LEFT: time + audience */}
+      <div className="flex items-center gap-2">
+
+        {/* Time chip */}
+        <div className="flex items-center gap-1 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
+          <img src={clockIcon} />
+          <span>{formatClockTime2(currentTime)}</span>
         </div>
 
-        {/* right: tools + voice/annotation UI */}
-        <div className="flex items-center gap-2">
-          {/* annotation button */}
+        {/* Audience */}
+        <AudienceSelect
+          value={audience}
+          onChange={setAudience}
+          userAccess={userAccess}
+        />
+      </div>
+
+      {/* RIGHT: grouped actions */}
+      <div className="flex items-center gap-2">
+
+        {/* grouped tools */}
+        <div className="flex items-center gap-1 bg-[#18191b] rounded-full px-2 py-1">
+
+          {/* annotation */}
           <button
-            className={`p-[6px] rounded-full hover:bg-white/5 ${
+            className={`p-1 rounded-full ${
               isAnnotating || hasPendingAnnotation ? "bg-white/10" : ""
             }`}
-            title={
-              hasPendingAnnotation
-                ? "Drawing ready"
-                : "Add annotation"
-            }
             onClick={onStartAnnotation}
+            title="Add annotation"
           >
             <img src={brushIcon} />
           </button>
 
-          {/* annotation pending chip */}
-          {!isRecording && hasPendingAnnotation && (
-            <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
-              <span className="text-gray-200">Drawing ready</span>
-              <button
-                className="text-gray-400 hover:text-white ml-1"
-                onClick={onCancelAnnotation}
-                title="Remove drawing"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          {/* emoji (disabled while recording) */}
-          {!isRecording && (
-            <div className="relative">
-              <button
-                ref={emojiBtnRef}
-                className="p-[6px] rounded-full hover:bg-white/5"
-                onClick={toggleEmoji}
-                title="Add emoji"
-              >
-                <img src={emojiIcon} />
-              </button>
-              {showEmojiPicker && emojiPos && (
-                <div
-                  ref={emojiPickerRef}
-                  style={{
-                    position: "fixed",
-                    top: emojiPos.top,
-                    left: emojiPos.left,
-                    zIndex: 9999
-                  }}
-                >
-                  <EmojiPicker
-                    theme="dark"
-                    emojiStyle="native"
-                    autoFocusSearch={false}
-                    onEmojiClick={(emoji) => {
-                      setText((v) => v + emoji.emoji);
-                      setShowEmojiPicker(false);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={handleAddFiles}
-          />
+          {/* emoji */}
           {!isRecording && (
             <button
-              className="p-[6px] rounded-full hover:bg-white/5"
-              title="Attach image"
+              ref={emojiBtnRef}
+              className="p-1 rounded-full hover:bg-white/10"
+              onClick={toggleEmoji}
+            >
+              <img src={emojiIcon} />
+            </button>
+          )}
+
+          {/* file */}
+          {!isRecording && (
+            <button
+              className="p-1 rounded-full hover:bg-white/10"
               onClick={() => fileInputRef.current?.click()}
             >
               <img src={clipIcon} />
             </button>
           )}
 
-          {/* voice recording / pending UI */}
-          {isRecording ? (
-            <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
-              <span className="text-red-500 text-xs">●</span>
-              <span className="text-gray-200">
-                Recording… {formatClockTimeMMSS(recordSeconds)}
-              </span>
-              <button
-                className="text-[#F87171] hover:underline ml-1"
-                onClick={onCancelVoice}
-              >
-                Cancel
-              </button>
-              <button
-                className="ml-2 px-2 py-[2px] rounded-full bg-[var(--brand-color)] text-black text-[11px] font-medium"
-                onClick={onStopVoice}
-              >
-                Stop
-              </button>
-            </div>
-          ) : (
-            hasPendingVoice && (
-              <div
-                className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px] cursor-pointer"
-                onClick={() => setShowVoicePreview(true)}
-              >
-                <img src={micIcon} className="w-3 h-3 opacity-80" />
-                <span className="text-gray-200">Click to play</span>
-
-                <button
-                  className="text-gray-400 hover:text-white ml-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCancelVoice();
-                  }}
-                  title="Remove voice note"
-                >
-                  ✕
-                </button>
-              </div>
-            )
-          )}
-
-          {/* mic button (only when not recording) */}
+          {/* mic */}
           {!isRecording && (
             <button
-              className="p-[6px] rounded-full hover:bg-white/5"
+              className="p-1 rounded-full hover:bg-white/10"
               onClick={toggleMic}
-              title="Record voice note"
             >
               <img src={micIcon} />
             </button>
           )}
-
-          {/* Send */}
-          <button
-            className="w-8 h-8 rounded-full bg-[var(--brand-color)] flex items-center justify-center shadow-sm disabled:opacity-40 disabled:cursor-default"
-            onClick={handleSend}
-            title="Add comment at current time"
-            disabled={disabledSend}
-          >
-            {sendingComment ? <Spinner size={16} color="#000" /> : 
-            <CommentSendIcon color={brandingColor}/>
-            }
-          </button>
         </div>
+
+        {/* Recording UI */}
+        {isRecording && (
+          <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
+            <span className="text-red-500">●</span>
+            <span>{formatClockTimeMMSS(recordSeconds)}</span>
+            <button onClick={onCancelVoice}>Cancel</button>
+            <button onClick={onStopVoice}>Stop</button>
+          </div>
+        )}
+
+        {/* SEND BUTTON */}
+        <button
+          className="w-9 h-9 rounded-full bg-[var(--brand-color)] flex items-center justify-center shadow-md disabled:opacity-40"
+          onClick={handleSend}
+          disabled={disabledSend}
+        >
+          {sendingComment ? (
+            <Spinner size={16} color="#000" />
+          ) : (
+            <CommentSendIcon color={brandingColor} />
+          )}
+        </button>
       </div>
-      {/* <VoicePreviewModal
-        isOpen={showVoicePreview}
-        onClose={() => setShowVoicePreview(false)}
-        audioUrl={pendingVoiceUrl}
-      /> */}
     </div>
+  </div>
+
+  {/* Emoji picker */}
+  {showEmojiPicker && emojiPos && (
+    <div
+      ref={emojiPickerRef}
+      style={{
+        position: "fixed",
+        top: emojiPos.top,
+        left: emojiPos.left,
+        zIndex: 9999
+      }}
+    >
+      <EmojiPicker
+        theme="dark"
+        emojiStyle="native"
+        onEmojiClick={(emoji) => {
+          setText((v) => v + emoji.emoji);
+          setShowEmojiPicker(false);
+        }}
+      />
+    </div>
+  )}
+
+  {/* Voice preview */}
+  {showVoicePreview && (
+    <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 w-[320px] bg-[#111216] border border-[#2A2B2E] rounded-xl p-3 shadow-xl">
+      <div className="flex justify-between mb-2 text-xs text-gray-300">
+        Voice note preview
+        <button onClick={() => setShowVoicePreview(false)}>✕</button>
+      </div>
+      <VoiceNotePlayer src={pendingVoiceUrl} />
+    </div>
+  )}
+
+  {/* hidden input */}
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept="image/*"
+    multiple
+    className="hidden"
+    onChange={handleAddFiles}
+  />
+</div>
   );
 }
