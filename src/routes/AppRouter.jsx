@@ -10,8 +10,8 @@ import DashboardLayout from "../components/dashboard/DashboardLayout";
 import WelcomeWorkspace from "../pages/dashboard/WelcomeWorkspace";
 import AddProject from "../pages/dashboard/AddProject";
 import ChangePassword from "../pages/ChangePassword";
+import NotFound from "../pages/NotFound";
 
-const NotFound = () => <div className="p-8">404 - Not Found</div>;
 
 const router = createBrowserRouter([
   {

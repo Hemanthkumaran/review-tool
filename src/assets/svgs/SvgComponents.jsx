@@ -428,3 +428,26 @@ export const CommentSendIcon = (props) => (
     />
   </svg>
 )
+
+export const LockIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={16}
+    height={16}
+    fill="none"
+    {...props}
+  >
+    <path
+      stroke="#323232"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M4 6.666V5.333c0-2.207.667-4 4-4s4 1.793 4 4v1.333M8 12.333A1.667 1.667 0 1 0 8 9a1.667 1.667 0 0 0 0 3.333Z"
+    />
+    <path
+      stroke="#323232"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11.334 14.667H4.667c-2.666 0-3.333-.667-3.333-3.333V10c0-2.666.667-3.333 3.333-3.333h6.667c2.667 0 3.333.667 3.333 3.333v1.334c0 2.666-.666 3.333-3.333 3.333Z"
+    />
+  </svg>
+)

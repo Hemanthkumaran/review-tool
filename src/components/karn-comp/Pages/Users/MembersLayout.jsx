@@ -17,12 +17,9 @@ export default function MembersLayout({
   workspacePlan,
   ownerWorkspace
 }) {
-
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setIsLoading] = useState(false);
-
-  console.log(workspaceUsers, 'workspaceUsers');
-  
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const data = useMemo(() => {
     return (workspaceUsers?.permissions || []).map((perm) => ({
@@ -72,7 +69,10 @@ export default function MembersLayout({
           row.original.role !== "Owner" && (
             <button
               className="remove-btn"
-              onClick={() => setIsOpen(true)}
+              onClick={() => {
+                setSelectedUser(row.original); // ✅ store correct row
+                setIsOpen(true);
+              }}
             >
               Remove
             </button>
@@ -92,34 +92,39 @@ export default function MembersLayout({
    * Counts
    * ------------------------------------- */
   const teamCount = data.filter(
-    (d) => d.role === "Owner" || d.role === "Team member"
+    (d) => d.role === "Team member"
   ).length;
 
   const collaboratorCount = data.filter(
     (d) => d.role === "Collaborator"
   ).length;
-  
+
   const maxUsers = workspacePlan?.subscription?.maxUsers ?? 1;
   const activePlan = workspacePlan?.subscription?.activePlan;
   const canInvite = teamCount < maxUsers;
   
-  async function handleRemove(rowItem) {
+  async function handleRemove() {
+    if (!selectedUser) return;
+
     setIsLoading(true);
-    const data = {
-      "email": rowItem.email
-    }
+
     try {
-      const res = await removeUserFromWorkspace(ownerWorkspace._id, data);
+      await removeUserFromWorkspace(ownerWorkspace._id, {
+        email: selectedUser.email,
+      });
+
       fetchWorkspaceUsers();
       setIsOpen(false);
-      setIsLoading(false);
+      setSelectedUser(null);
     } catch (e) {
-      setIsLoading(false);
       console.error(e);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  if (loading) return <AppLoader visible={loading} message="Loading folders…" />
+  if (loading)
+    return <AppLoader visible={loading} message="Loading folders…" />;
 
   return (
     <div>
@@ -136,10 +141,7 @@ export default function MembersLayout({
       {/* Members info */}
       <div className="members-bar">
         <div>
-          <div className="members-count">{data.length} members</div>
-          {/* <div className="members-meta">
-            {teamCount} team members · {collaboratorCount} collaborator
-          </div> */}
+          <div className="members-count">{data.length - 1} members</div>
           <div className="members-meta">
             {teamCount}/{maxUsers} team members · {collaboratorCount} collaborator
           </div>
@@ -162,11 +164,6 @@ export default function MembersLayout({
           <span className="plus">+</span>
           Invite
         </button>
-
-        {/* <button className="invite-btn" onClick={onInvite}>
-          <span className="plus">+</span>
-          Invite
-        </button> */}
       </div>
 
       {/* Table */}
@@ -189,8 +186,7 @@ export default function MembersLayout({
 
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <>
-                            <tr key={row.id}>
+              <tr key={row.id}>
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id}>
                     {flexRender(
@@ -200,21 +196,26 @@ export default function MembersLayout({
                   </td>
                 ))}
               </tr>
-               <RemoveAccessModal
-                  open={isOpen}
-                  onClose={() => setIsOpen(false)}
-                  title={`Remove ${row.original.name} from your workspace?`}
-                  description="This user won't be able to view or work in the workspace once removed. You can add them later from Settings → Users."
-                  buttonText="Remove from workspace"
-                  handleRemove={() => handleRemove(row.original)}
-                />
-              </>
             ))}
-                 
           </tbody>
         </table>
       </div>
 
+      {/* ✅ SINGLE MODAL (FIXED) */}
+      <RemoveAccessModal
+        open={isOpen}
+        onClose={() => {
+          setIsOpen(false);
+          setSelectedUser(null);
+        }}
+        title={`Remove ${
+          selectedUser?.name || selectedUser?.email || ""
+        } from your workspace?`}
+        description="This user won't be able to view or work in the workspace once removed. You can add them later from Settings → Users."
+        buttonText="Remove from workspace"
+        handleRemove={handleRemove}
+        loading={loading}
+      />
     </div>
   );
 }

@@ -57,7 +57,7 @@ function AssignedEditorsRow({
         >
           {/* placeholder avatar */}
           <span className="uppercase">
-            {p.email?.[0] || "?"}
+            {p.name || "?"}
           </span>
         </div>
       ))}
@@ -118,7 +118,6 @@ const handleAssignEditors = async (editors) => {
     alert("Failed to assign editors");
   }
 };
-
 
   return (
     <div

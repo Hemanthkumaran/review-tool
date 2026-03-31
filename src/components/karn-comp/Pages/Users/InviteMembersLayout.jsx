@@ -1,25 +1,75 @@
 import { useState, useRef, useEffect } from "react";
-import { X, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import "./InviteMembersLayout.css";
 import { inviteUserToWorkspace } from "../../../../services/api";
 import { showSuccessToast } from "../../../../helpers/showToast";
+import { LockIcon } from "../../../../assets/svgs/SvgComponents";
 
-
-
-export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace, fetchWorkspaceUsers, ownerWorkspacePlan }) {
+export default function InviteMembersLayout({
+  teamCount,
+  maxUsers,
+  onBack = () => {},
+  ownerWorkspace,
+  fetchWorkspaceUsers,
+  ownerWorkspacePlan
+}) {
   const [emails, setEmails] = useState([]);
   const [value, setValue] = useState("");
-  const [role, setRole] = useState(ownerWorkspacePlan?.subscription?.activePlan === 'team_plus' ? "Collaborator" : "Team member");
   const [open, setOpen] = useState(false);
-  const [roles, setRoles] = useState(["Team member"]);
+  const [role, setRole] = useState("Team member");
+  const [roles, setRoles] = useState([]);
+
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const activePlan = ownerWorkspacePlan?.subscription?.activePlan;
+console.log(ownerWorkspacePlan, 'ownerWorkspacePlan')
+  /* ---------------------------------------
+   * PLAN LOGIC (single source of truth)
+   * ------------------------------------- */
+  useEffect(() => {
+    if (!activePlan) return;
+
+    if (activePlan === "team_plus") {
+      setRoles(["Team member", "Collaborator"]);
+      setRole("Collaborator");
+    } else if (activePlan === "team") {
+      setRoles(["Team member", "Collaborator"]); // ✅ include both
+      setRole("Team member");
+    } else {
+      setRoles([]);
+    }
+  }, [activePlan]);
+
+  /* ---------------------------------------
+   * Close dropdown on outside click
+   * ------------------------------------- */
+  useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  /* ---------------------------------------
+   * Email logic
+   * ------------------------------------- */
+  const isValidEmail = (email) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const commitEmail = () => {
     const email = value.trim().toLowerCase();
     if (!email || !isValidEmail(email) || emails.includes(email)) return;
+
+    const remainingSlots = maxUsers - teamCount;
+    if (emails.length >= remainingSlots) {
+      showSuccessToast(`Limit reached. Max ${maxUsers} users allowed`);
+      return;
+    }
+
     setEmails((prev) => [...prev, email]);
     setValue("");
   };
@@ -35,36 +85,44 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
     }
   };
 
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (ownerWorkspace && ownerWorkspacePlan?.subscription?.activePlan === 'team_plus') {
-      setRoles(["Collaborator", "Team member"]);
-    }
-    const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [ownerWorkspace]);
-
+  /* ---------------------------------------
+   * Invite logic
+   * ------------------------------------- */
   function handleInvite() {
+    const remainingSlots = maxUsers - teamCount;
+
+    if (emails.length > remainingSlots) {
+      showSuccessToast(`You can only invite ${remainingSlots} more users`);
+      return;
+    }
+
     const data = {
       emails,
-      "permissionType": role == "Team member" ? "member" : role.toLowerCase()
-    }
+      permissionType:
+        role === "Team member" ? "member" : role.toLowerCase(),
+    };
+
     inviteUserToWorkspace(ownerWorkspace._id, data)
-    .then(res => {
-      setEmails([]);
-      setValue("");
-      fetchWorkspaceUsers(ownerWorkspace._id);
-      showSuccessToast("The invitation was sent to the user");
-    })
-    .catch(err => {
-      console.log(err.response.data.error)
-    })
+      .then(() => {
+        setEmails([]);
+        setValue("");
+        fetchWorkspaceUsers(ownerWorkspace._id);
+        showSuccessToast("The invitation was sent to the user");
+      })
+      .catch((err) => {
+        console.log(err?.response?.data?.error);
+      });
   }
+
+  const remainingSlots = maxUsers - teamCount;
+  const isOverLimit = emails.length > remainingSlots;
+
+  /* ---------------------------------------
+   * ❌ Freelancer → hide entire UI
+   * ------------------------------------- */
+if (!activePlan) {
+  return null; // or loader if you want
+}
 
   return (
     <div>
@@ -83,39 +141,58 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
             Share access to your workspace and choose the role they'll have.
           </p>
         </div>
-
-        {/* <button className="close-btn" onClick={onBack}>
-          <X size={18} />
-        </button> */}
       </div>
 
       {/* Invite as */}
       <div className="invite-row" ref={dropdownRef}>
         <label>Invite as:</label>
-          <button
-            className={`role-dropdown ${open ? "open" : ""}`}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {role}
-            <ChevronDown size={16} />
-          </button>
-          {open && (
-            <div className="role-menu">
-              {roles.map((r) => (
-                <button
-                  key={r}
-                  className={`role-item ${r === role ? "active" : ""}`}
-                  onClick={() => {
-                    setRole(r);
-                    setOpen(false);
-                  }}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+<button
+  className={`role-dropdown ${open ? "open" : ""} ${
+    activePlan === "freelancer" ? "disabled" : ""
+  }`}
+  onClick={() => {
+    setOpen((o) => !o);
+  }}
+>
+  {role}
+  {/* {activePlan !== "team_plus" && (
+    <span className="ml-2 opacity-50">🔒</span>
+  )} */}
+  <ChevronDown size={16} />
+</button>
+
+        {open && (
+  <div className="role-menu">
+    {roles.map((r) => {
+const isDisabled =
+  (activePlan === "team" && r === "Collaborator") ||
+  activePlan === "freelancer";
+
+      return (
+        <button
+          key={r}
+          style={{ color: isDisabled ? "#323232" : "#BFBFBF"}}
+          className={`role-item flex items-center
+            ${r === role ? "active" : ""} 
+            ${isDisabled ? "disabled" : ""}
+          `}
+          onClick={() => {
+            if (isDisabled) return; // 🔒 block selection
+            setRole(r);
+            setOpen(false);
+          }}
+        >
+          <span>{r}</span>
+
+          {/* 🔒 lock icon */}
+          {isDisabled && <span style={{ marginLeft:10 }}><LockIcon/></span>}
+        </button>
+      );
+    })}
+  </div>
+)}
+      </div>
+
       <br />
 
       {/* Email input */}
@@ -126,7 +203,9 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
             <button
               className="chip-remove"
               onClick={() =>
-                setEmails((prev) => prev.filter((e) => e !== email))
+                setEmails((prev) =>
+                  prev.filter((e) => e !== email)
+                )
               }
             >
               ×
@@ -134,15 +213,22 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
           </div>
         ))}
 
-        <input
-          ref={inputRef}
-          className="email-input"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={emails.length ? "" : "Enter email address"}
-        />
+<input
+  ref={inputRef}
+  className="email-input"
+  value={value}
+  onChange={(e) => setValue(e.target.value)}
+  onKeyDown={handleKeyDown}
+  placeholder={""}
+/>
       </div>
+
+      {isOverLimit && (
+        <div className="text-xs text-red-400 mt-2">
+          You can only invite {remainingSlots} more user
+          {remainingSlots !== 1 ? "s" : ""}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="invite-actions">
@@ -150,9 +236,16 @@ export default function InviteMembersLayout({ onBack = () => {}, ownerWorkspace,
           Cancel
         </button>
 
-        <button className="invite-btn" disabled={!emails.length} onClick={handleInvite}>
-          Invite
-        </button>
+<button
+  className="invite-btn"
+  disabled={
+    !emails.length ||
+    isOverLimit
+  }
+  onClick={handleInvite}
+>
+  Invite
+</button>
       </div>
     </div>
   );

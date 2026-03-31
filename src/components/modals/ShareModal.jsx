@@ -451,7 +451,7 @@ const filteredSuggestions = useMemo(() => {
 
         {/* current members */}
         <div className="px-6 py-3">
-            {/* <span style={{ fontFamily:'Gilroy-Light', fontSize:14}}>People with access</span> */}
+            <span style={{ fontFamily:'Gilroy-Light', fontSize:14}}>People with access</span>
           <div className="space-y-2 max-h-60 overflow-auto pb-2 no-scrollbar">
             {/* <div
                 className="flex items-center justify-between text-[13px] mt-3 mb-2"
@@ -473,9 +473,10 @@ const filteredSuggestions = useMemo(() => {
                   <span>{'Owner'}</span>
                 </div>
               </div> */}
-            {/* <div className="space-y-3">
-              {projectAccess?.map((p) => {
-                return <>
+            <div className="space-y-3">
+              {permissions
+                ?.filter((p) => p.permissionType !== "owner") // 👈 remove owner completely
+                .map((p) => (
                   <div
                     key={p._id}
                     className="flex items-center justify-between"
@@ -484,18 +485,15 @@ const filteredSuggestions = useMemo(() => {
                       {p.email}
                     </div>
 
-                    {p.role !== "Owner" && (
-                      <button
-                        onClick={() => setRemoveTarget(p.email)}
-                        className="w-7 h-7 cursor-pointer rounded-full bg-[#1E1F22] flex items-center justify-center hover:bg-white/10"
-                      >
-                        ×
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setRemoveTarget(p.email)}
+                      className="w-7 h-7 cursor-pointer rounded-full bg-[#1E1F22] flex items-center justify-center hover:bg-white/10"
+                    >
+                      ×
+                    </button>
                   </div>
-                </>
-              })}
-            </div> */}
+                ))}
+            </div>
             <RemoveAccessModal
               open={!!removeTarget}
               onClose={() => setRemoveTarget(null)}

@@ -6,6 +6,7 @@ import {
   removeUserFromProjectApi,
 } from "../../services/api";
 import RemoveAccessModal from "./RemoveAccessModal";
+import { getInitials } from "../../helpers/common";
 
 export default function AssignEditorsModal({
   open,
@@ -120,10 +121,13 @@ export default function AssignEditorsModal({
                   key={p.id}
                   className="flex items-center gap-2 bg-[#1B1C1E] rounded-full px-3 py-1 text-[12px]"
                 >
-                  <img
+                  {p.avatar ? <img
                     src={p.avatar}
                     className="w-4 h-4 rounded-full"
-                  />
+                  /> :
+                    <div className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#151618] border border-[#232427]">  
+                      <div style={{ fontSize:10 }}>{getInitials(p?.name)}</div>
+                    </div> }
                   <span>{p.email}</span>
                   <button
                     onClick={() => toggle(p)}
@@ -162,10 +166,15 @@ export default function AssignEditorsModal({
                         ${active ? "bg-[#141517]" : ""}`}
                     >
                       <div className="flex items-center gap-3">
-                        <img
-                          src={p.avatar}
-                          className="w-9 h-9 rounded-md"
-                        />
+                        {p.avatar ?
+                          <img
+                            src={p.avatar}
+                            className="w-9 h-9 rounded-md"
+                          /> :
+                          <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#151618] border border-[#232427] mr-3">  
+                            <div>{getInitials(p?.name)}</div>
+                          </div>
+                        }
                         <div>
                           <div className="text-[13px]">
                             {p.name}
@@ -188,9 +197,9 @@ export default function AssignEditorsModal({
 
         {/* People with access */}
         <div className="px-7 mt-4">
-          {/* <h4 className="text-sm mb-3 text-white/80">
+          {projectAccess.length ? <h4 className="text-sm mb-3 text-white/80">
             People assigned to this project
-          </h4>
+          </h4> : null}
           <div className="space-y-3">
             {projectAccess.map((p) => {
               return <>
@@ -213,7 +222,7 @@ export default function AssignEditorsModal({
                 </div>
               </>
             })}
-          </div> */}
+          </div>
           <RemoveAccessModal
             open={!!removeTarget}
             onClose={() => setRemoveTarget(null)}
@@ -253,7 +262,7 @@ function mapPermissions(permissions = []) {
         p.permissionType === "member"
           ? "Team member"
           : "Collaborator",
-      avatar: p?.profileImage?.url ?? `https://i.pravatar.cc/64?u=${p.email}`,
+      avatar: p?.profileImage?.url ? p?.profileImage?.url : null,
     }));
 }
 

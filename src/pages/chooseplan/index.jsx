@@ -82,7 +82,7 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
       : isCurrent
       ? "Continue with Current Plan"
       : "Switch Plan",
-    disabled: overLimit,
+    disabled: false,
   };
 };
 

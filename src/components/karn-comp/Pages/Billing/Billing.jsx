@@ -76,8 +76,11 @@ const Billing = () => {
         onClose={() => setIsOpen(false)}
         setChosenPlan={(plan) => {
           setChosenPlan(plan);
+          refreshOwnerWorkspacePlan()
         }}
         onSuccess={() => {
+          setIsOpen(false);
+
         }}
         trialUsed={trialUsed}
         buttonLabel={!trialUsed ? "Start free trial" : "Subscribe"}

@@ -174,7 +174,7 @@ if (next) {
     if (!workspaceId) return;
 
     try {
-      setLoading(true);
+      // setLoading(true);
       setWorkspaceUsers(null); // 🔑 reset to avoid flashing old data
 
       const res = await getWorkspaceUsers(workspaceId);
