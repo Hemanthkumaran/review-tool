@@ -31,7 +31,7 @@ export default function DownloadMenuButton({ onAction, projectDetail, onRefresh,
 
   function btnContent() {
     if (userAccess === constants.REVIEWER) {
-      if (projectDetail?.downloadLink.length) {
+      if (projectDetail?.downloadLink?.length) {
         return <button
         type="button"
         onMouseDown={(e) => e.stopPropagation()} 

@@ -85,7 +85,6 @@ export default function VideoReview() {
   const commentInputRef = useRef(null);
   
   const { brandingColor } = useWorkspace();
-  console.log(brandingColor, 'brandingColor');
   
   // annotation draft (from canvas)
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }

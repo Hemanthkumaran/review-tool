@@ -374,7 +374,7 @@ sendingComment ||
 
   {/* Voice preview */}
   {showVoicePreview && (
-    <div className="absolute bottom-[70px] left-1/2 -translate-x-1/2 w-[320px] bg-[#111216] border border-[#2A2B2E] rounded-xl p-3 shadow-xl">
+    <div className="absolute bottom-[100px] left-1/2 -translate-x-1/2 w-[320px] bg-[#111216] border border-[#2A2B2E] rounded-xl p-3 shadow-xl">
       <div className="flex justify-between mb-2 text-xs text-gray-300">
         Voice note preview
         <button onClick={() => setShowVoicePreview(false)}>✕</button>

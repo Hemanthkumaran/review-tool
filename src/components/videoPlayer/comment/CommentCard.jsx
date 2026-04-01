@@ -124,21 +124,12 @@ export default function CommentCard({
   };
 
   return (
-    <div onClick={onGo}   className="
-    cursor-pointer 
-    group/comment 
-    relative  
-    bg-[#050506] 
-    rounded-2xl 
-    border border-black 
-    px-4 py-3 mb-3 last:mb-0 
-    text-[13px]
-
-    transition-colors duration-250
+    <div onClick={onGo} className="
+        transition-colors duration-250
     hover:bg-[#121212] 121212
     active:bg-[#0a0a0b]
-  ">
-      <a
+    cursor-pointer group/comment relative  bg-[#050506] rounded-2xl border border-black px-4 py-3 mb-3 last:mb-0 text-[13px]">
+      <CommentHeader
         time={time}
         index={index}
         sNo={marker.sNo}
@@ -160,13 +151,11 @@ export default function CommentCard({
         {!isEditingComment ? (
           <>
             <p className="whitespace-pre-line">{marker.text}</p>
-            {(audioUrl || images.length > 0) && (
+            {(type === "voice" || type === "mixed") && audioUrl && (
             <div className="mt-1">
-              {audioUrl && (
-                <VoiceNotePlayer src={audioUrl} />
-              )}
+              <VoiceNotePlayer src={audioUrl}/>
               {images.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-2">
+                <div className="flex flex-wrap gap-3 mt-1">
                   {images.map((src, i) => (
                     <div
                       key={`${src}-${i}`}
@@ -185,8 +174,8 @@ export default function CommentCard({
                   ))}
                 </div>
               )}
-              </div>
-            )}
+            </div>
+          )}
             {/* footer row */}
                 <div className="mt-3 flex items-center justify-between">
                   {/* Reply */}

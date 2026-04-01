@@ -42,7 +42,7 @@ const EditableAvatar = ({ imageUrl, onImageSelect, user, addOnStatus }) => {
       <div className="d-flex justify-center align-center">
         <div style={{ fontSize:24, marginTop:-15, fontWeight:'bold' }}>{getInitials(user?.firstName, user?.lastName)}</div>
       </div>}
-      <button type="button" className="edit-btn" onClick={addOnStatus != 'active' ? null : open}>
+      <button type="button" className="edit-btn" onClick={open}>
         <img height="24px" width="20px" src={EditIcon} alt="" />
       </button>
     </div>
