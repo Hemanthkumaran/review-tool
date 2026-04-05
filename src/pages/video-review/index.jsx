@@ -94,17 +94,19 @@ export default function VideoReview() {
   const [isUploading, setIsUploading] = useState(false);
   const rawVersions = projectDetail?.versions || [];
   const isLatestVersion =
-  rawVersions.length > 0 &&
-  activeVersionId === rawVersions[rawVersions.length - 1]?._id;
+    rawVersions.length > 0 &&
+    activeVersionId === rawVersions[rawVersions.length - 1]?._id;
 
-    const activeRawVersion = useMemo(() => {
-  if (!activeVersionId || !rawVersions?.length) return null;
-  return rawVersions.find(v => v._id === activeVersionId) || null;
-}, [activeVersionId, rawVersions]);
+  const activeRawVersion = useMemo(() => {
+    if (!activeVersionId || !rawVersions?.length) return null;
+    return rawVersions.find(v => v._id === activeVersionId) || null;
+  }, [activeVersionId, rawVersions]);
+
 const playbackId = activeRawVersion?.muxPlaybackID || null;
+const videoFps = activeRawVersion?.fps || null;
 const muxStatus = activeRawVersion?.muxStatus;
 
-
+  
   const currentUser = {
     id: "me",
     name: "John",
@@ -517,7 +519,7 @@ function fetchProject(storedGuest = null) {
     }
 
   const baseTime = isEdit
-    ? existingMarker.time           // 👈 reuse original timeline
+    ? existingMarker.time        
     : (hasAnnotation && pendingAnnotation.time) ||
       (hasVoice && pendingVoice.startTime) ||
       currentTime ||
@@ -527,8 +529,11 @@ function fetchProject(storedGuest = null) {
 
   const formData = new FormData();
   formData.append('commentType', commentType);
-  // timeline in seconds (backend expects string)
-  formData.append("timeline", baseTime.toFixed(3));
+
+  const frame = Math.floor(baseTime * videoFps);
+  
+  formData.append("timeline", baseTime.toFixed(6));
+  formData.append("frame", frame);                
 
   if (trimmed) {
     formData.append("text", trimmed);
@@ -877,6 +882,7 @@ const handleNewVersionFile = async (e) => {
             onAddAnnotation={handleAddAnnotation}
             onCancelAnnotation={handleCancelAnnotation}
             onAnnotationDraftChange={handleAnnotationDraftChange}
+            videoFps={videoFps}
           />
           </div>
         ) : (
@@ -908,6 +914,8 @@ const handleNewVersionFile = async (e) => {
         commentInputRef={commentInputRef}
         sendingComment={sendingComment}
         userAccess={projectAccess}
+        videoFps={videoFps}
+        frame={activeRawVersion.frame}
       />}
     </div>
 
@@ -930,6 +938,7 @@ const handleNewVersionFile = async (e) => {
         updateCommentResolvedLocal={updateCommentResolvedLocal}
         updateCommentLocal={updateCommentLocal}
         deleteCommentLocal={deleteCommentLocal}
+        videoFps={videoFps}
       />
     </div>
   </div>

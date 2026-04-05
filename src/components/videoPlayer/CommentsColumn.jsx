@@ -24,7 +24,8 @@ export default function CommentsColumn({
   handleSendComment,
   updateCommentResolvedLocal,
   updateCommentLocal,
-  deleteCommentLocal
+  deleteCommentLocal,
+  videoFps
 }) {
   const [activeTab, setActiveTab] = useState("comments");
   const NOTES_SECTIONS = [
@@ -283,7 +284,17 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     loggedInUser={user}
                     projectId={projectId}
                     index={idx}
-                    onGo={() => onSeek(m.time)}
+                    onGo={() => {
+                      const fps = m.fps || projectDetail?.versions?.[0]?.fps || 60;
+                      const frame = m.frame;
+
+                      const exactTime = frame / fps;
+
+                      // small offset to ensure correct frame landing
+                      const epsilon = 0.000001;
+                      
+                      onSeek(exactTime + epsilon);
+                    }}
                     activeVersionId={activeVersionId}
                     onReplySubmit={(text) =>
                       onAddReply ? onAddReply(m.id, text) : null
@@ -296,6 +307,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
                     onReplyUpdated={handleReplyUpdated}
                     onReplyDeleted={handleReplyDeleted}
                     updateCommentResolvedLocal={updateCommentResolvedLocal}
+                    videoFps={videoFps}
                   />
                 ))}
                 <div style={{ height:120 }}/>

@@ -20,6 +20,7 @@ export default function VideoPlayerWithSeekbar({
   onCancelAnnotation,
   onAnnotationDraftChange,
   markers = [],
+  videoFps
   // projectId
 }) {
   const annotationCanvasRef = useRef(null);
@@ -34,34 +35,37 @@ export default function VideoPlayerWithSeekbar({
   const [volume, setVolume] = useState(1);
   const [lastAction, setLastAction] = useState("play");
   
-//   useEffect(() => {
-//     if (!playerRef.current) return;
-//     const video = playerRef.current?.media;
-//     if (!video || !video.requestVideoFrameCallback) return;
+useEffect(() => {
+  const player = playerRef.current;
+  if (!player) return;
 
-//     let lastTime = 0;
-//     let frames = 0;
+  const video =
+    player.media ??
+    player.shadowRoot?.querySelector("video");
 
-//     const loop = (now) => {
-//       frames++;
+  if (!video || !video.requestVideoFrameCallback) return;
 
-//       if (!lastTime) lastTime = now;
+  let frameId;
 
-//       const diff = now - lastTime;
+  const update = (now, metadata) => {
+    const currentTime = metadata.mediaTime;
 
-//       if (diff >= 1000) {
-//         const fps = (frames * 1000) / diff;
-//         console.log("FPS:", fps.toFixed(2));
+    // 👇 THIS is the key part
+    onTimeUpdate?.({
+      target: { currentTime }
+    });
 
-//         frames = 0;
-//         lastTime = now;
-//       }
+    frameId = video.requestVideoFrameCallback(update);
+  };
 
-//       video.requestVideoFrameCallback(loop);
-//     };
+  frameId = video.requestVideoFrameCallback(update);
 
-//     video.requestVideoFrameCallback(loop);
-// }, []);
+  return () => {
+    if (frameId && video.cancelVideoFrameCallback) {
+      video.cancelVideoFrameCallback(frameId);
+    }
+  };
+}, [playerRef, onTimeUpdate]);
   
   useEffect(() => {
     if (!playerRef.current) return;
@@ -447,6 +451,7 @@ const handleTogglePlay = () => {
         onVolumeChange={handleVolumeChange}
         onToggleMute={handleToggleMute}
         playbackId={src}
+        videoFps={videoFps}
       />
       <div className="h-4" />
     </div>

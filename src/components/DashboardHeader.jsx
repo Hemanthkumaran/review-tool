@@ -47,21 +47,27 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
 
 
   useEffect(() => {
-  const handleClickOutside = (event) => {
-    if (
-      workspaceRef.current &&
-      !workspaceRef.current.contains(event.target)
-    ) {
-      setOpenWorkspace(false);
-    }
-  };
+    const handleClickOutside = (event) => {
+      if (
+        workspaceRef.current &&
+        !workspaceRef.current.contains(event.target)
+      ) {
+        setOpenWorkspace(false);
+      }
+    };
 
-  document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
 
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const getUsageColor = () => {
+    if (usagePercent < 60) return "#24B491";
+    if (usagePercent < 90) return "#FFA500"; // orange
+    return "#820000";
   };
-}, []);
 
   const handleWorkspaceChange = (workspace) => {
     setActiveWorkspace(workspace);
@@ -118,8 +124,11 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
             {minutesUsed} / {minutesCap} mins
             <div className="h-1 w-28 mt-1 rounded-full bg-[#1E1F22] overflow-hidden">
               <div
-                className="h-full bg-[#820000] rounded-full"
-                style={{ width: `${usagePercent}%` }}
+                className="h-full rounded-full"
+                style={{ 
+                  width: `${usagePercent}%`,
+                  backgroundColor: getUsageColor(),
+               }}
               />
             </div>
             </div>}

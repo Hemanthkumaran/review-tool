@@ -9,7 +9,13 @@ export default function CommentHeader({
   sNo,
   // onGo,
   onToggleResolved,
+  frame,
+  videoFps
 }) {
+console.log(frame,videoFps, 'frame');
+
+  const finalTime = frame / videoFps;
+
   return (
     <div className="flex items-center justify-between mb-3">
       {/* Left */}
@@ -18,7 +24,11 @@ export default function CommentHeader({
           // onClick={onGo}
           className="text-[var(--brand-color)] cursor-pointer"
         >
-          {formatClockTime2(time)}
+          {/* {formatClockTime2(finalTime, videoFps)} */}
+            {formatClockTime2({
+              frame: frame,
+              fps: videoFps
+            })}
         </span>
         <span className="text-gray-400">•</span>
         <span className="text-gray-300">#{sNo}</span>

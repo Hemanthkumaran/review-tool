@@ -45,7 +45,9 @@ export default function CommentBar({
   sendingComment,
   commentInputRef,
   userAccess,
-  pendingVoiceUrl
+  pendingVoiceUrl,
+  videoFps,
+  frame
 }) {
   const [text, setText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -62,6 +64,12 @@ export default function CommentBar({
 
   const MAX_RECORD_SECONDS = 180;
   const [recordSeconds, setRecordSeconds] = useState(MAX_RECORD_SECONDS);
+
+  const fps = videoFps || 60;
+
+  const snappedFrame = Math.round(currentTime * fps);
+  const snappedTime = snappedFrame / fps;
+
   
   useEffect(() => {
     if (userAccess) {
@@ -264,7 +272,8 @@ sendingComment ||
         {/* Time chip */}
         <div className="flex items-center gap-1 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
           <img src={clockIcon} />
-          <span>{formatClockTime2(currentTime)}</span>
+          <span>{formatClockTime2(snappedTime, fps)}</span>
+          
         </div>
 
         {/* Audience */}

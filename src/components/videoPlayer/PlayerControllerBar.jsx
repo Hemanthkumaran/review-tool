@@ -45,7 +45,8 @@ export default function PlayerControlsBar({
   onQualityChange,
   volume,
   onVolumeChange,
-  playbackId
+  playbackId,
+  videoFps
 }) {
   const [qualityMenuOpen, setQualityMenuOpen] = useState(false);
   const [volumeOpen, setVolumeOpen] = useState(false);
@@ -95,6 +96,11 @@ export default function PlayerControlsBar({
     }
   };
 
+    const fps = videoFps || 60;
+
+  const snappedFrame = Math.round(currentTime * fps);
+  const snappedTime = snappedFrame / fps;
+
 
   return (
     <div style={{ marginTop:-20}} className="select-none px-6">
@@ -105,6 +111,7 @@ export default function PlayerControlsBar({
         markers={markers}
         onSeek={onSeek}
         playbackId={playbackId}
+        videoFps={videoFps}
       />
       {/* controls row */}
       <div className="mt-3 flex items-center justify-between text-[13px] text-gray-200">
@@ -168,7 +175,8 @@ export default function PlayerControlsBar({
         </div>
         {/* center time */}
         <div className="min-w-[120px] text-center tracking-wide">
-          {formatClockTime2(currentTime)}{" "}
+          {/* {formatClockTime2(currentTime, videoFps)}{" "} */}
+          {formatClockTime2(snappedTime, fps)}{" "}
           <span className="text-gray-500">
             / {formatClockTime2(Number.isFinite(duration) ? duration : 0)}
           </span>

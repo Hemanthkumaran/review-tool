@@ -75,11 +75,36 @@ export function formatClockTime(t = 0) {
   );
 }
 
-export function formatClockTime2(t = 0, fps = 59) {
-  if (!Number.isFinite(t)) t = 0;
+export function formatClockTime2(
+  tOrObj = 0,
+  fps = 60
+) {
+  let time = 0;
+  let frame = null;
 
-  const totalSeconds = Math.floor(t);
-  const frames = Math.floor((t % 1) * fps);
+  // ✅ support object input
+  if (typeof tOrObj === "object" && tOrObj !== null) {
+    time = tOrObj.time ?? 0;
+    frame = tOrObj.frame ?? null;
+    fps = tOrObj.fps ?? fps;
+  } else {
+    time = tOrObj;
+  }
+
+  if (!Number.isFinite(fps) || fps <= 0) fps = 60;
+
+  let totalFrames;
+
+  // 🔥 PRIORITY: frame if exists
+  if (Number.isFinite(frame)) {
+    totalFrames = Math.floor(frame);
+  } else {
+    if (!Number.isFinite(time)) time = 0;
+    totalFrames = Math.floor(time * fps);
+  }
+
+  const frames = Math.floor(totalFrames % fps);
+  const totalSeconds = Math.floor(totalFrames / fps);
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

@@ -29,7 +29,8 @@ export default function CommentCard({
   handleSendComment,
   updateCommentResolvedLocal,
   deleteCommentLocal,
-  loggedInUser
+  loggedInUser,
+  videoFps
 }) {
   const {
     time,
@@ -133,6 +134,8 @@ export default function CommentCard({
         time={time}
         index={index}
         sNo={marker.sNo}
+        frame={marker.frame}
+        videoFps={videoFps}
         createdAt={createdAt}
         isResolved={isResolved}
         resolving={resolving}

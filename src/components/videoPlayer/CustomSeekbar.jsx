@@ -14,6 +14,7 @@ export default function CustomSeekBar({
   onSeek,
   markers = [],
   playbackId,
+  videoFps
 }) {
   const [hoverTime, setHoverTime] = useState(null);
   const [hoverX, setHoverX] = useState(0);
@@ -164,7 +165,7 @@ export default function CustomSeekBar({
               className="w-full h-20"
             />
             <div className="text-[11px] text-center text-white py-1 bg-black/70">
-              {formatClockTime2(hoverTime)}
+              {formatClockTime2(hoverTime, videoFps)}
             </div>
           </div>
         </div>

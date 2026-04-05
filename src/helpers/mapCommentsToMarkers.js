@@ -32,7 +32,9 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
     // Voice note (signed URL)
     const audioUrl = c.voiceNote?.url || null;
 
-    const sNo = c.sNo
+    const sNo = c.sNo;
+
+    const frame = c.frame;
 
     const annotation = safeParseAnnotation(c.annotation);
 
@@ -87,6 +89,7 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
       replies,
       isResolved: !!c.isResolved,
       sNo: sNo,
+      frame: frame,
       _raw: c, // keep raw
     };
   });
