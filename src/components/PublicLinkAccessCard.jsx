@@ -6,7 +6,8 @@ export default function PublicLinkAccessCard({
   passwordRequired,
   onTogglePassword,
   onCopy,
-  onSavePassword, // 🔐 NEW
+  onSavePassword,
+  copied,
 }) {
   const [password, setPassword] = useState("");
   const [saved, setSaved] = useState(false);
@@ -43,7 +44,6 @@ export default function PublicLinkAccessCard({
             </div>
           </div>
         </div>
-
         <button
           onClick={onCopy}
           className="
@@ -56,8 +56,12 @@ export default function PublicLinkAccessCard({
             cursor-pointer
           "
         >
-          <CopyIcon color="#BFBFBF" />
-          <span className="text-sm">Copy link</span>
+        { copied ?
+          <span className="text-sm">Copied</span> :
+          <>
+            <CopyIcon color="#BFBFBF" />
+            <span className="text-sm">Copy link</span>
+          </> }
         </button>
       </div>
 
@@ -127,7 +131,7 @@ export default function PublicLinkAccessCard({
               cursor-pointer
             "
           >
-            Save
+            {saved ? 'Saved' : 'Save'}
           </button>
         </div>
       )}

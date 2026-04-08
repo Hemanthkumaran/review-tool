@@ -62,6 +62,7 @@ export default function ShareModal({ projectDetail = null, open = true, onClose,
   const [removeTarget, setRemoveTarget] = useState(null);
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [passwordRequired, setPasswordRequired] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const { activeWorkspace, ownerWorkspacePlan } = useWorkspace();
   const activePlan = ownerWorkspacePlan?.subscription?.activePlan;
@@ -185,13 +186,26 @@ const handleSavePassword = async (password) => {
     )}&passwordRequired=${passwordRequired}`;
 
     navigator.clipboard.writeText(url);
-    showSuccessToast("Link copied!");
+    // showSuccessToast("Link copied!");
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000); // 2 seconds
   }
 
   const handleRemove = async (email) => {
     await removeUserFromProjectApi(projectID, email);
     onRefresh?.();
   };
+
+  function handleXBtn(p) {
+    if (p.userData.role == "member") {
+      handleRemove(p.email);
+    } else {
+      setRemoveTarget(p.email);
+    }
+  }
   
   return (
       <Modal
@@ -260,13 +274,14 @@ const handleSavePassword = async (password) => {
                   getOptionValue={(option) => option.email}
                   formatOptionLabel={(option) => (
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={option.avatar}
-                          alt={option.name}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                        <div>
+        <div className="flex items-center gap-3">
+          {option?.profileImage?.url ? <img
+            src={option?.profileImage?.url}
+            style={{ borderRadius:5 }}
+            className="w-8 h-8 object-cover"
+          /> : 
+          <div style={{ borderRadius:5 }} className="flex items-center justify-center w-8 h-8 bg-[#151618]">{getInitials(option?.name)}</div>}
+          <div>
                           <div
                             className="leading-tight text-[13px] text-white"
                             style={{ fontFamily: "Gilroy-Light" }}
@@ -285,7 +300,7 @@ const handleSavePassword = async (password) => {
                         className="text-[11px] text-[#C7C7C7]"
                         style={{ fontFamily: "Gilroy-Light" }}
                       >
-                        {option.role}
+                        {option.permissionType}
                       </div>
                     </div>
                   )}
@@ -306,11 +321,12 @@ const handleSavePassword = async (password) => {
             passwordRequired={passwordRequired}
             onTogglePassword={handleTogglePassword}
             onCopy={handleCopy}
+            copied={copied}
             onSavePassword={handleSavePassword}
           />
         }
         {/* suggestions dropdown card */}
-        {filteredSuggestions?.length > 0 && (
+        {/* {filteredSuggestions?.length > 0 && (
           <div className="px-6">
             <div className="bg-black rounded-2xl border border-[#222229] mt-2 mb-3 max-h-44 overflow-auto">
               {filteredSuggestions.map((p, idx) => (
@@ -344,7 +360,7 @@ const handleSavePassword = async (password) => {
               ))}
             </div>
           </div>
-        )}
+        )} */}
 
         <div className="mx-6 h-px bg-[#26262E]" />
 
@@ -390,7 +406,7 @@ const handleSavePassword = async (password) => {
           </span>
 
           <button
-            onClick={() => setRemoveTarget(p.email)}
+            onClick={() => handleXBtn(p)}
             className="w-7 h-7 cursor-pointer rounded-full bg-[#1E1F22] flex items-center justify-center hover:bg-white/10"
           >
             ×

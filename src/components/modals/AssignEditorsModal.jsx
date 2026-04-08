@@ -17,13 +17,17 @@ export default function AssignEditorsModal({
   projectAccess
 }) {
   const people = useMemo(() => mapPermissions(permissions), [permissions]);
-  console.log(projectAccess, 'projectAccess');
   
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const [removeTarget, setRemoveTarget] = useState(null);
+const [localAccess, setLocalAccess] = useState(projectAccess || []);
+
+useEffect(() => {
+  setLocalAccess(projectAccess || []);
+}, [projectAccess]);
 
   useEffect(() => {
     if (!showDropdown) return;
@@ -42,15 +46,26 @@ export default function AssignEditorsModal({
       document.removeEventListener("mousedown", handler);
   }, [showDropdown]);
 
+  const existingEmails = useMemo(() => {
+  return new Set(
+    (localAccess || []).map(p => p?.userData?.email)
+  );
+}, [localAccess]);
+
   const filtered = useMemo(() => {
-    if (!query) return people;
+    if (!query) {
+      return people.filter(p => !existingEmails.has(p.email));
+    }
     const q = query.toLowerCase();
     return people.filter(
       (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.email.toLowerCase().includes(q)
+        !existingEmails.has(p.email) && // 🔥 REMOVE already added users
+        (
+          p.name.toLowerCase().includes(q) ||
+          p.email.toLowerCase().includes(q)
+        )
     );
-  }, [query, people]);
+  }, [query, people, existingEmails]);
 
   const toggle = (person) => {
     setSelected((prev) =>
@@ -77,10 +92,19 @@ export default function AssignEditorsModal({
     }
   };
 
-  const handleRemove = async (email) => {
+const handleRemove = async (email) => {
+  // 🔥 optimistic update
+  setLocalAccess(prev =>
+    prev.filter(p => p?.userData?.email !== email)
+  );
+
+  try {
     await removeUserFromProjectApi(projectID, email);
-    onRefresh?.();
-  };
+    onRefresh?.(); // still sync with backend
+  } catch (e) {
+    console.error(e);
+  }
+};
 
   return (
     <Modal
@@ -113,7 +137,7 @@ export default function AssignEditorsModal({
         />
 
         {/* Search */}
-        <div className="px-6 mt-6 relative" ref={dropdownRef}>
+        <div className="px-6 mt-3 relative" ref={dropdownRef}>
           <div className="rounded-2xl border border-[#1E1F22] bg-[#0F1011] p-2">
             {/* Selected chips */}
             <div className="flex flex-wrap gap-2 mb-2">
@@ -129,7 +153,7 @@ export default function AssignEditorsModal({
                     <div className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#151618] border border-[#232427]">  
                       <div style={{ fontSize:10 }}>{getInitials(p?.name)}</div>
                     </div> }
-                  <span>{p.email}</span>
+                  <span>{p.name}</span>
                   <button
                     onClick={() => toggle(p)}
                     className="cursor-pointer"
@@ -198,12 +222,12 @@ export default function AssignEditorsModal({
 
         {/* People with access */}
         <div className="px-7 mt-4">
-          {projectAccess.length ? <h4 className="text-sm mb-3 text-white/80">
+          {localAccess.length ? <h4 className="text-sm mb-3 text-white/80">
             People assigned to this project
           </h4> : null}
 
           <div className="space-y-3 mt-3">
-  {projectAccess?.map((p) => {
+  {localAccess?.map((p) => {
     // const role =
     //   p.permissionType === "owner"
     //     ? "Owner"

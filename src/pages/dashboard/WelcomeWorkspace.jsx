@@ -176,10 +176,19 @@ export default function WelcomeWorkspace({
         </Accordion.Root>
     }
   }
+  const isLocked = modalStep === "noPlan";
   const isLoading = workspaceLoading || foldersLoading || billingLoading;
-
+  console.log(modalStep, 'modalStep');
+  
+  // if (isLocked) {
+  //   return <div style={{ top:"8%" }} className="absolute inset-0 z-40 backdrop-blur-sm  pointer-events-none" />
+  // }
   return (
     <div className="min-h-screen w-full text-white px-4 mt-4">
+        {/* 🔴 Blur overlay */}
+  {isLocked && (
+    <div style={{ top:"8%" }} className="absolute  inset-0 z-40 backdrop-blur-sm bg-black/50 pointer-events-none" />
+  )}
       <main className="px-6 md:px-8">
         <div className="mt-8 h-[45px] flex items-center justify-between">
           <div style={{ fontFamily:"Gilroy-SemiBold", fontSize:24 }}>
