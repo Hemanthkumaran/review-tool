@@ -13,8 +13,8 @@ export default function CommentHeader({
   videoFps
 }) {
 
-  const finalTime = frame / videoFps;
 
+  const fps = frame ? (videoFps && frame ? (arguments[0]?.fps || videoFps) : videoFps) : videoFps;
   return (
     <div className="flex items-center justify-between mb-3">
       {/* Left */}
@@ -23,11 +23,10 @@ export default function CommentHeader({
           // onClick={onGo}
           className="text-[var(--brand-color)] cursor-pointer"
         >
-          {/* {formatClockTime2(finalTime, videoFps)} */}
-            {formatClockTime2({
-              frame: frame,
-              fps: videoFps
-            })}
+          {formatClockTime2({
+            frame: frame,
+            fps: fps
+          })}
         </span>
         <span className="text-gray-400">•</span>
         <span className="text-gray-300">#{sNo}</span>

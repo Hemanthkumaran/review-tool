@@ -575,10 +575,13 @@ function fetchProject(storedGuest = null, pwd = null) {
   const formData = new FormData();
   formData.append('commentType', commentType);
 
-  const frame = Math.floor(baseTime * videoFps);
+  const frame = Math.round(baseTime * videoFps);
   
-  formData.append("timeline", baseTime.toFixed(6));
-  formData.append("frame", frame);                
+  const snappedTime = frame / videoFps;
+
+  formData.append("timeline", snappedTime.toFixed(6));
+  formData.append("frame", frame);
+          
 
   if (trimmed) {
     formData.append("text", trimmed);
