@@ -17,6 +17,7 @@ export default function AssignEditorsModal({
   projectAccess
 }) {
   const people = useMemo(() => mapPermissions(permissions), [permissions]);
+  console.log(projectAccess, 'projectAccess');
   
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState([]);
@@ -200,7 +201,59 @@ export default function AssignEditorsModal({
           {projectAccess.length ? <h4 className="text-sm mb-3 text-white/80">
             People assigned to this project
           </h4> : null}
-          <div className="space-y-3">
+
+          <div className="space-y-3 mt-3">
+  {projectAccess?.map((p) => {
+    // const role =
+    //   p.permissionType === "owner"
+    //     ? "Owner"
+    //     : p.permissionType === "member"
+    //     ? "Team member"
+    //     : "Collaborator";
+
+    return (
+      <div
+        key={p._id}
+        className="flex items-center justify-between"
+      >
+        {/* LEFT: Avatar + Name + Email */}
+        <div className="flex items-center gap-3">
+          {p?.userData?.profileImage?.url ? <img
+            src={p?.userData?.profileImage?.url}
+            style={{ borderRadius:5 }}
+            className="w-8 h-8 object-cover"
+          /> : 
+          <div style={{ borderRadius:5 }} className="flex items-center justify-center w-8 h-8 bg-[#151618]">{getInitials(p?.userData?.firstName)}</div>}
+          <div>
+            <div className="text-[13px] text-white leading-tight">
+              {p?.userData?.firstName || "Pending"}
+            </div>
+            <div className="text-[11px] text-[#8A8A8A]">
+              {p?.userData?.email}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: Role + Remove */}
+        <div className="flex items-center gap-3">
+          <span className="text-[12px] text-[#C7C7C7]">
+            {p?.userData?.role}
+          </span>
+
+          <button
+            onClick={() => setRemoveTarget(p.email)}
+            className="w-7 h-7 cursor-pointer rounded-full bg-[#1E1F22] flex items-center justify-center hover:bg-white/10"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+
+          {/* <div className="space-y-3">
             {projectAccess.map((p) => {
               return <>
                 <div
@@ -222,7 +275,7 @@ export default function AssignEditorsModal({
                 </div>
               </>
             })}
-          </div>
+          </div> */}
           <RemoveAccessModal
             open={!!removeTarget}
             onClose={() => setRemoveTarget(null)}

@@ -25,10 +25,10 @@ const modalStyles = {
   },
 };
 
-const PLAN_LIMITS = {
-  freelancer: 100,
-  team: 500,
-  team_plus: 1000,
+const PLAN_MEMBER_LIMITS = {
+  freelancer: 1,
+  team: 5,
+  team_plus: 10,
 };
 
 const PLAN_ORDER = {
@@ -38,7 +38,7 @@ const PLAN_ORDER = {
 };
 
 export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, buttonLabel, trialUsed, additionalStorageMinutes = 0, showClose = false }) {
-  const { activeWorkspace, refreshWorkspacePlan, workspacePlan, brandingColor } = useWorkspace();
+  const { activeWorkspace, workspaceUsers, refreshWorkspacePlan, workspacePlan, brandingColor } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
   const { openCheckout } = useRazorpay();
@@ -47,6 +47,9 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
   const priceTeam = isAnnual ? 20 : 25;
   const priceAgency = isAnnual ? 36 : 45;
 
+  const memberCount = workspaceUsers?.permissions?.length || 1;
+  console.log(workspaceUsers, 'workspaceUsers');
+  
   const subscription = activeWorkspace?.subscription || workspacePlan?.subscription;
 
   const minutesUsed = subscription?.storageMinutesUsed || 0;
@@ -56,21 +59,35 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
     (subscription?.additionalStorageMinutes || 0);
 
   const currentPlan = subscription?.activePlan;
+console.log(workspacePlan?.subscription, 'currentPlan');
 
-  const canSwitchTo = (planKey) => {
-    const limit = PLAN_LIMITS[planKey];
-    return minutesUsed <= limit;
-  };
+  // const canSwitchTo = (planKey) => {
+  //   const limit = PLAN_LIMITS[planKey];
+  //   return minutesUsed <= limit;
+  // };
+
+const canSwitchTo = (planKey) => {
+  const limit = PLAN_MEMBER_LIMITS[planKey];
+  return memberCount <= limit;
+};
 
 
- const getPlanState = (planKey) => {
+const isTrialing = subscription?.status === "trialing";
+
+const getPlanState = (planKey) => {
   const isCurrent = currentPlan === planKey;
 
-  const isDowngrade =
-    PLAN_ORDER[planKey] < PLAN_ORDER[currentPlan];
+  const overLimit = !canSwitchTo(planKey);
 
-  const overLimit =
-    isDowngrade || !canSwitchTo(planKey);
+  // 🔴 Trial override
+  if (isTrialing) {
+    return {
+      isCurrent,
+      overLimit,
+      buttonLabel: "Upgrade",
+      disabled: false,
+    };
+  }
 
   return {
     isCurrent,
@@ -82,12 +99,25 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
       : isCurrent
       ? "Continue with Current Plan"
       : "Switch Plan",
-    disabled: false,
+    disabled: overLimit,
   };
 };
 
   const handleChoosePlan = async (planKey) => {
     if (!activeWorkspace?._id) return;
+
+    const isCurrent = currentPlan === planKey;
+    const overLimit = !canSwitchTo(planKey); // ✅ ADD THIS
+
+    // 🛑 BLOCK: Over limit should never proceed
+    if (overLimit) {
+      return;
+    }
+
+    if (isCurrent) {
+      onClose?.();
+      return;
+    }
 
     try {
       setLoadingPlan(planKey);
@@ -270,12 +300,16 @@ const overLimit = !canSwitchTo("freelancer");
         </div>
 
         {/* Footer note */}
-        <div className="flex justify-center mt-6 text-xs">
-          <span style={{ fontFamily: "Gilroy-Bold", marginRight: 4 }}>
-            Note:
-          </span>
-          Billing details will be requested after 7 days.
-        </div>
+        {
+          workspacePlan?.subscription?.status === "trialing" ? null :
+          <div className="flex justify-center mt-6 text-xs">
+            <span style={{ fontFamily: "Gilroy-Bold", marginRight: 4 }}>
+              Note:
+            </span>
+            Billing details will be requested after 7 days.
+          </div>
+        }
+        
       </div>
     </Modal>
   );
@@ -331,9 +365,14 @@ function PricingCard({ title,
                     ? "You currently have more team members or storage than this plan allows for"
                     : ""
                 }
-                disabled={disabled || loading}
                 onClick={onClick}
-                style={!disabled ? { background: brandingColor } : {}}
+                style={
+                  buttonLabel === "Over limits"
+                    ? { background: "#323232", color:"#fff" }
+                    : !disabled
+                    ? { background: brandingColor }
+                    : {}
+                }
                 className={`w-full sm:w-auto px-8 py-3 rounded-full font-medium transition
                   ${disabled
                     ? "bg-[#2a2a2a] text-gray-400 cursor-not-allowed"
