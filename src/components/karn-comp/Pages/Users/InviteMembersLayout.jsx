@@ -23,6 +23,11 @@ export default function InviteMembersLayout({
   const dropdownRef = useRef(null);
 
   const activePlan = ownerWorkspacePlan?.subscription?.activePlan;
+  const remainingSlots = maxUsers - teamCount - emails.length;
+
+  console.log("PLAN:", activePlan);
+console.log("MAX USERS:", maxUsers);
+console.log("TEAM COUNT:", teamCount);
   /* ---------------------------------------
    * PLAN LOGIC (single source of truth)
    * ------------------------------------- */
@@ -63,9 +68,9 @@ export default function InviteMembersLayout({
     const email = value.trim().toLowerCase();
     if (!email || !isValidEmail(email) || emails.includes(email)) return;
 
-    const remainingSlots = maxUsers - teamCount;
-    if (emails.length >= remainingSlots) {
-      showSuccessToast(`Limit reached. Max ${maxUsers} users allowed`);
+
+    if (role === "Team member" && emails.length + 1 >= remainingSlots) {
+      showSuccessToast(`Limit reached. Max ${maxUsers} team members allowed`);
       return;
     }
 
@@ -88,10 +93,9 @@ export default function InviteMembersLayout({
    * Invite logic
    * ------------------------------------- */
   function handleInvite() {
-    const remainingSlots = maxUsers - teamCount;
 
-    if (emails.length > remainingSlots) {
-      showSuccessToast(`You can only invite ${remainingSlots} more users`);
+    if (role === "Team member" && emails.length > (maxUsers - teamCount)) {
+      showSuccessToast(`You can only invite ${remainingSlots} more team members`);
       return;
     }
 
@@ -100,7 +104,8 @@ export default function InviteMembersLayout({
       permissionType:
         role === "Team member" ? "member" : role.toLowerCase(),
     };
-
+    console.log(data,  'data');
+    
     inviteUserToWorkspace(ownerWorkspace._id, data)
       .then(() => {
         setEmails([]);
@@ -113,8 +118,9 @@ export default function InviteMembersLayout({
       });
   }
 
-  const remainingSlots = maxUsers - teamCount;
-  const isOverLimit = emails.length > remainingSlots;
+  const isOverLimit =
+    role === "Team member" &&
+    emails.length > (maxUsers - teamCount);
 
   /* ---------------------------------------
    * ❌ Freelancer → hide entire UI
@@ -222,7 +228,7 @@ const isDisabled =
 />
       </div>
 
-      {isOverLimit && (
+      {isOverLimit && role === "Team member" && (
         <div className="text-xs text-red-400 mt-2">
           You can only invite {remainingSlots} more user
           {remainingSlots !== 1 ? "s" : ""}

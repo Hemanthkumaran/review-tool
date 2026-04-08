@@ -12,7 +12,7 @@ import AssignEditorsModal from "./modals/AssignEditorsModal";
 import { addUserToProjectApi } from "../services/api";
 import { showSuccessToast } from "../helpers/showToast";
 import ShareModal from "./modals/ShareModal";
-import { formatDuration } from "../helpers/common";
+import { formatDuration, getInitials } from "../helpers/common";
 import timerIcon from "../assets/svgs/timer.svg";
 
 const formatDateTime = (isoString) => {
@@ -43,6 +43,7 @@ function AssignedEditorsRow({
 }) {
   const visible = permissions.slice(0, 3);
   const extra = permissions.length - visible.length;
+  console.log(visible,'visible');
   
   return (
     <div className="flex items-center gap-1">
@@ -56,9 +57,14 @@ function AssignedEditorsRow({
             ${idx !== 0 ? "-ml-2" : ""}`}
         >
           {/* placeholder avatar */}
+          {p?.userData?.profileImage?.url ? <img
+            src={p?.userData?.profileImage?.url}
+            style={{ borderRadius:5 }}
+            className="w-8 h-8 object-cover"
+          /> : 
           <span className="uppercase">
-            {p.name || "?"}
-          </span>
+            {getInitials(p?.userData?.firstName)}
+          </span>}
         </div>
       ))}
 
@@ -88,7 +94,8 @@ export default function ProjectFolder({
   onStatusChange,
   fetchGetAllProjs
 }) {
-
+  console.log(project, 'projectprojectproject');
+  
   const createdAtLabel = formatDateTime(project.createdAt);
   const commentCount = getTotalComments(project);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -208,7 +215,7 @@ const handleAssignEditors = async (editors) => {
             </div>
             <div className="flex items-center mt-2">
               <img src={timerIcon} width={16} height={16} className="mr-1" />
-              <span className="text-[12px] text-[#BFBFBF] mt-1">{formatDuration(project.totalVideoDuration)} mins</span>
+              <span className="text-[12px] text-[#BFBFBF] mt-1">{formatDuration(project.totalVideoDuration)}</span>
             </div>
           </div>
           <div

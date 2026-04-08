@@ -1,15 +1,19 @@
 import { clearAuth } from "./storage";
 
 export function formatDuration(duration) {
-  if (!duration || duration < 0) return "00:00";
+  if (!duration || duration < 0) return "0s";
 
   const totalSeconds = Math.floor(duration * 60);
   const minutes = Math.floor(totalSeconds / 60);
-  const remainingSeconds = totalSeconds % 60;
+  const seconds = totalSeconds % 60;
 
-  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
-    .toString()
-    .padStart(2, "0")}`;
+  // Only seconds
+  if (minutes === 0) {
+    return `${seconds}s`;
+  }
+
+  // Minutes + seconds (pad seconds when needed)
+  return `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
 }
 
 export function formatMinutesOnly(duration) {

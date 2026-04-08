@@ -24,9 +24,11 @@ export default function WorkspaceMembersPage({ activeWorkspace }) {
     }, [workspaceUsers?.permissions]);
 
 
-  const teamCount = data.filter(
-    (d) => d.role === "Team member"
-  ).length;
+const teamCount = workspaceUsers?.permissions?.filter(
+  (p) =>
+    p.permissionType === "owner" ||
+    p.permissionType === "member"
+).length;
 
   const maxUsers = workspacePlan?.subscription?.maxUsers ?? 1;
 
@@ -44,7 +46,10 @@ export default function WorkspaceMembersPage({ activeWorkspace }) {
       console.error(e);
     }
   };
-
+console.log("DATA:", data);
+console.log("TEAM COUNT FILTERED:", data.filter(
+  (d) => d.role === "Team member" || d.role === "Owner"
+));
   if (loading) {
     return <div>loading</div>
   }

@@ -92,7 +92,7 @@ export default function MembersLayout({
    * Counts
    * ------------------------------------- */
   const teamCount = data.filter(
-    (d) => d.role === "Team member"
+    (d) => d.role === "Team member" || d.role === "Owner"
   ).length;
 
   const collaboratorCount = data.filter(
@@ -101,7 +101,7 @@ export default function MembersLayout({
 
   const maxUsers = workspacePlan?.subscription?.maxUsers ?? 1;
   const activePlan = workspacePlan?.subscription?.activePlan;
-  const canInvite = teamCount < maxUsers;
+  const canInvite = activePlan === 'team_plus' ? true : teamCount < maxUsers;
   
   async function handleRemove() {
     if (!selectedUser) return;
@@ -141,7 +141,7 @@ export default function MembersLayout({
       {/* Members info */}
       <div className="members-bar">
         <div>
-          <div className="members-count">{data.length - 1} members</div>
+          <div className="members-count">{data.length} members</div>
           <div className="members-meta">
             {teamCount}/{maxUsers} team members · {collaboratorCount} collaborator
           </div>
@@ -167,39 +167,41 @@ export default function MembersLayout({
       </div>
 
       {/* Table */}
-      <div className="table-container">
-        <table>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id}>
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
+      <div className="table-container overflow-y-auto border border-[#2A2B2E] rounded-xl">
+  <table className="w-full">
+    
+    <thead className="sticky top-0 bg-[#111216] z-10">
+      {table.getHeaderGroups().map((headerGroup) => (
+        <tr key={headerGroup.id}>
+          {headerGroup.headers.map((header) => (
+            <th key={header.id} className="p-3 text-left text-xs text-gray-400">
+              {flexRender(
+                header.column.columnDef.header,
+                header.getContext()
+              )}
+            </th>
+          ))}
+        </tr>
+      ))}
+    </thead>
 
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <tbody>
+      {table.getRowModel().rows.map((row) => (
+        <tr key={row.id} className="border-t border-[#2A2B2E]">
+          {row.getVisibleCells().map((cell) => (
+            <td key={cell.id} className="p-3 text-sm text-white">
+              {flexRender(
+                cell.column.columnDef.cell,
+                cell.getContext()
+              )}
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+
+  </table>
+</div>
 
       {/* ✅ SINGLE MODAL (FIXED) */}
       <RemoveAccessModal

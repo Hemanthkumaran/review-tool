@@ -126,7 +126,7 @@ export default function SettingsModal({ isOpen, onClose, activeWorkspace, active
           </div>
 
           {/* RIGHT PANEL (SCROLLABLE) */}
-          <div className="right-panel">
+            <div className="right-panel">
             <div onClick={onClose} style={{ position:'absolute', right:20, cursor:'pointer', background:"#181A1C", height:40, width:40, borderRadius:40, display:'flex', justifyContent:'center', alignItems:'center' }}>
               <img width="26px" src={close} alt="" />
             </div>

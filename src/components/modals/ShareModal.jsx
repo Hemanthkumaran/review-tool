@@ -1,6 +1,5 @@
-// src/components/ShareModal.jsx
-import React, { useEffect, useMemo, useState } from "react";
-import Select from "react-select";
+import { useEffect, useMemo, useState } from "react";
+import Select, { components } from "react-select";
 import Modal from "react-modal";
 
 
@@ -12,12 +11,7 @@ import PublicLinkAccessCard from "../PublicLinkAccessCard";
 import { showSuccessToast } from "../../helpers/showToast";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { reactSelectStyles, reactSelectStyles2 } from "../../styles/reactSelectStyles";
-
-const ROLE_OPTIONS = [
-  { value: "collaborator", label: "Collaborator" },
-  { value: "reviewer", label: "Reviewer" },
-];
-
+import { getInitials } from "../../helpers/common";
 
 
 const CustomMultiValue = (props) => {
@@ -61,21 +55,50 @@ const CustomMultiValue = (props) => {
   );
 };
 
-export default function ShareModal({ projectDetail = null, open = true, onClose, permissions, projectID, onRefresh }) {
-  const [role, setRole] = useState(ROLE_OPTIONS[1]);
+export default function ShareModal({ projectDetail = null, open = true, onClose, permissions, projectAccess, projectID, onRefresh }) {
+  const [role, setRole] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]);
   const [removeTarget, setRemoveTarget] = useState(null);
   const [selectedEmail, setSelectedEmail] = useState(null);
   const [passwordRequired, setPasswordRequired] = useState(false);
 
-  const { activeWorkspace } = useWorkspace();
-
+  const { activeWorkspace, ownerWorkspacePlan } = useWorkspace();
+  const activePlan = ownerWorkspacePlan?.subscription?.activePlan;
+  
   useEffect(() => {
     if (projectDetail?.isPasswordProtected !== undefined) {
       setPasswordRequired(projectDetail.isPasswordProtected);
     }
   }, [projectDetail]);
+
+  const roleOptions = useMemo(() => {
+    if (activePlan === "freelancer") {
+      return [{ value: "reviewer", label: "Reviewer" }];
+    }
+
+    if (activePlan === "team") {
+      return [{ value: "reviewer", label: "Reviewer" }, { value: "team", label: "Team member" }];
+    }
+    if (activePlan === "team_plus") {
+      return [
+        { value: "collaborator", label: "Collaborator" },
+        { value: "reviewer", label: "Reviewer" },
+        { value: "team", label: "Team member" }
+      ];
+    }
+
+    return [];
+  }, [activePlan]);
+
+
+  useEffect(() => {
+    if (roleOptions.length > 0) {
+      setRole(roleOptions[0]);
+    }
+  }, [roleOptions]);
+
+  
 
 const handleTogglePassword = async () => {
   if (!passwordRequired) {
@@ -139,23 +162,20 @@ const handleSavePassword = async (password) => {
 };
 
   const handleShare = async () => {
-    await Promise.all(
-      selectedPeople.map((p) =>
-        addUserToProjectApi(projectID, p.email)
-      )
-    );
+    try{
+      await Promise.all(
+        selectedPeople.map((p) =>
+          addUserToProjectApi(projectID, p.email)
+        )
+      );
 
-    setSelectedPeople([]);
-    onRefresh?.();
+      setSelectedPeople([]);
+      onRefresh?.();
+    } catch(e) {
+      alert(e.response.data.error)
+    }
+
   };
-
-
-  // function handleCopy() {
-    
-  //   const url = `${window.location.origin}/video-review/${projectID}?ws=${activeWorkspace?._id}&color=${encodeURIComponent(activeWorkspace?.colourCode || "")}`;
-  //   navigator.clipboard.writeText(url);
-  //   showSuccessToast("Link copied!");
-  // }
 
   function handleCopy() {
     const url = `${window.location.origin}/video-review/${projectID}?ws=${
@@ -203,7 +223,7 @@ const handleSavePassword = async (password) => {
             <Select
               value={role}
               onChange={setRole}
-              options={ROLE_OPTIONS}
+              options={roleOptions}
               styles={reactSelectStyles}
               isSearchable={false}
               components={{ IndicatorSeparator: () => null }}
@@ -212,7 +232,8 @@ const handleSavePassword = async (password) => {
         </div>
         {/* email input + Share button */}
         {
-          role.value == constants.COLLABORATOR ?
+          // (role?.value === constants.COLLABORATOR && activePlan === "team_plus") ?
+          (role?.value === constants.COLLABORATOR || role?.value === 'team') ?
           <div className="px-6 pb-2 flex items-center gap-3">
             <div className="flex-1">
               <Select
@@ -325,54 +346,60 @@ const handleSavePassword = async (password) => {
           </div>
         )}
 
-        {/* divider */}
         <div className="mx-6 h-px bg-[#26262E]" />
 
-        {/* current members */}
         <div className="px-6 py-3">
-            <span style={{ fontFamily:'Gilroy-Light', fontSize:14}}>People with access</span>
+          <span style={{ fontFamily:'Gilroy-Light', fontSize:14}}>People with access</span>
           <div className="space-y-2 max-h-60 overflow-auto pb-2 no-scrollbar">
-            {/* <div
-                className="flex items-center justify-between text-[13px] mt-3 mb-2"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={PEOPLE[0].avatar}
-                    alt={PEOPLE[0].name}
-                    className="w-8 h-8 rounded-sm object-cover"
-                  />
-                  <div>
-                    <div className="leading-tight">{PEOPLE[0].name}</div>
-                    <div className="text-[11px] text-gray-500">
-                      {PEOPLE[0].email}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-[11px] text-gray-300">
-                  <span>{'Owner'}</span>
-                </div>
-              </div> */}
-            <div className="space-y-3">
-              {permissions
-                ?.filter((p) => p.permissionType !== "owner") // 👈 remove owner completely
-                .map((p) => (
-                  <div
-                    key={p._id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="text-xs text-white/50">
-                      {p.email}
-                    </div>
+<div className="space-y-3 mt-3">
+  {projectAccess?.map((p) => {
+    // const role =
+    //   p.permissionType === "owner"
+    //     ? "Owner"
+    //     : p.permissionType === "member"
+    //     ? "Team member"
+    //     : "Collaborator";
 
-                    <button
-                      onClick={() => setRemoveTarget(p.email)}
-                      className="w-7 h-7 cursor-pointer rounded-full bg-[#1E1F22] flex items-center justify-center hover:bg-white/10"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+    return (
+      <div
+        key={p._id}
+        className="flex items-center justify-between"
+      >
+        {/* LEFT: Avatar + Name + Email */}
+        <div className="flex items-center gap-3">
+          {p?.userData?.profileImage?.url ? <img
+            src={p?.userData?.profileImage?.url}
+            style={{ borderRadius:5 }}
+            className="w-8 h-8 object-cover"
+          /> : 
+          <div style={{ borderRadius:5 }} className="flex items-center justify-center w-8 h-8 bg-[#151618]">{getInitials(p?.userData?.firstName)}</div>}
+          <div>
+            <div className="text-[13px] text-white leading-tight">
+              {p?.userData?.firstName || "Pending"}
             </div>
+            <div className="text-[11px] text-[#8A8A8A]">
+              {p?.userData?.email}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: Role + Remove */}
+        <div className="flex items-center gap-3">
+          <span className="text-[12px] text-[#C7C7C7]">
+            {p?.userData?.role}
+          </span>
+
+          <button
+            onClick={() => setRemoveTarget(p.email)}
+            className="w-7 h-7 cursor-pointer rounded-full bg-[#1E1F22] flex items-center justify-center hover:bg-white/10"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    );
+  })}
+</div>
             <RemoveAccessModal
               open={!!removeTarget}
               onClose={() => setRemoveTarget(null)}
