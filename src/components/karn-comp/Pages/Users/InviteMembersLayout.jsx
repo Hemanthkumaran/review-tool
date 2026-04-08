@@ -23,7 +23,6 @@ export default function InviteMembersLayout({
   const dropdownRef = useRef(null);
 
   const activePlan = ownerWorkspacePlan?.subscription?.activePlan;
-console.log(ownerWorkspacePlan, 'ownerWorkspacePlan')
   /* ---------------------------------------
    * PLAN LOGIC (single source of truth)
    * ------------------------------------- */

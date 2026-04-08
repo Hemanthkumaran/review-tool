@@ -13,6 +13,8 @@ import usage from "../../assets/icons/Settings/usage.svg";
 import billing from "../../assets/icons/Settings/billing.svg";
 import Modal from "react-modal";
 import close from "../../assets/icons/close.svg";
+import { constants } from "../../../../helpers/enum";
+import { useWorkspace } from "../../../../context/WorkspaceContext";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: profile },
@@ -39,20 +41,58 @@ const modalStyles = {
 };
 
 export default function SettingsModal({ isOpen, onClose, activeWorkspace, activeScreen = null }) {
+  const { trialUsed, userAccess } = useWorkspace();
   const [active, setActive] = useState(activeScreen || "profile");
 
+  const shouldRenderTabs =
+  userAccess === constants.OWNER && trialUsed;
+
+  const restrictedTabs = ["users", "usage", "billing"];
+
+  const filteredTabs = tabs.filter((tab) => {
+    if (!shouldRenderTabs && restrictedTabs.includes(tab.id)) {
+      return false;
+    }
+    return true;
+  });
+  
   const renderContent = () => {
     switch (active) {
       case "profile":
-        return <Profile onClose={onClose}/>;
+        return <Profile onClose={onClose} />;
+
       case "workspace":
-        return <WorkspaceSettings onClose={onClose} activeWorkspace={activeWorkspace}/>;
+        return (
+          <WorkspaceSettings
+            onClose={onClose}
+            activeWorkspace={activeWorkspace}
+          />
+        );
+
       case "users":
-        return <WorkspaceMembersPage onClose={onClose} activeWorkspace={activeWorkspace}/>;
       case "usage":
-        return <Usage setActive={setActive} onClose={onClose} />;
       case "billing":
-        return <Billing onClose={onClose} />;
+        if (!shouldRenderTabs) return null;
+
+        if (active === "users") {
+          return (
+            <WorkspaceMembersPage
+              onClose={onClose}
+              activeWorkspace={activeWorkspace}
+            />
+          );
+        }
+
+        if (active === "usage") {
+          return <Usage setActive={setActive} onClose={onClose} />;
+        }
+
+        if (active === "billing") {
+          return <Billing onClose={onClose} />;
+        }
+
+        return null;
+
       default:
         return null;
     }
@@ -70,7 +110,7 @@ export default function SettingsModal({ isOpen, onClose, activeWorkspace, active
         <div className="layout-wrapper">
           {/* SIDEBAR */}
           <div className="sidebar">
-            {tabs.map((t) => (
+            {filteredTabs.map((t) => (
               <div
                 key={t.id}
                 className={`sidebar-item ${active === t.id ? "active" : ""}`}

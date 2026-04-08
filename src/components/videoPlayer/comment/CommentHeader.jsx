@@ -12,7 +12,6 @@ export default function CommentHeader({
   frame,
   videoFps
 }) {
-console.log(frame,videoFps, 'frame');
 
   const finalTime = frame / videoFps;
 

@@ -54,7 +54,6 @@ function LoginAccount({ setCurrentScreen }) {
 };
 
 
-
   return (
     <div className="w-full max-w-sm">
         <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />

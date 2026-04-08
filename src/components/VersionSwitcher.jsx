@@ -340,7 +340,7 @@ function ManageVersionsModal({
                   </button>
 
                   {/* download */}
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() =>
                       onDownloadVersion && onDownloadVersion(v)
@@ -348,7 +348,7 @@ function ManageVersionsModal({
                     className="w-6 h-6 flex items-center justify-center hover:bg-white/5 rounded-full"
                   >
                     <img className='cursor-pointer' src={downloadIcon}/>
-                  </button>
+                  </button> */}
 
                   {/* delete */}
                   {userAccess !== constants.REVIEWER && 

@@ -51,8 +51,6 @@ const isOwnReply =
   
     // };
 
-    console.log(isOwnReply, 'isOwnComment reply');
-    console.log(isOwnReply, 'isOwnComment reply');
     
 
   return (

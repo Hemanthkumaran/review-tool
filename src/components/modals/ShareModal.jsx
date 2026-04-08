@@ -283,7 +283,6 @@ const filteredSuggestions = useMemo(() => {
   // }
 
   function handleCopy() {
-    console.log(activeWorkspace, 'activeWorkspace');
     
     const url = `${window.location.origin}/video-review/${projectID}?ws=${activeWorkspace?._id}&color=${encodeURIComponent(activeWorkspace?.colourCode || "")}`;
     navigator.clipboard.writeText(url);

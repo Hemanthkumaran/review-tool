@@ -24,7 +24,7 @@ function Plus({ className = "" }) {
   );
 }
 
-function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setActiveWorkspace, workspacePlan }) {
+function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setActiveWorkspace, workspacePlan, trialUsed }) {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,12 +39,19 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const minutesCap =
   workspacePlan?.subscription?.baseStorageMinutes +
   workspacePlan?.subscription?.additionalStorageMinutes;
-  const minutesUsed = workspacePlan?.subscription?.storageMinutesUsed.toFixed(2);
+
+  const rawMinutesUsed = workspacePlan?.subscription?.storageMinutesUsed ?? 0;
+  const minutesUsed = Number(rawMinutesUsed);
+  const formattedMinutesUsed = minutesUsed.toFixed(2);
+  // const minutesUsed = workspacePlan?.subscription?.storageMinutesUsed.toFixed(2);
 
   const usagePercent = minutesCap
-  ? Math.min(100, (minutesUsed / minutesCap) * 100)
+    ? Math.min(100, (minutesUsed / minutesCap) * 100)
   : 0;
-
+  console.log(userAccess === constants.OWNER, !trialUsed);
+  
+  const showUsage =
+  userAccess === constants.OWNER && trialUsed;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -119,9 +126,8 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
       <div className="flex items-center gap-3 md:gap-4">
 
         <div className="hidden sm:flex items-center gap-3 rounded-full bg-[#070707] border border-[#101213] px-3 py-2">
-         
-          {userAccess == constants.OWNER && <div className="text-xs text-[#BFBFBF] min-w-[84px]">
-            {minutesUsed} / {minutesCap} mins
+          {showUsage ? <div className="text-xs text-[#BFBFBF] min-w-[84px]">
+            {formattedMinutesUsed} / {minutesCap} mins
             <div className="h-1 w-28 mt-1 rounded-full bg-[#1E1F22] overflow-hidden">
               <div
                 className="h-full rounded-full"
@@ -131,7 +137,7 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
                }}
               />
             </div>
-            </div>}
+            </div> : null}
 
           {/* <button className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#1E1F22] hover:bg-[#24262A]">
             <Plus className="h-4 w-4" />

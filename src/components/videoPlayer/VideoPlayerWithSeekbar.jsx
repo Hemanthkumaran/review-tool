@@ -407,7 +407,7 @@ const handleTogglePlay = () => {
             {annotationMode && (
               <>
                 <div className="absolute inset-0 bg-black/10 pointer-events-none z-10" />
-                <div className="absolute top-3 right-3 flex gap-2 z-30">
+                {/* <div className="absolute top-3 right-3 flex gap-2 z-30">
                   <button
                     type="button"
                     onClick={handleCancelOverlay}
@@ -415,7 +415,7 @@ const handleTogglePlay = () => {
                   >
                     Cancel
                   </button>
-                </div>
+                </div> */}
               </>
             )}
 

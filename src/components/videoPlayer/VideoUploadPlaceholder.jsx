@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { getOneProjectApi, getVideoUploadUrl } from "../../services/api";
 import uploadIcon from '../../assets/svgs/upload.svg';
 import { constants } from "../../helpers/enum";
-import { getVideoDuration, getVideoFPS } from "../../helpers/muxHelpers";
+import { getVideoDuration } from "../../helpers/muxHelpers";
 
 
 function UploadFrameLoader({ progress = 0, label = "Uploading" }) {
@@ -118,15 +118,11 @@ useEffect(() => {
 
 
   const handleFile = async (file) => {
-      const fps = await getVideoFPS(file);
-  console.log("Estimated FPS:", fps);
-    return;
     if (!file) return;
 
     setError("");
     setIsUploading(true);
     setProgress(0);
-    console.log("File name:", file.name);
     try {
       const duration = await getVideoDuration(file);
       const res = await getVideoUploadUrl(projectId, duration, file.name);

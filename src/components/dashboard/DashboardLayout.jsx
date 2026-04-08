@@ -68,6 +68,7 @@ export default function DashboardLayout() {
         workspacePlan={workspacePlan}
         userAccess={userAccess}
         setLoading={setLoading}
+        trialUsed={trialUsed}
       />
 
       {/* ✅ Modal (now stable, no flicker) */}

@@ -137,7 +137,7 @@ export default function SubscriptionCard({
 
       {/* <div className="sub-divider"></div> */}
 
-      <div>
+      {/* <div>
         <div className="sub-addon-name mb-2">
           Active Add-ons
         </div>
@@ -154,8 +154,8 @@ export default function SubscriptionCard({
           None
         </div>
       }
-      </div>
-      <div className="sub-divider"></div>
+      </div> */}
+      {/* <div className="sub-divider"></div> */}
 
       {/* ---------- FAQ ---------- */}
       <div className="sub-faq-row">

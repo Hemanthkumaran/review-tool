@@ -32,7 +32,6 @@ function SetNewPassword({ setCurrentScreen, changePasswordFlow = false }) {
         password,
         confirmPassword,      
       });
-      console.log(res, 'eee');
       setCurrentScreen('passwordChanged');
       localStorage.clear();
     } catch (err) {

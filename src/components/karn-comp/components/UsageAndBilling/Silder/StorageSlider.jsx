@@ -235,7 +235,7 @@ export default function StorageSlider({ setActive }) {
             className="change-btn"
             style={{ fontFamily:'Gilroy-SemiBold', opacity: isDisabled ? 0.5 : 1 }}
           >
-             Change plan
+            Add storage
           </button>
         </div>
       </div>

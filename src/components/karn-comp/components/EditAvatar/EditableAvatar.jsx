@@ -5,7 +5,7 @@ import "./EditableAvatar.css";
 import EditIcon from "../../assets/icons/edit.svg"
 import { getInitials } from "../../../../helpers/common";
 
-const EditableAvatar = ({ imageUrl, onImageSelect, user, addOnStatus }) => {
+const EditableAvatar = ({ imageUrl, onImageSelect, user }) => {
   const [preview, setPreview] = useState(imageUrl || null);
   
 

@@ -18,7 +18,6 @@ export default function CustomSeekBar({
 }) {
   const [hoverTime, setHoverTime] = useState(null);
   const [hoverX, setHoverX] = useState(0);
-  console.log(markers, 'marker');
   
   const safeDuration =
     Number.isFinite(duration) && duration > 0 ? duration : 0;

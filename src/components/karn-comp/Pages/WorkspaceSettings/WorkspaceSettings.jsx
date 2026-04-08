@@ -7,8 +7,8 @@ import EditableAvatar from "../../components/EditAvatar/EditableAvatar";
 import BrandColorPicker from "../../components/BrandColor/BrandColorPicker";
 import Button from "../../../UI/Button";
 import { useWorkspace } from "../../../../context/WorkspaceContext";
-import { createAddonPaymentApi, updateWorkspaceApi } from "../../../../services/api";
-import { useRazorpay } from "../../../../hooks/useRazorpay";
+import { updateWorkspaceApi } from "../../../../services/api";
+// import { useRazorpay } from "../../../../hooks/useRazorpay";
 import FeatureLockedModal from "../../../modals/FeatureLockedModal";
 import { Confetti, FeatureLockIcon } from "../../../../assets/svgs/SvgComponents";
 
@@ -18,16 +18,16 @@ const WorkspaceSettings = ({ onClose }) => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoUrl, setLogoUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  // const [showModal, setShowModal] = useState(false);
   const [brandColor, setBrandColor] = useState(null)
   const [successModal, setSuccessModal] = useState(false)
 
-  const { openCheckout } = useRazorpay();
-  const { workspacePlan, refreshWorkspacePlan, brandingColor, ownerWorkspace, activeWorkspace, refreshWorkspace } = useWorkspace();
+  // const { openCheckout } = useRazorpay();
+  const {brandingColor, ownerWorkspace, activeWorkspace, refreshWorkspace } = useWorkspace();
   
-  const subscription = workspacePlan?.subscription;
+  // const subscription = workspacePlan?.subscription;
 
-  const addOnStatus = subscription?.status;
+  // const addOnStatus = subscription?.status;
   
 
   // 🔁 Prefill data
@@ -38,36 +38,36 @@ const WorkspaceSettings = ({ onClose }) => {
     setLogoUrl(ownerWorkspace.logo?.url || null);
   }, [ownerWorkspace]);
 
-  const handleUnlockBranding = async () => {
-    setShowModal(false);
-    const payload = {
-      activePlan: subscription?.activePlan,
-      interval: subscription?.interval,
-      additionalStorageMinutes: subscription?.additionalStorageMinutes,
-      purpose: "upgrade",
-      addons: ["white_label"],
-    }
-  try {
-    const res = await createAddonPaymentApi(activeWorkspace._id, payload);
-    const order = res.data.razorpay;
+  // const handleUnlockBranding = async () => {
+  //   setShowModal(false);
+  //   const payload = {
+  //     activePlan: subscription?.activePlan,
+  //     interval: subscription?.interval,
+  //     additionalStorageMinutes: subscription?.additionalStorageMinutes,
+  //     purpose: "upgrade",
+  //     addons: ["white_label"],
+  //   }
+  // try {
+  //   const res = await createAddonPaymentApi(activeWorkspace._id, payload);
+  //   const order = res.data.razorpay;
     
-    openCheckout({
-      orderId: order.orderID,
-      amount: order.amount,
-      currency: order.currency,
-      name: activeWorkspace.name,
-      onSuccess: async () => {
-        refreshWorkspacePlan(activeWorkspace._id);
-        setSuccessModal(true);
-      },
-      brandingColor: brandingColor
-    });
+  //   openCheckout({
+  //     orderId: order.orderID,
+  //     amount: order.amount,
+  //     currency: order.currency,
+  //     name: activeWorkspace.name,
+  //     onSuccess: async () => {
+  //       refreshWorkspacePlan(activeWorkspace._id);
+  //       setSuccessModal(true);
+  //     },
+  //     brandingColor: brandingColor
+  //   });
 
-    } catch (err) {
-      alert(err.response.data.error)
-      console.error(err.response.data.error);
-    }
-  };
+  //   } catch (err) {
+  //     alert(err.response.data.error)
+  //     console.error(err.response.data.error);
+  //   }
+  // };
 
   const handleSave = async () => {
     if (!activeWorkspace?._id) return;
@@ -124,23 +124,21 @@ const WorkspaceSettings = ({ onClose }) => {
 
       <br />
 
-      <div onClick={() => (addOnStatus != 'active' && addOnStatus != 'trialing') ? setShowModal(true) : null} style={{ background: addOnStatus != 'active' ? "#181818" : "#131313" }} className="w-[80%] cursor-pointer pt-6 pl-6 pb-4 border-[#2a2a2a] border-2 rounded-2xl">
+      <div style={{ background: "#181818" }} className="w-[80%] cursor-pointer pt-6 pl-6 pb-4 border-[#2a2a2a] border-2 rounded-2xl">
         <div className="flex justify-between mb-4">
           <div>Logo</div>
-          {addOnStatus != 'active' ? 
-          <div className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
+          {/* <div className="cursor-pointer bg-[yellow] p-1 rounded-md mr-4">
             <img height="20" width="20" src={lock} alt="" />
-          </div> : null}
+          </div> */}
         </div>
 
         <EditableAvatar
           imageUrl={logoUrl}
           onImageSelect={setLogoFile}
-          addOnStatus={addOnStatus}
         />
 
         <br />
-        <BrandColorPicker disabled={addOnStatus != 'active'} brandColor={brandColor} setBrandColor={setBrandColor} />
+        <BrandColorPicker brandColor={brandColor} setBrandColor={setBrandColor} />
       </div>
 
       <div className="domain">
@@ -195,7 +193,7 @@ const WorkspaceSettings = ({ onClose }) => {
           />
         </div>
       </div>
-      <FeatureLockedModal
+      {/* <FeatureLockedModal
         open={showModal}
         onClose={() => setShowModal(false)}
         title="Feature locked"
@@ -203,7 +201,7 @@ const WorkspaceSettings = ({ onClose }) => {
         buttonTitle="Activate add-on"
         ModalImg={<FeatureLockIcon />}
         onBtnClick={handleUnlockBranding}
-      />
+      /> */}
       <FeatureLockedModal
         open={successModal}
         onClose={() => setSuccessModal(false)}

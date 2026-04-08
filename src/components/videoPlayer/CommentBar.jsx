@@ -7,28 +7,15 @@ import brushIcon from "../../assets/svgs/brush.svg";
 import clipIcon from "../../assets/svgs/clip.svg";
 import emojiIcon from "../../assets/svgs/emoji.svg";
 import micIcon from "../../assets/svgs/mic.svg";
-import sendIcon from "../../assets/svgs/send.svg";
 import AudienceSelect from "../AudienceSelect";
 import { constants } from "../../helpers/enum";
-import { formatClockTime, formatClockTime2, formatClockTimeMMSS } from "../../helpers/common";
+import { formatClockTime2, formatClockTimeMMSS } from "../../helpers/common";
 import Spinner from "../common/Spinner";
 import VoicePreviewModal from "../modals/VoicePreviewModal";
 import VoiceNotePlayer from "./VoiceNotePlayer";
 import { CommentSendIcon } from "../../assets/svgs/SvgComponents";
 import { useWorkspace } from "../../context/WorkspaceContext";
 
-
-/**
- * Props:
- *  - currentTime
- *  - isRecording
- *  - hasPendingVoice
- *  - isAnnotating
- *  - hasPendingAnnotation
- *  - onSend({ text, images })
- *  - onStartVoice, onStopVoice, onCancelVoice
- *  - onStartAnnotation, onCancelAnnotation
- */
 export default function CommentBar({
   currentTime,
   isRecording,
@@ -47,7 +34,6 @@ export default function CommentBar({
   userAccess,
   pendingVoiceUrl,
   videoFps,
-  frame
 }) {
   const [text, setText] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -192,7 +178,7 @@ sendingComment ||
   );
 
   return (
-   <div className="w-[60%] mx-auto pb-5">
+   <div className="w-[60%] mx-auto pb-5 relative">
   <div className="bg-[#101213] border border-[#1F1F21] rounded-2xl p-3">
 
     {/* ================= TOP: INPUT + INLINE CHIPS ================= */}
@@ -216,7 +202,7 @@ sendingComment ||
       {hasPendingAnnotation && (
         <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
           <span>Drawing ready</span>
-          <button onClick={onCancelAnnotation}>✕</button>
+          <button className="cursor-pointer" onClick={onCancelAnnotation}>✕</button>
         </div>
       )}
 
@@ -383,7 +369,7 @@ sendingComment ||
 
   {/* Voice preview */}
   {showVoicePreview && (
-    <div className="absolute bottom-[100px] left-1/2 -translate-x-1/2 w-[320px] bg-[#111216] border border-[#2A2B2E] rounded-xl p-3 shadow-xl">
+    <div style={{ right:0, zIndex:1000 }} className="absolute bottom-full mb-2 w-[90%] max-w-[320px] bg-[#111216] border border-[#2A2B2E] rounded-xl p-3 shadow-xl">
       <div className="flex justify-between mb-2 text-xs text-gray-300">
         Voice note preview
         <button onClick={() => setShowVoicePreview(false)}>✕</button>
