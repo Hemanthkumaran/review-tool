@@ -133,7 +133,7 @@ export default function PublicLinkAccessCard({
       )}
 
       {/* Saved state */}
-      {saved && (
+      {/* {saved && (
         <div className="flex justify-center">
           <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-[#1B1C1E]">
             <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
@@ -150,7 +150,7 @@ export default function PublicLinkAccessCard({
             <span className="text-sm">Saved</span>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

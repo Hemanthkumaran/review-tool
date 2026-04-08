@@ -268,6 +268,7 @@ const closeMoreMenu = () => setOpen(false);
           permissions={workspaceUsers?.permissions}
           projectAccess={projectDetail?.permissions}
           projectID={projectDetail._id}
+          projectDetail={projectDetail}
           onRefresh={fetchProject}
         />
 

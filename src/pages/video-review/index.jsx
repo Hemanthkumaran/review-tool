@@ -5,7 +5,7 @@ import CommentBar from "../../components/videoPlayer/CommentBar";
 import VideoHeader from "../../components/videoPlayer/VideoHeader";
 import CommentsColumn from "../../components/videoPlayer/CommentsColumn";
 import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlaceholder";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { addCommentApi, addReplyApi, deleteProjectVersionApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi, updateProjectApi } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
@@ -81,11 +81,12 @@ export default function VideoReview() {
   const { projectId } = useParams();
   const [error, setError] = useState("");
   const [showGuestModal, setShowGuestModal] = useState(false);
-  const [guest, setGuest] = useState(null);
+  const [reviewerPassword, setReviewerPassword] = useState(false);
+  const [guest, setGuest] = useState(null); 
   const commentInputRef = useRef(null);
-  
+  const [requirePassword, setRequirePassword] = useState(false);
   const { brandingColor } = useWorkspace();
-  
+  const [searchParams] = useSearchParams();
   // annotation draft (from canvas)
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
   const annotationStartTimeRef = useRef(0);
@@ -106,6 +107,7 @@ const playbackId = activeRawVersion?.muxPlaybackID || null;
 const videoFps = activeRawVersion?.fps || null;
 const muxStatus = activeRawVersion?.muxStatus;
 
+      const storedPwd = localStorage.getItem(`project_pwd_${projectId}`);
   
   const currentUser = {
     id: "me",
@@ -124,16 +126,26 @@ const muxStatus = activeRawVersion?.muxStatus;
   }, [brandingColor]);
 
   useEffect(() => {
+    const pwdRequired = searchParams.get("passwordRequired");
+
+    if (pwdRequired === "true") {
+      setRequirePassword(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (!getAuthToken()) {
+
       const storedGuest = getGuestIdentity();
+
       if (storedGuest) {
-        fetchProject(storedGuest);
+        fetchProject(storedGuest, storedPwd);
       } else {
         setLoading(false);
         setShowGuestModal(true);
       }
     } else {
-      fetchProject(null);
+      fetchProject(null, storedPwd);
     }
 
     return () => {
@@ -152,15 +164,25 @@ const muxStatus = activeRawVersion?.muxStatus;
   //   };
   // }, [videoSrc]);
 
-    const handleGuestSubmit = async ({ name, email }) => {
-      const guestData = { reviewerName: name, reviewerEmail: email };
+const handleGuestSubmit = async ({ name, email, password }) => {
+  const guestData = {
+    reviewerName: name,
+    reviewerEmail: email,
+  };
 
-      setGuestIdentity(guestData);
-      setGuest(guestData);
-      setLoading(true);
-      setShowGuestModal(false);
-      fetchProject(guestData);
-    };
+  setGuestIdentity(guestData);
+  setGuest(guestData);
+
+  if (password) {
+    localStorage.setItem(`project_pwd_${projectId}`, password);
+  }
+
+  setLoading(true);
+  setShowGuestModal(false);
+
+  // 🔥 PASS PASSWORD DIRECTLY (avoid async bug)
+  fetchProject(guestData, password);
+};
 
 //   useEffect(() => {
 //   if (!rawVersions?.length) return;
@@ -180,6 +202,13 @@ const muxStatus = activeRawVersion?.muxStatus;
     }
   }, [rawVersions, activeVersionId]);
 
+  useEffect(() => {
+    const storedPwd = localStorage.getItem(`project_pwd_${projectId}`);
+    if (storedPwd) {
+      setReviewerPassword(storedPwd);
+    }
+  }, [projectId]);
+  
 useEffect(() => {
   const handler = (e) => {
     // Don't steal focus if user is typing
@@ -226,37 +255,53 @@ const handleUpdateProject = async (id, payload) => {
 
 
 
-function fetchProject(storedGuest = null) {
-  const params = storedGuest
-    ? {
-        reviewerName: storedGuest.name,
-        reviewerEmail: storedGuest.email,
-      }
-    : {};
+function fetchProject(storedGuest = null, pwd = null) {
+  const params = {
+    ...(storedGuest && {
+      reviewerName: storedGuest.reviewerName, // ✅ FIXED
+      reviewerEmail: storedGuest.reviewerEmail, // ✅ FIXED
+    }),
+    ...(pwd && {
+      reviewerPassword: pwd, // 🔥 IMPORTANT
+    }),
+  };
 
-  getOneProjectApi(projectId, params).then((res) => {
-    const project = res.data.project;
-    const permission = res.data.permission == 'none' ? constants.REVIEWER : res.data.permission;
-    setProjectAccess(permission);
+  getOneProjectApi(projectId, params)
+    .then((res) => {
+      const project = res.data.project;
 
-    setProjectDetail(prev => {
-      // preserve current version if exists
-      const currentVersionStillExists = project.versions?.some(
-        v => v._id === activeVersionId
-      );
+      const permission =
+        res.data.permission == "none"
+          ? constants.REVIEWER
+          : res.data.permission;
 
-      if (!currentVersionStillExists) {
-        const latest = project.versions?.[project.versions.length - 1];
-        if (latest) {
-          setActiveVersionId(latest._id);
+      setProjectAccess(permission);
+
+      setProjectDetail((prev) => {
+        const currentVersionStillExists = project.versions?.some(
+          (v) => v._id === activeVersionId
+        );
+
+        if (!currentVersionStillExists) {
+          const latest =
+            project.versions?.[project.versions.length - 1];
+          if (latest) {
+            setActiveVersionId(latest._id);
+          }
         }
+
+        return project;
+      });
+
+      setRequirePassword(false); // ✅ success
+      setLoading(false);
+    })
+    .catch((err) => {
+      if (err?.response?.data?.passwordRequired) {
+        setRequirePassword(true); // 🔥 show password input
       }
-
-      return project;
+      setLoading(false);
     });
-
-    setLoading(false);
-  });
 }
 
 
@@ -819,6 +864,7 @@ const handleNewVersionFile = async (e) => {
       error={error}
       onClose={() => setShowGuestModal(false)}
       onContinue={handleGuestSubmit}
+      requirePassword={requirePassword}
     />
 
 

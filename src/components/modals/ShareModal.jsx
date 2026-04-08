@@ -1,190 +1,24 @@
 // src/components/ShareModal.jsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Select from "react-select";
 import Modal from "react-modal";
 
 
 import closeCircle from "../../assets/svgs/close-with-circle.svg"
 import RemoveAccessModal from "./RemoveAccessModal";
-import { addUserToProjectApi, removeUserFromProjectApi } from "../../services/api";
+import { addUserToProjectApi, removeUserFromProjectApi, updateReviewerPasswordApi } from "../../services/api";
 import { constants } from "../../helpers/enum";
 import PublicLinkAccessCard from "../PublicLinkAccessCard";
 import { showSuccessToast } from "../../helpers/showToast";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { reactSelectStyles, reactSelectStyles2 } from "../../styles/reactSelectStyles";
 
 const ROLE_OPTIONS = [
   { value: "collaborator", label: "Collaborator" },
   { value: "reviewer", label: "Reviewer" },
 ];
 
-const reactSelectStyles = {
-  control: (base) => ({
-    ...base,
-    backgroundColor: "#131313",
-    fontFamily:'Gilroy-Light',
-    borderRadius: 9999,
-    borderColor: '#181A1C',
-    boxShadow: "none",
-    cursor:'pointer',
-    minHeight: 34,
-    paddingLeft: 4,
-    paddingRight: 4,
-    fontSize:14,
-    "&:hover": {
-      borderColor: "#181A1C",
-    },
-  }),
-  valueContainer: (base) => ({
-    ...base,
-    padding: "0 4px",
-  }),
-  input: (base) => ({
-    ...base,
-    color: "#fff",
-  }),
-  singleValue: (base) => ({
-    ...base,
-    color: "#fff",
-  }),
-  menu: (base) => ({
-    ...base,
-    backgroundColor: "#050506",
-    borderRadius: 12,
-    overflow: "hidden",
-    marginTop: 6,
-    border: "1px solid #26262B",
-    zIndex: 40,
-  }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: "transparent",
-    color: state.isFocused ? "#F9EF38" : "#fff",
-    fontFamily:'Gilroy-Light',
-    fontSize:14,
-    paddingTop: 8,
-    paddingBottom: 8,
-    cursor: "pointer",
-  }),
-  placeholder: (base) => ({
-    ...base,
-    color: "#6B6B72",
-  }),
-  dropdownIndicator: (base) => ({
-    ...base,
-    padding: 4,
-    color: "#A0A0AA",
-  }),
-  clearIndicator: (base) => ({
-    ...base,
-    padding: 4,
-    color: "#A0A0AA",
-  }),
-  multiValue: (base) => ({
-    ...base,
-    backgroundColor: "#26262C",
-    borderRadius: 9999,
-  }),
-  multiValueLabel: (base) => ({
-    ...base,
-    color: "#E5E5E8",
-    fontSize: 12,
-  }),
-  multiValueRemove: (base) => ({
-    ...base,
-    color: "#A0A0AA",
-    ":hover": {
-      backgroundColor: "transparent",
-      color: "#fff",
-    },
-  }),
-};
 
-const reactSelectStyles2 = {
-  menuPortal: (base) => ({
-  ...base,
-  zIndex: 9999 
-}),
-placeholder: (base) => ({
-  ...base,
-  position: "absolute",   // 🔥 key fix
-  left: 0,
-  margin: 0,
-  pointerEvents: "none",
-}),
-  control: (base) => ({
-    ...base,
-    backgroundColor: "#101013",
-    fontFamily: "Gilroy-Light",
-    borderRadius: 10,
-    borderColor: "#181A1C",
-    boxShadow: "none",
-    minHeight: 40,
-    paddingLeft: 8,
-    paddingRight: 4,
-    fontSize: 14,
-    "&:hover": {
-      borderColor: "#3A3A42",
-    },
-  }),
-  valueContainer: (base) => ({
-    ...base,
-    padding: "2px 0",
-    gap: 6,
-    display: "flex",
-    flexWrap: "wrap",
-    position: "relative",
-  }),
-  input: (base) => ({
-    ...base,
-    color: "#fff",
-    fontFamily: "Gilroy-Light",
-  }),
-  singleValue: (base) => ({
-    ...base,
-    color: "#fff",
-  }),
-  menu: (base) => ({
-  ...base,
-  backgroundColor: "#050506",
-  borderRadius: 12,
-  overflow: "hidden",
-  marginTop: 6,
-  border: "1px solid #26262B",
-  zIndex: 40,
-}),
-menuList: (base) => ({
-  ...base,
-  padding: 0,
-  maxHeight: 180,
-  overflowY: "auto",
-}),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isFocused ? "#151518" : "transparent",
-    color: "#E5E5E8",
-    paddingTop: 8,
-    paddingBottom: 8,
-    cursor: "pointer",
-  }),
-  dropdownIndicator: () => null,  // ❌ no chevron
-  clearIndicator: () => null,     // ❌ no global clear
-  IndicatorSeparator: () => null,
-  multiValue: (base) => ({
-    ...base,
-    backgroundColor: "transparent",
-    borderRadius: 9999,
-    margin: 0,
-    padding: 0,
-  }),
-  multiValueLabel: (base) => ({
-    ...base,
-    padding: 0,
-  }),
-  multiValueRemove: (base) => ({
-    ...base,
-    padding: 0,
-  }),
-};
 
 const CustomMultiValue = (props) => {
   const { data, innerProps, removeProps } = props;
@@ -227,7 +61,7 @@ const CustomMultiValue = (props) => {
   );
 };
 
-export default function ShareModal({ open = true, onClose, permissions, projectID, onRefresh }) {
+export default function ShareModal({ projectDetail = null, open = true, onClose, permissions, projectID, onRefresh }) {
   const [role, setRole] = useState(ROLE_OPTIONS[1]);
   const [inputValue, setInputValue] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]);
@@ -237,9 +71,34 @@ export default function ShareModal({ open = true, onClose, permissions, projectI
 
   const { activeWorkspace } = useWorkspace();
 
-  const handleTogglePassword = () => {
-    setPasswordRequired((prev) => !prev);
-  };
+  useEffect(() => {
+    if (projectDetail?.isPasswordProtected !== undefined) {
+      setPasswordRequired(projectDetail.isPasswordProtected);
+    }
+  }, [projectDetail]);
+
+const handleTogglePassword = async () => {
+  if (!passwordRequired) {
+    // 🔥 Turning ON → just UI
+    setPasswordRequired(true);
+    return;
+  }
+
+  // 🔥 Turning OFF → call API
+  try {
+    await updateReviewerPasswordApi(projectID, {
+      isPasswordProtected: false,
+    });
+
+    setPasswordRequired(false);
+    showSuccessToast("Password removed");
+
+    onRefresh();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to update");
+  }
+};
   
 const emailOptions = (permissions || [])
   .filter((p) => p.permissionType !== "owner") // 🚫 exclude owner
@@ -265,6 +124,19 @@ const filteredSuggestions = useMemo(() => {
     .slice(0, 3);
 }, [inputValue, permissions]);
 
+const handleSavePassword = async (password) => {
+  try {
+    await updateReviewerPasswordApi(projectID, {
+      isPasswordProtected: true,
+      reviewerPassword: password,
+    });
+    onRefresh();
+    showSuccessToast("Password saved");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save password");
+  }
+};
 
   const handleShare = async () => {
     await Promise.all(
@@ -277,14 +149,21 @@ const filteredSuggestions = useMemo(() => {
     onRefresh?.();
   };
 
+
   // function handleCopy() {
-  //   showSuccessToast("Link copied!")
-  //   navigator.clipboard.writeText(`${window.location.origin}/video-review/${projectID}`)
+    
+  //   const url = `${window.location.origin}/video-review/${projectID}?ws=${activeWorkspace?._id}&color=${encodeURIComponent(activeWorkspace?.colourCode || "")}`;
+  //   navigator.clipboard.writeText(url);
+  //   showSuccessToast("Link copied!");
   // }
 
   function handleCopy() {
-    
-    const url = `${window.location.origin}/video-review/${projectID}?ws=${activeWorkspace?._id}&color=${encodeURIComponent(activeWorkspace?.colourCode || "")}`;
+    const url = `${window.location.origin}/video-review/${projectID}?ws=${
+      activeWorkspace?._id
+    }&color=${encodeURIComponent(
+      activeWorkspace?.colourCode || ""
+    )}&passwordRequired=${passwordRequired}`;
+
     navigator.clipboard.writeText(url);
     showSuccessToast("Link copied!");
   }
@@ -406,6 +285,7 @@ const filteredSuggestions = useMemo(() => {
             passwordRequired={passwordRequired}
             onTogglePassword={handleTogglePassword}
             onCopy={handleCopy}
+            onSavePassword={handleSavePassword}
           />
         }
         {/* suggestions dropdown card */}

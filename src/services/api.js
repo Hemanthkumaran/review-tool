@@ -83,9 +83,16 @@ export const allProjectsApi = (params) => {
   return axiosClient.get('/project/getAllProjects', { params });
 };
 
-export const getOneProjectApi = (projId, params) => {
-  return axiosClient.get(`/project/getOneProject?projectID=${projId}`, { params });
-};
+// export const getOneProjectApi = (projId, params) => {
+//   return axiosClient.get(`/project/getOneProject?projectID=${projId}`, { params });
+// };
+export const getOneProjectApi = (projectID, params = {}) =>
+  axiosClient.get(`/project/getOneProject`, {
+    params: {
+      projectID,
+      ...params,
+    },
+  });
 
 export const getVideoUploadUrl = (projId, videoDuration, fileName) => {
   return axiosClient.get(`/project/getUploadVideoLink?projectID=${projId}&videoDuration=${videoDuration}&fileName=${fileName}`);
@@ -330,4 +337,15 @@ export const cancelAddonApi = async (workspaceId) =>
       {
         addonCode: "white_label",
       }
+  );
+
+export const updateReviewerPasswordApi = (projectID, payload) =>
+  axiosClient.patch(
+    `/project/updateReviewerPassword?projectID=${projectID}`,
+    payload,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
   );

@@ -5,13 +5,15 @@ export default function GuestIdentityModal({
   onClose,
   onContinue,
   error = "",
+  requirePassword = false,
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({
     name: "",
     email: "",
+    password: "",
   });
 
   if (!open) return null;
@@ -33,6 +35,9 @@ export default function GuestIdentityModal({
     } else if (!emailRegex.test(email)) {
       newErrors.email = "Enter a valid email";
     }
+    if (requirePassword && !password.trim()) {
+      newErrors.password = "Password is required";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -41,7 +46,7 @@ export default function GuestIdentityModal({
   const handleContinue = () => {
     if (!validate()) return;
 
-    onContinue({ name, email });
+    onContinue({ name, email, password });
   };
 
   return (
@@ -101,6 +106,30 @@ export default function GuestIdentityModal({
             </p>
           )}
         </div>
+
+        {requirePassword && (
+          <div className="mt-4">
+            <label className="block text-sm mb-2 text-white/80">
+              Password
+            </label>
+
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              type="password"
+              className={`w-full h-[48px] rounded-2xl bg-[#0F1011] px-4 text-sm outline-none placeholder-white/30 focus:border-white/30 border ${
+                errors.password ? "border-red-500/60" : "border-[#1F2023]"
+              }`}
+            />
+
+            {errors.password && (
+              <p className="mt-2 text-[13px] text-red-400">
+                {errors.password}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="mt-8 flex items-center justify-between gap-4">
