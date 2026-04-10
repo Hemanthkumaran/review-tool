@@ -933,10 +933,8 @@ const handleNewVersionFile = async (e) => {
 
 
   return (
-  <div
-    style={{ margin: 15 }}
-    className="min-h-screen text-gray-200 font-sans"
-  >
+  <div className="h-[100svh] overflow-hidden bg-[#050506] text-gray-200 font-sans">
+  <div className="mx-auto flex h-full w-full max-w-[1760px] flex-col px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-4">
   <input
     ref={fileInputRef}
     type="file"
@@ -962,75 +960,86 @@ const handleNewVersionFile = async (e) => {
 
   {/* MAIN LAYOUT */}
   <div
-    className={`
-      mx-auto grid transition-all duration-300
-      ${isCommentsOpen ? "grid-cols-[65%_32%]" : "grid-cols-[100%_0%]"}
-    `}
-    style={{ height: "calc(100vh - 160px)" }}
+    className="flex flex-1 min-h-0 items-stretch justify-center overflow-hidden"
+    style={{
+      columnGap: isCommentsOpen ? "2px" : "0px",
+      transition:
+        "column-gap 500ms cubic-bezier(0.22, 1, 0.36, 1)",
+    }}
   >
     {/* ================= COLUMN 1 ================= */}
-    <div className="flex flex-col min-w-0 h-full select-none">
-      {/* Video container */}
-      <div className="relative w-full flex-1 rounded-3xl bg-black min-h-0">
-        {showVideo ? (
-           <div className="relative w-full h-full overflow-hidden rounded-3xl">
-          <VideoPlayerWithSeekbar
-            activeVersionId={activeVersionId}
-            projectId={projectId}
-            src={playbackId}
-            playerRef={playerRef}
-            currentTime={currentTime}
-            duration={duration}
-            isPlaying={isPlaying}
-            markers={markers}
-            pendingAnnotation={pendingAnnotation}
-            annotationMode={annotationMode}
-            onTimeUpdate={handleTimeUpdate}
-            onLoadedMetadata={handleLoadedMetadata}
-            onTogglePlay={handleTogglePlay}
-            onSeek={handleSeek}
-            onAddAnnotation={handleAddAnnotation}
-            onCancelAnnotation={handleCancelAnnotation}
-            onAnnotationDraftChange={handleAnnotationDraftChange}
-            videoFps={videoFps}
-          />
-          </div>
-        ) : (
-          <VideoUploadPlaceholder
-            projectId={projectId}
-            onVideoUploaded={handleVideoUploaded}
-            muxStatus={activeVersion?.muxStatus}
-            userAccess={projectAccess}
-          />
+    <div className="flex min-w-0 flex-1 select-none min-h-0 items-center">
+      <div
+        className="mx-auto flex h-full w-full min-w-0 flex-col justify-center"
+        style={{
+          maxWidth: isCommentsOpen
+            ? "min(1060px, calc((100svh - 296px) * 1.78))"
+            : "min(1120px, calc((100svh - 310px) * 1.78))",
+          transition: "max-width 500ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
+        {/* Video container */}
+        <div className="relative w-full flex-none rounded-3xl bg-black">
+          {showVideo ? (
+             <div className="relative w-full h-full overflow-hidden rounded-3xl">
+            <VideoPlayerWithSeekbar
+              activeVersionId={activeVersionId}
+              projectId={projectId}
+              src={playbackId}
+              playerRef={playerRef}
+              currentTime={currentTime}
+              duration={duration}
+              isPlaying={isPlaying}
+              markers={markers}
+              pendingAnnotation={pendingAnnotation}
+              annotationMode={annotationMode}
+              onTimeUpdate={handleTimeUpdate}
+              onLoadedMetadata={handleLoadedMetadata}
+              onTogglePlay={handleTogglePlay}
+              onSeek={handleSeek}
+              onAddAnnotation={handleAddAnnotation}
+              onCancelAnnotation={handleCancelAnnotation}
+              onAnnotationDraftChange={handleAnnotationDraftChange}
+              videoFps={videoFps}
+            />
+            </div>
+          ) : (
+            <VideoUploadPlaceholder
+              projectId={projectId}
+              onVideoUploaded={handleVideoUploaded}
+              muxStatus={activeVersion?.muxStatus}
+              userAccess={projectAccess}
+            />
         )}
       </div>
       {/* Comment input bar */}
       {!isLatestVersion ? null :
-      <CommentBar
-        disabled={!isLatestVersion}
-        currentTime={currentTime}
-        isRecording={isRecording}
-        hasPendingVoice={hasPendingVoice}
-        pendingVoiceUrl={pendingVoice?.url}
-        isAnnotating={annotationMode}
-        hasPendingAnnotation={hasPendingAnnotation}
-        onSend={handleSendComment}
-        onStartVoice={startVoiceRecording}
-        onStopVoice={stopVoiceRecording}
-        onCancelVoice={handleCancelVoice}
-        onStartAnnotation={handleStartAnnotation}
-        onCancelAnnotation={handleCancelAnnotation}
-        pauseVideo={pauseVideo}
-        commentInputRef={commentInputRef}
-        sendingComment={sendingComment}
-        userAccess={projectAccess}
-        videoFps={videoFps}
+        <CommentBar
+          disabled={!isLatestVersion}
+          currentTime={currentTime}
+          isRecording={isRecording}
+          hasPendingVoice={hasPendingVoice}
+          pendingVoiceUrl={pendingVoice?.url}
+          isAnnotating={annotationMode}
+          hasPendingAnnotation={hasPendingAnnotation}
+          onSend={handleSendComment}
+          onStartVoice={startVoiceRecording}
+          onStopVoice={stopVoiceRecording}
+          onCancelVoice={handleCancelVoice}
+          onStartAnnotation={handleStartAnnotation}
+          onCancelAnnotation={handleCancelAnnotation}
+          pauseVideo={pauseVideo}
+          commentInputRef={commentInputRef}
+          sendingComment={sendingComment}
+          userAccess={projectAccess}
+          videoFps={videoFps}
         frame={activeRawVersion.frame}
       />}
+      </div>
     </div>
 
     {/* ================= COLUMN 2 ================= */}
-    <div className="select-none relative h-full overflow-hidden flex flex-col">
+    <div className="select-none relative h-full min-h-0 overflow-visible flex flex-col flex-none">
       <CommentsColumn
         isOpen={isCommentsOpen}
         onToggle={() => setIsCommentsOpen((v) => !v)}
@@ -1052,7 +1061,7 @@ const handleNewVersionFile = async (e) => {
       />
     </div>
   </div>
-</div>
-
+  </div>
+  </div>
   );
 }

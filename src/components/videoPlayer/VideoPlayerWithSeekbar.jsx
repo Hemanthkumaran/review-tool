@@ -17,7 +17,6 @@ export default function VideoPlayerWithSeekbar({
   onTogglePlay,
   onSeek,
   activeVersionId,
-  onCancelAnnotation,
   onAnnotationDraftChange,
   markers = [],
   videoFps
@@ -285,14 +284,6 @@ useEffect(() => {
   pendingAnnotation,
 ]);
 
-
-  const handleCancelOverlay = () => {
-    onCancelAnnotation?.();
-    onAnnotationDraftChange?.(null);
-    setIsDrawing(false);
-    setDrawingAnnotation(null);
-  };
-
 const muxPlayerStyle = {
   width: "100%",
   height: "100%",
@@ -352,7 +343,7 @@ const handleTogglePlay = () => {
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-lg">
-      <div className="p-6 pb-0">
+      <div className="p-3 pb-0 lg:p-4 lg:pb-0">
         <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-[#1b1b1b] bg-black">
             {!ready && src && (
               <img
@@ -453,7 +444,7 @@ const handleTogglePlay = () => {
         playbackId={src}
         videoFps={videoFps}
       />
-      <div className="h-4" />
+      <div className="h-1 lg:h-2" />
     </div>
   );
 }

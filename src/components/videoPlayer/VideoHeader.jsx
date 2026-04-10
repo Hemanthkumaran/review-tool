@@ -100,11 +100,11 @@ const closeMoreMenu = () => setOpen(false);
 
 
   return (
-    <div style={{ marginLeft:40}} className="select-none flex items-center justify-between mb-6">
-        <div className="flex items-center">
+    <div className="select-none mb-2 flex min-w-0 items-center justify-between gap-4 lg:mb-3">
+        <div className="flex min-w-0 items-center">
           <div onClick={goBack} className="flex items-center justify-center" style={{ height:40, width:40, cursor:'pointer' }}><img src={LeftArrow} /></div>
             <div style={{ height:20, width:0.8,  background:"#202020", margin:"0 10px" }}/>
-            <div className="flex items-center">
+            <div className="flex min-w-0 items-center">
               <div className="min-w-0 max-w-[220px]">
                 {isRenaming ? (
                   <input
@@ -145,7 +145,7 @@ const closeMoreMenu = () => setOpen(false);
                 onAddNewVersion={onAddNewVersion}
                 userAccess={userAccess}
                 projectName={projectDetail.name}
-                onDownloadVersion={(v) => {
+                onDownloadVersion={() => {
                 // call download API
                 }}
                 onDeleteVersion={onDeleteVersion}
@@ -153,7 +153,7 @@ const closeMoreMenu = () => setOpen(false);
             {/* <div style={{ marginLeft:10 }}><VersionPill onClick={() => console.log("version pill clicked")} /></div> */}
             </div>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between">
             {/* <StatusPill/> */}
             {/* <ProjectStatusDropdown
               projectId={projectDetail._id}

@@ -103,7 +103,7 @@ export default function PlayerControlsBar({
 
 
   return (
-    <div style={{ marginTop:-20}} className="select-none px-6">
+    <div style={{ marginTop:-8}} className="select-none px-3 lg:px-4">
       {/* seek bar with markers */}
       <CustomSeekBar
         duration={duration}

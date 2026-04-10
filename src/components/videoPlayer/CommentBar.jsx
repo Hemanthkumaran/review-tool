@@ -178,7 +178,7 @@ sendingComment ||
   );
 
   return (
-   <div className="w-[60%] mx-auto pb-5 relative">
+   <div className="relative mx-auto w-full max-w-[600px] pb-0 pt-2">
   <div className="bg-[#101213] border border-[#1F1F21] rounded-2xl p-3">
 
     {/* ================= TOP: INPUT + INLINE CHIPS ================= */}

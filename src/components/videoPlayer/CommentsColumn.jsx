@@ -28,6 +28,8 @@ export default function CommentsColumn({
   videoFps
 }) {
   const [activeTab, setActiveTab] = useState("comments");
+  const panelWidth = "clamp(380px, 29vw, 450px)";
+  const panelTransition = "500ms cubic-bezier(0.22, 1, 0.36, 1)";
   const NOTES_SECTIONS = [
     { id: "brief", label: "Brief" },
     { id: "script", label: "Script" },
@@ -40,7 +42,7 @@ export default function CommentsColumn({
     references: projectDetail?.notes?.references || "",
     raw: projectDetail?.notes?.rawFile || "",
   });
-  const [notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
+  const [_notesUpdatedBySection, setNotesUpdatedBySection] = useState({});
   const [savingSectionId, setSavingSectionId] = useState(null);
   const [showResolved, setShowResolved] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -177,16 +179,21 @@ const handleSaveNotesSection = async (sectionId, html) => {
 
 
   return (
-    <>
-      {/* chevron button overlapping between columns */}
-      {/* <button
+    <div className="relative h-full overflow-visible">
+      <button
         type="button"
         onClick={onToggle}
-        className="absolute -left-[14px] top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-[#111111] border border-[#242424] shadow flex items-center justify-center hover:bg-white/10 z-20"
+        aria-label={isOpen ? "Collapse comments panel" : "Expand comments panel"}
+        aria-expanded={isOpen}
+        className={`cursor-pointer z-30 flex items-center justify-center shadow-[0_14px_40px_rgba(0,0,0,0.45)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isOpen
+            ? "absolute -left-3 top-24 h-7 w-7 rounded-full border border-[#24262A] bg-[#121314]/95 backdrop-blur-sm hover:bg-[#18191B]"
+            : "fixed right-0 top-1/2 h-8 w-9 -translate-y-1/2 rounded-l-full rounded-r-none bg-[var(--brand-color)] text-black"
+        }`}
       >
         {isOpen ? (
           <svg
-            className="w-3 h-3"
+            className="h-3 w-3"
             viewBox="0 0 16 16"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -201,131 +208,146 @@ const handleSaveNotesSection = async (sectionId, html) => {
           </svg>
         ) : (
           <svg
-            className="w-3 h-3"
+            className="h-4 w-4"
             viewBox="0 0 16 16"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
               d="M10 3L5 8L10 13"
-              stroke="#E5E7EB"
-              strokeWidth="1.4"
+              stroke="#111111"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         )}
-      </button> */}
+      </button>
 
-      {/* comments panel – hide content when collapsed */}
-      {isOpen && (
-        <div className="h-[90vh] rounded-2xl flex flex-col">
-          {/* tabs */}
-          <div className="mt-2">
-            <SegmentedTabs
-              options={
-                userAccess !== constants.REVIEWER ?
-                [{ id: "comments", label: "Comments" }, { id: "notes", label: "Notes" }] :
-                [{ id: "comments", label: "Comments" }]
-              }
-              value={activeTab}
-              onChange={setActiveTab}
-            />
-          </div>
+      <div
+        className="h-full overflow-hidden"
+        style={{
+          width: isOpen ? panelWidth : "0px",
+          transition: `width ${panelTransition}`,
+        }}
+      >
+        <div
+          className={`h-full flex flex-col transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isOpen
+              ? "translate-x-0 opacity-100"
+              : "translate-x-8 opacity-0 pointer-events-none"
+          }`}
+          style={{ width: panelWidth }}
+          aria-hidden={!isOpen}
+        >
+          <div className="h-full rounded-2xl flex flex-col">
+            {/* tabs */}
+            <div className="mt-2">
+              <SegmentedTabs
+                options={
+                  userAccess !== constants.REVIEWER ?
+                  [{ id: "comments", label: "Comments" }, { id: "notes", label: "Notes" }] :
+                  [{ id: "comments", label: "Comments" }]
+                }
+                value={activeTab}
+                onChange={setActiveTab}
+              />
+            </div>
 
-          {/* body */}
-          <div className="mt-3 flex-1 min-h-0 bg-[#101213] rounded-2xl flex flex-col">
-            { activeTab === "comments" ?
-            <div className="flex items-center px-2 justify-between gap-2 mb-4 mt-3">
-              <div className="px-2 flex items-center">
-                  <span>
-                    All Comments
-                  </span>
-                  <img style={{ marginLeft:10 }} src={downloadIcon}/>
-              </div>
-              <div className=" px-2 flex items-center gap-3 text-xs text-gray-400">
-                  <span>Unresolved only</span>
-                  <ToggleButton
-                    checked={showResolved}
-                    onChange={setShowResolved}
-                    size="sm"
-                  />
-                <div className="relative">
-                  <img
-                    ref={filterBtnRef}
-                    src={filterIcon}
-                    className="cursor-pointer"
-                    onClick={() => setShowFilter((v) => !v)}
-                  />
-
-                  {showFilter && (
-                    <CommentFilterDropdown
-                      selected={commentFilters}
-                      onChange={setCommentFilters}
-                      onClose={() => setShowFilter(false)}
-                      triggerRef={filterBtnRef}
-                    />
-                  )}
+            {/* body */}
+            <div className="mt-3 flex-1 min-h-0 bg-[#101213] rounded-2xl flex flex-col">
+              { activeTab === "comments" ?
+              <div className="flex items-center px-2 justify-between gap-2 mb-4 mt-3">
+                <div className="px-2 flex items-center">
+                    <span>
+                      All Comments
+                    </span>
+                    <img style={{ marginLeft:10 }} src={downloadIcon}/>
                 </div>
-              </div>
-            </div> : null }
-            {activeTab === "comments" ? (
-              <div className="h-full overflow-y-auto px-2">
-                {filteredComments.length === 0 && (
-                  <div className="text-[13px] text-gray-500 mt-6">
-                    No comments yet — add one from the comment bar below the
-                    video.
+                <div className=" px-2 flex items-center gap-3 text-xs text-gray-400">
+                    <span>Unresolved only</span>
+                    <ToggleButton
+                      checked={showResolved}
+                      onChange={setShowResolved}
+                      size="sm"
+                    />
+                  <div className="relative">
+                    <img
+                      ref={filterBtnRef}
+                      src={filterIcon}
+                      className="cursor-pointer"
+                      onClick={() => setShowFilter((v) => !v)}
+                    />
+
+                    {showFilter && (
+                      <CommentFilterDropdown
+                        selected={commentFilters}
+                        onChange={setCommentFilters}
+                        onClose={() => setShowFilter(false)}
+                        triggerRef={filterBtnRef}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div> : null }
+              {activeTab === "comments" ? (
+                <div className="h-full overflow-y-auto px-2">
+                  {filteredComments.length === 0 && (
+                    <div className="text-[13px] text-gray-500 mt-6">
+                      No comments yet — add one from the comment bar below the
+                      video.
+                    </div>
+                  )}
+                  {filteredComments.map((m, idx) => (
+                    <CommentCard
+                      key={m.id}
+                      marker={m}
+                      loggedInUser={user}
+                      projectId={projectId}
+                      index={idx}
+                      onGo={() => {
+                        const fps = m.fps || projectDetail?.versions?.[0]?.fps || 60;
+                        const frame = m.frame;
+
+                        const exactTime = frame / fps;
+
+                        // small offset to ensure correct frame landing
+                        const epsilon = 0.000001;
+                        
+                        onSeek(exactTime + epsilon);
+                      }}
+                      activeVersionId={activeVersionId}
+                      onReplySubmit={(text) =>
+                        onAddReply ? onAddReply(m.id, text) : null
+                      }
+                      handleSendComment={handleSendComment}
+                      onCommentUpdated={handleCommentUpdated}
+                      updateCommentLocal={updateCommentLocal}
+                      deleteCommentLocal={deleteCommentLocal}
+                      onCommentDeleted={handleCommentDeleted}
+                      onReplyUpdated={handleReplyUpdated}
+                      onReplyDeleted={handleReplyDeleted}
+                      updateCommentResolvedLocal={updateCommentResolvedLocal}
+                      videoFps={videoFps}
+                    />
+                  ))}
+                  <div style={{ height:120 }}/>
+                </div>
+              ) : (
+                  <div className="h-full">
+                    <NotesEditor
+                      sections={NOTES_SECTIONS}
+                      initialBySection={notesBySection}
+                      onSave={handleSaveNotesSection}
+                      onCancel={() => {}}
+                      savingSectionId={savingSectionId}
+                    />
                   </div>
                 )}
-                {filteredComments.map((m, idx) => (
-                  <CommentCard
-                    key={m.id}
-                    marker={m}
-                    loggedInUser={user}
-                    projectId={projectId}
-                    index={idx}
-                    onGo={() => {
-                      const fps = m.fps || projectDetail?.versions?.[0]?.fps || 60;
-                      const frame = m.frame;
-
-                      const exactTime = frame / fps;
-
-                      // small offset to ensure correct frame landing
-                      const epsilon = 0.000001;
-                      
-                      onSeek(exactTime + epsilon);
-                    }}
-                    activeVersionId={activeVersionId}
-                    onReplySubmit={(text) =>
-                      onAddReply ? onAddReply(m.id, text) : null
-                    }
-                    handleSendComment={handleSendComment}
-                    onCommentUpdated={handleCommentUpdated}
-                    updateCommentLocal={updateCommentLocal}
-                    deleteCommentLocal={deleteCommentLocal}
-                    onCommentDeleted={handleCommentDeleted}
-                    onReplyUpdated={handleReplyUpdated}
-                    onReplyDeleted={handleReplyDeleted}
-                    updateCommentResolvedLocal={updateCommentResolvedLocal}
-                    videoFps={videoFps}
-                  />
-                ))}
-                <div style={{ height:120 }}/>
-              </div>
-            ) : (
-                <div className="h-full">
-                  <NotesEditor
-                    sections={NOTES_SECTIONS}
-                    initialBySection={notesBySection}
-                    onSave={handleSaveNotesSection}
-                    onCancel={() => {}}
-                    savingSectionId={savingSectionId}
-                  />
-                </div>
-              )}
+            </div>
           </div>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }
