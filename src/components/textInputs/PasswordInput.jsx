@@ -1,13 +1,27 @@
 import React, { useState } from "react";
 
-function PasswordInput({ label, placeholder, value, onChange, name }) {
+function PasswordInput({
+  label,
+  placeholder,
+  value,
+  onChange,
+  name,
+  onKeyDown,
+  inputClassName = "",
+  labelClassName = "",
+  containerClassName = "",
+  inputStyle,
+  hasError = false,
+}) {
   const [show, setShow] = useState(false);
 
   return (
-    <div className="relative">
-      <label className="block text-sm font-medium mb-2 text-left">
-        {label}
-      </label>
+    <div className={`relative ${containerClassName}`.trim()}>
+      {label ? (
+        <label className={`block text-sm font-medium mb-2 text-left ${labelClassName}`.trim()}>
+          {label}
+        </label>
+      ) : null}
 
       <input
         type={show ? "text" : "password"}
@@ -15,19 +29,29 @@ function PasswordInput({ label, placeholder, value, onChange, name }) {
         value={value}
         name={name}
         onChange={onChange}
-        className="
-          w-full px-4 pr-10 py-2 border rounded-lg 
-          focus:outline-none focus:border-indigo-600 
+        onKeyDown={onKeyDown}
+        aria-invalid={hasError}
+        style={{
+          borderColor: hasError ? "rgba(239, 68, 68, 0.6)" : "#1A1A1A",
+          borderRadius: 10,
+          height: 40,
+          ...inputStyle,
+        }}
+        className={`
+          w-full px-4 pr-10 py-2 border rounded-lg
+          focus:outline-none focus:border-indigo-600
           focus:ring-2 focus:ring-[#F9EF38]
-        "
-        style={{ borderColor: "#1A1A1A", borderRadius: 10, height: 40 }}
+          ${inputClassName}
+        `.trim()}
       />
 
       {/* Eye icon */}
       <button
         type="button"
         onClick={() => setShow(!show)}
-        className="absolute right-3 top-[48px] transform -translate-y-1/2 text-gray-600 hover:text-gray-800"
+        className={`absolute right-3 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 ${
+          label ? "top-[48px]" : "top-1/2"
+        }`}
       >
         {show ? (
           // eye-off icon

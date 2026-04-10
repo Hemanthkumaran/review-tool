@@ -11,9 +11,16 @@ import AppLoader from "../../components/common/AppLoader";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 import { getVideoDuration, uploadToMux } from "../../helpers/muxHelpers";
 import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
-import { getAuthToken, getGuestIdentity, setGuestIdentity } from "../../helpers/storage.js";
+import {
+  getAuthToken,
+  getGuestIdentity,
+  getReviewerPassword,
+  setGuestIdentity,
+  setReviewerPassword as persistReviewerPassword,
+} from "../../helpers/storage.js";
 import { constants } from "../../helpers/enum.js";
 import { useWorkspace } from "../../context/WorkspaceContext.jsx";
+import { PATHS } from "../../routes/paths.jsx";
 
 const getFileFromUrl = async (url, index) => {
   try {
@@ -81,18 +88,17 @@ export default function VideoReview() {
   const { projectId } = useParams();
   const [error, setError] = useState("");
   const [showGuestModal, setShowGuestModal] = useState(false);
-  const [reviewerPassword, setReviewerPassword] = useState(false);
-  const [guest, setGuest] = useState(null); 
+  const [reviewerPassword, setReviewerPassword] = useState("");
+  const [guestModalStep, setGuestModalStep] = useState("identity");
   const commentInputRef = useRef(null);
-  const [requirePassword, setRequirePassword] = useState(false);
   const { brandingColor } = useWorkspace();
   const [searchParams] = useSearchParams();
   // annotation draft (from canvas)
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
   const annotationStartTimeRef = useRef(0);
   const fileInputRef = useRef(null);
-  const [uploadPct, setUploadPct] = useState(null); // 0–100
-  const [isUploading, setIsUploading] = useState(false);
+  const [_uploadPct, setUploadPct] = useState(null); // 0–100
+  const [_isUploading, setIsUploading] = useState(false);
   const rawVersions = projectDetail?.versions || [];
   const isLatestVersion =
     rawVersions.length > 0 &&
@@ -105,9 +111,8 @@ export default function VideoReview() {
 
 const playbackId = activeRawVersion?.muxPlaybackID || null;
 const videoFps = activeRawVersion?.fps || null;
-const muxStatus = activeRawVersion?.muxStatus;
-
-      const storedPwd = localStorage.getItem(`project_pwd_${projectId}`);
+const passwordRequiredFromLink =
+  searchParams.get("passwordRequired") === "true";
   
   const currentUser = {
     id: "me",
@@ -126,62 +131,86 @@ const muxStatus = activeRawVersion?.muxStatus;
   }, [brandingColor]);
 
   useEffect(() => {
-    const pwdRequired = searchParams.get("passwordRequired");
+    const storedPwd = getReviewerPassword(projectId);
 
-    if (pwdRequired === "true") {
-      setRequirePassword(true);
-    }
-  }, []);
+    setReviewerPassword(storedPwd || "");
 
-  useEffect(() => {
-    if (!getAuthToken()) {
+    const bootstrapReview = async () => {
+      if (getAuthToken()) {
+        await fetchProject();
+        return;
+      }
 
       const storedGuest = getGuestIdentity();
 
-      if (storedGuest) {
-        fetchProject(storedGuest, storedPwd);
-      } else {
+      if (passwordRequiredFromLink && !storedPwd) {
+        setGuestModalStep("password");
+        setError("");
         setLoading(false);
         setShowGuestModal(true);
+        return;
       }
-    } else {
-      fetchProject(null, storedPwd);
-    }
+
+      if (!storedGuest && !storedPwd) {
+        const result = await fetchProject(null, null);
+
+        if (result?.status === "passwordRequired") {
+          setGuestModalStep("password");
+          setError("");
+          setShowGuestModal(true);
+          return;
+        }
+
+        setGuestModalStep("identity");
+        setError("");
+        setShowGuestModal(true);
+        return;
+      }
+
+      const result = await fetchProject(storedGuest, storedPwd);
+
+      if (result?.status === "passwordRequired") {
+        persistReviewerPassword(projectId, "");
+        setReviewerPassword("");
+        setGuestModalStep("password");
+        setError("");
+        setShowGuestModal(true);
+        return;
+      }
+
+      if (result?.status === "success" && !storedGuest) {
+        setGuestModalStep("identity");
+        setError("");
+        setShowGuestModal(true);
+      }
+    };
+
+    bootstrapReview();
 
     return () => {
       if (videoSrc && videoSrc.startsWith("blob:")) {
         URL.revokeObjectURL(videoSrc);
       }
     };
-  }, [videoSrc]);
+  }, [projectId, passwordRequiredFromLink, videoSrc]);
 
-  // useEffect(() => {
-  //   fetchProject();
-  //   return () => {
-  //     if (videoSrc && videoSrc.startsWith("blob:")) {
-  //       URL.revokeObjectURL(videoSrc);
-  //     }
-  //   };
-  // }, [videoSrc]);
-
-const handleGuestSubmit = async ({ name, email, password }) => {
+const handleGuestSubmit = async ({ name, email }) => {
   const guestData = {
     reviewerName: name,
     reviewerEmail: email,
   };
 
   setGuestIdentity(guestData);
-  setGuest(guestData);
-
-  if (password) {
-    localStorage.setItem(`project_pwd_${projectId}`, password);
-  }
-
+  setError("");
   setLoading(true);
   setShowGuestModal(false);
+  await fetchProject(guestData, reviewerPassword);
+};
 
-  // 🔥 PASS PASSWORD DIRECTLY (avoid async bug)
-  fetchProject(guestData, password);
+const handleGuestModalClose = () => {
+  setShowGuestModal(false);
+  setError("");
+  navigate(PATHS.ROOT, { replace: true });
 };
 
 //   useEffect(() => {
@@ -202,13 +231,6 @@ const handleGuestSubmit = async ({ name, email, password }) => {
     }
   }, [rawVersions, activeVersionId]);
 
-  useEffect(() => {
-    const storedPwd = localStorage.getItem(`project_pwd_${projectId}`);
-    if (storedPwd) {
-      setReviewerPassword(storedPwd);
-    }
-  }, [projectId]);
-  
 useEffect(() => {
   const handler = (e) => {
     // Don't steal focus if user is typing
@@ -255,7 +277,39 @@ const handleUpdateProject = async (id, payload) => {
 
 
 
-function fetchProject(storedGuest = null, pwd = null) {
+async function handlePasswordSubmit({ password }) {
+  setLoading(true);
+  setError("");
+
+  const result = await fetchProject(null, password);
+
+  if (result?.status !== "success") {
+    setLoading(false);
+    setGuestModalStep("password");
+    setShowGuestModal(true);
+    setError(
+      result?.status === "passwordRequired"
+        ? "The password entered is wrong."
+        : result?.error?.response?.data?.message || "Unable to unlock this link right now."
+    );
+    return;
+  }
+
+  persistReviewerPassword(projectId, password);
+  setReviewerPassword(password);
+  setError("");
+  setLoading(false);
+
+  if (getGuestIdentity()) {
+    setShowGuestModal(false);
+    return;
+  }
+
+  setGuestModalStep("identity");
+  setShowGuestModal(true);
+}
+
+async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPassword || getReviewerPassword(projectId)) {
   const params = {
     ...(storedGuest && {
       reviewerName: storedGuest.reviewerName, // ✅ FIXED
@@ -266,42 +320,49 @@ function fetchProject(storedGuest = null, pwd = null) {
     }),
   };
 
-  getOneProjectApi(projectId, params)
-    .then((res) => {
-      const project = res.data.project;
+  try {
+    const res = await getOneProjectApi(projectId, params);
+    const project = res.data.project;
 
-      const permission =
-        res.data.permission == "none"
-          ? constants.REVIEWER
-          : res.data.permission;
+    const permission =
+      res.data.permission == "none"
+        ? constants.REVIEWER
+        : res.data.permission;
 
-      setProjectAccess(permission);
+    setProjectAccess(permission);
 
-      setProjectDetail((prev) => {
-        const currentVersionStillExists = project.versions?.some(
-          (v) => v._id === activeVersionId
-        );
+    setProjectDetail(() => {
+      const currentVersionStillExists = project.versions?.some(
+        (v) => v._id === activeVersionId
+      );
 
-        if (!currentVersionStillExists) {
-          const latest =
-            project.versions?.[project.versions.length - 1];
-          if (latest) {
-            setActiveVersionId(latest._id);
-          }
+      if (!currentVersionStillExists) {
+        const latest =
+          project.versions?.[project.versions.length - 1];
+        if (latest) {
+          setActiveVersionId(latest._id);
         }
-
-        return project;
-      });
-
-      setRequirePassword(false); // ✅ success
-      setLoading(false);
-    })
-    .catch((err) => {
-      if (err?.response?.data?.passwordRequired) {
-        setRequirePassword(true); // 🔥 show password input
       }
-      setLoading(false);
+
+      return project;
     });
+
+    if (pwd) {
+      setReviewerPassword(pwd);
+    }
+
+    setLoading(false);
+    return { status: "success", data: res.data };
+  } catch (err) {
+    if (err?.response?.data?.passwordRequired) {
+      setError("");
+      setLoading(false);
+      return { status: "passwordRequired", error: err };
+    }
+
+    setLoading(false);
+    return { status: "error", error: err };
+  }
 }
 
 
@@ -358,7 +419,7 @@ function fetchProject(storedGuest = null, pwd = null) {
     setIsPlaying(false);
   };
 
-  const addMarker = (partial) => {
+  const _addMarker = (partial) => {
     const tempId = "tmp_" + Date.now();
     pauseVideo();
     const marker = {
@@ -865,9 +926,9 @@ const handleNewVersionFile = async (e) => {
   if (showGuestModal) return <GuestIdentityModal
       open={showGuestModal}
       error={error}
-      onClose={() => setShowGuestModal(false)}
-      onContinue={handleGuestSubmit}
-      requirePassword={requirePassword}
+      onClose={handleGuestModalClose}
+      onContinue={guestModalStep === "password" ? handlePasswordSubmit : handleGuestSubmit}
+      step={guestModalStep}
     />
 
 

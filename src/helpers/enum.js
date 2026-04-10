@@ -4,6 +4,7 @@ export const constants = {
   COLLABORATOR : 'collaborator',
   REVIEWER : 'reviewer',
   GUEST_KEY : "guestIdentity",
+  REVIEWER_PASSWORD_KEY: "reviewerPassword",
   AUTH_TOKEN : "authToken",
 };
 
