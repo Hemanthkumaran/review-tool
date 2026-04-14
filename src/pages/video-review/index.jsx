@@ -973,8 +973,8 @@ const handleNewVersionFile = async (e) => {
         className="mx-auto flex h-full w-full min-w-0 flex-col justify-center"
         style={{
           maxWidth: isCommentsOpen
-            ? "min(1060px, calc((100svh - 296px) * 1.78))"
-            : "min(1120px, calc((100svh - 310px) * 1.78))",
+            ? "min(1240px, calc((100svh - 230px) * 1.78), calc(100vw - clamp(380px, 29vw, 450px) - 48px))"
+            : "min(1240px, calc((100svh - 288px) * 1.78))",
           transition: "max-width 500ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >

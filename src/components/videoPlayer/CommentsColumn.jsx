@@ -185,10 +185,10 @@ const handleSaveNotesSection = async (sectionId, html) => {
         onClick={onToggle}
         aria-label={isOpen ? "Collapse comments panel" : "Expand comments panel"}
         aria-expanded={isOpen}
-        className={`cursor-pointer z-30 flex items-center justify-center shadow-[0_14px_40px_rgba(0,0,0,0.45)] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`cursor-pointer z-30 flex items-center justify-center shadow-[0_14px_40px_rgba(0,0,0,0.45)] transition-[top,transform,width,height,border-radius,background-color,color,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           isOpen
             ? "absolute -left-3 top-24 h-7 w-7 rounded-full border border-[#24262A] bg-[#121314]/95 backdrop-blur-sm hover:bg-[#18191B]"
-            : "fixed right-0 top-1/2 h-8 w-9 -translate-y-1/2 rounded-l-full rounded-r-none bg-[var(--brand-color)] text-black"
+            : "fixed right-0 top-[180px] h-8 w-9 -translate-y-1/2 rounded-l-full rounded-r-none bg-[var(--brand-color)] text-black"
         }`}
       >
         {isOpen ? (
