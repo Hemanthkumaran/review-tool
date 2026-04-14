@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 import VoiceNotePlayer from "../VoiceNotePlayer";
 import { deleteCommentApi, resolveCommentApi } from "../../../services/api";
@@ -9,7 +10,6 @@ import CommentUserCard from "./CommentUserCard";
 import ReplyInput from "./ReplyInput";
 import DeleteCommentModal from "../../modals/DeleteCommentModal";
 import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
-import { useUser } from "../../../context/UserContext";
 import { getGuestIdentity } from "../../../helpers/storage";
 
 
@@ -21,7 +21,6 @@ export default function CommentCard({
   onReplySubmit, // (text) => Promise | void
   projectId,
   activeVersionId,
-  onCommentUpdated,
   updateCommentLocal,
   onCommentDeleted,
   onReplyUpdated,
@@ -155,30 +154,31 @@ export default function CommentCard({
           <>
             <p className="whitespace-pre-line">{marker.text}</p>
             {(type === "voice" || type === "mixed") && audioUrl && (
-            <div className="mt-1">
-              <VoiceNotePlayer src={audioUrl}/>
-              {images.length > 0 && (
-                <div className="flex flex-wrap gap-3 mt-1">
-                  {images.map((src, i) => (
-                    <div
-                      key={`${src}-${i}`}
-                      className="w-[76px] h-[76px] rounded-2xl overflow-hidden bg-black/40"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPreviewImage(src);
-                      }}
-                    >
-                      <img
-                        src={src}
-                        alt={`attachment-${i + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+              <div className="mt-2">
+                <VoiceNotePlayer src={audioUrl}/>
+              </div>
+            )}
+            {images.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-3">
+                {images.map((src, i) => (
+                  <button
+                    key={`${src}-${i}`}
+                    type="button"
+                    className="h-[76px] w-[76px] overflow-hidden rounded-2xl bg-black/40"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewImage(src);
+                    }}
+                  >
+                    <img
+                      src={src}
+                      alt={`attachment-${i + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
             {/* footer row */}
                 <div className="mt-3 flex items-center justify-between">
                   {/* Reply */}
@@ -325,18 +325,32 @@ export default function CommentCard({
           }
         }}
       />
-      {previewImage && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
-          onClick={() => setPreviewImage(null)}
-        >
-          <img
-            src={previewImage}
-            className="max-w-[90vw] max-h-[90vh] rounded-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+      {previewImage && typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/85 px-6 py-8 backdrop-blur-sm"
+            onClick={() => setPreviewImage(null)}
+          >
+            <button
+              type="button"
+              className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#111216] text-xl text-white shadow-xl hover:bg-[#1A1B1F]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewImage(null);
+              }}
+              aria-label="Close image preview"
+            >
+              ×
+            </button>
+            <img
+              src={previewImage}
+              alt="Comment attachment preview"
+              className="max-h-[88vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>,
+          document.body
+        )}
       </div>
   );
 }

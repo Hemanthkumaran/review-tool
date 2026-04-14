@@ -8,6 +8,7 @@ import VideoUploadPlaceholder from "../../components/videoPlayer/VideoUploadPlac
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { addCommentApi, addReplyApi, deleteProjectVersionApi, getOneProjectApi, getVideoUploadUrl, updateCommentApi, updateProjectApi } from "../../services/api";
 import AppLoader from "../../components/common/AppLoader";
+import { hasAnnotationContent } from "../../helpers/annotation";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
 import { getVideoDuration, uploadToMux } from "../../helpers/muxHelpers";
 import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
@@ -464,6 +465,7 @@ async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPass
 
   const startVoiceRecording = async () => {
     pauseVideo();
+    setAnnotationMode(false);
     if (!navigator.mediaDevices?.getUserMedia) {
       alert("Recording not supported in this browser");
       return;
@@ -549,18 +551,12 @@ async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPass
     }
   };
 
-  // legacy hook-in if ever needed (not used by overlay now, but safe)
-  const handleAddAnnotation = ({ time, annotation }) => {
-    pauseVideo();
-    setPendingAnnotation({
-      time: time ?? annotationStartTimeRef.current,
-      annotation,
-    });
+  const handleCancelAnnotation = () => {
+    setPendingAnnotation(null);
     setAnnotationMode(false);
   };
 
-  const handleCancelAnnotation = () => {
-    setPendingAnnotation(null);
+  const handleFinishAnnotation = () => {
     setAnnotationMode(false);
   };
 
@@ -611,34 +607,34 @@ async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPass
     const trimmed = (text || "")?.trim();
     const imageUrls = images || [];
 
-    const hasAnnotation =
-      !!pendingAnnotation &&
-      !!pendingAnnotation.annotation &&
-      pendingAnnotation.annotation.strokes?.length > 0;
+    const hasAnnotation = hasAnnotationContent(pendingAnnotation?.annotation);
 
     const hasVoice = !!pendingVoice && !!pendingVoice.url;
     const hasTextOrImages = !!trimmed || imageUrls.length > 0;
 
     // nothing to send
     if (!hasAnnotation && !hasVoice && !hasTextOrImages) {
+      setSendingComment(false);
       return;
     }
 
   const baseTime = isEdit
     ? existingMarker.time        
-    : (hasAnnotation && pendingAnnotation.time) ||
-      (hasVoice && pendingVoice.startTime) ||
-      currentTime ||
-      0;
+    : hasAnnotation
+      ? pendingAnnotation.time ?? currentTime ?? 0
+      : hasVoice
+        ? pendingVoice.startTime ?? currentTime ?? 0
+        : currentTime || 0;
 
   /* ---------- 2) Build FormData for backend ---------- */
 
   const formData = new FormData();
   formData.append('commentType', commentType);
 
-  const frame = Math.round(baseTime * videoFps);
+  const fps = videoFps || 60;
+  const frame = Math.round(baseTime * fps);
   
-  const snappedTime = frame / videoFps;
+  const snappedTime = frame / fps;
 
   formData.append("timeline", snappedTime.toFixed(6));
   formData.append("frame", frame);
@@ -649,11 +645,16 @@ async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPass
   }
 
   if (hasAnnotation) {
-    // send your strokes structure as JSON
+    const annotationPayload = pendingAnnotation.annotation;
     formData.append(
       "annotation",
-      JSON.stringify(pendingAnnotation.annotation)
+      JSON.stringify(annotationPayload)
     );
+
+    if (!isEdit) {
+      setPendingAnnotation(null);
+      setAnnotationMode(false);
+    }
   }
 
     // voiceNote: convert object URL -> Blob -> File, force WAV mimetype
@@ -726,6 +727,7 @@ async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPass
 
   if (!projectID || !versionID) {
     console.warn("Missing projectID or versionID");
+    setSendingComment(false);
     return;
   }
 
@@ -909,9 +911,7 @@ const handleNewVersionFile = async (e) => {
 };
 
   const hasPendingAnnotation =
-    !!pendingAnnotation &&
-    !!pendingAnnotation.annotation &&
-    pendingAnnotation.annotation.strokes?.length > 0;
+    hasAnnotationContent(pendingAnnotation?.annotation);
 
   const hasPendingVoice =
     !!pendingVoice && !!pendingVoice.url;
@@ -997,9 +997,8 @@ const handleNewVersionFile = async (e) => {
               onLoadedMetadata={handleLoadedMetadata}
               onTogglePlay={handleTogglePlay}
               onSeek={handleSeek}
-              onAddAnnotation={handleAddAnnotation}
-              onCancelAnnotation={handleCancelAnnotation}
               onAnnotationDraftChange={handleAnnotationDraftChange}
+              onFinishAnnotation={handleFinishAnnotation}
               videoFps={videoFps}
             />
             </div>
@@ -1028,6 +1027,7 @@ const handleNewVersionFile = async (e) => {
           onCancelVoice={handleCancelVoice}
           onStartAnnotation={handleStartAnnotation}
           onCancelAnnotation={handleCancelAnnotation}
+          onFinishAnnotation={handleFinishAnnotation}
           pauseVideo={pauseVideo}
           commentInputRef={commentInputRef}
           sendingComment={sendingComment}

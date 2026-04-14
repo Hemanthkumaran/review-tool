@@ -1,8 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import PlayerControlsBar from "./PlayerControllerBar";
+import AnnotationToolbar from "./AnnotationToolbar";
 import playIcon from "../../assets/svgs/play.svg";
 import pauseIcon from "../../assets/svgs/pause.svg";
+import {
+  ANNOTATION_TOOLS,
+  DEFAULT_ANNOTATION_COLOR,
+  DEFAULT_ANNOTATION_STROKE_WIDTH,
+  DEFAULT_ANNOTATION_TOOL,
+  createAnnotation,
+  hasAnnotationContent,
+  normalizeAnnotation,
+} from "../../helpers/annotation";
 
 export default function VideoPlayerWithSeekbar({
   src,
@@ -18,13 +28,22 @@ export default function VideoPlayerWithSeekbar({
   onSeek,
   activeVersionId,
   onAnnotationDraftChange,
+  onFinishAnnotation,
   markers = [],
   videoFps
   // projectId
 }) {
   const annotationCanvasRef = useRef(null);
+  const activePointerIdRef = useRef(null);
+  const annotationDraftTimeRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [drawingAnnotation, setDrawingAnnotation] = useState(null); // { strokes: [{ points: [{xPct,yPct}]}] }
+  const [drawingAnnotation, setDrawingAnnotation] = useState(null);
+  const [draftShape, setDraftShape] = useState(null);
+  const [annotationTool, setAnnotationTool] = useState(DEFAULT_ANNOTATION_TOOL);
+  const [annotationColor, setAnnotationColor] = useState(DEFAULT_ANNOTATION_COLOR);
+  const [annotationStrokeWidth, setAnnotationStrokeWidth] = useState(
+    DEFAULT_ANNOTATION_STROKE_WIDTH
+  );
   const [isLooping, setIsLooping] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [ready, setReady] = useState(false);
@@ -70,7 +89,7 @@ useEffect(() => {
     if (!playerRef.current) return;
     playerRef.current.volume = volume;
     playerRef.current.muted = isMuted;
-  }, [volume, isMuted]);
+  }, [playerRef, volume, isMuted]);
 
 
   useEffect(() => {
@@ -106,7 +125,7 @@ useEffect(() => {
 
     window.addEventListener("keydown", onKey, { passive: false });
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [playerRef]);
 
 
 
@@ -141,33 +160,61 @@ useEffect(() => {
   useEffect(() => {
     if (!annotationMode) return;
 
-    const hasStrokes =
-      drawingAnnotation && drawingAnnotation.strokes?.length > 0;
-
-    if (hasStrokes) {
+    if (hasAnnotationContent(drawingAnnotation)) {
       onAnnotationDraftChange?.({
-        time: currentTime,
+        time: annotationDraftTimeRef.current ?? currentTime,
         annotation: drawingAnnotation,
       });
+      return;
     }
-}, [drawingAnnotation, annotationMode, currentTime]);
 
+    onAnnotationDraftChange?.(null);
+  }, [drawingAnnotation, annotationMode, currentTime, onAnnotationDraftChange]);
 
-  const addPointToStroke = (xPct, yPct) => {
+  const buildAnnotation = (elements) => {
+    if (!elements.length) return null;
+    return createAnnotation(elements);
+  };
+
+  const updateDrawingElements = (updater) => {
     setDrawingAnnotation((prev) => {
-      const strokes = prev?.strokes ? [...prev.strokes] : [];
-      if (!strokes.length) {
-        strokes.push({ points: [{ xPct, yPct }] });
-      } else {
-        const last = { ...strokes[strokes.length - 1] };
-        const pts = last.points
-          ? [...last.points, { xPct, yPct }]
-          : [{ xPct, yPct }];
-        last.points = pts;
-        strokes[strokes.length - 1] = last;
-      }
-      return { strokes };
+      const nextElements = updater([...normalizeAnnotation(prev).elements]);
+      return buildAnnotation(nextElements);
     });
+  };
+
+  const getPointerPoint = (canvas, event) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    return {
+      xPct: rect.width ? x / rect.width : 0,
+      yPct: rect.height ? y / rect.height : 0,
+    };
+  };
+
+  const createPenElement = (point) => ({
+    id: `annotation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type: ANNOTATION_TOOLS.PEN,
+    color: annotationColor,
+    strokeWidth: annotationStrokeWidth,
+    points: [point],
+  });
+
+  const createShapeElement = (point) => ({
+    id: `annotation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type: annotationTool,
+    color: annotationColor,
+    strokeWidth: annotationStrokeWidth,
+    start: point,
+    end: point,
+  });
+
+  const hasVisibleBounds = (shape) => {
+    if (!shape?.start || !shape?.end) return false;
+    const dx = Math.abs(shape.end.xPct - shape.start.xPct);
+    const dy = Math.abs(shape.end.yPct - shape.start.yPct);
+    return dx > 0.003 || dy > 0.003;
   };
 
   const handleCanvasPointerDown = (e) => {
@@ -175,114 +222,299 @@ useEffect(() => {
     const canvas = annotationCanvasRef.current;
     if (!canvas) return;
 
+    activePointerIdRef.current = e.pointerId;
+    if (annotationDraftTimeRef.current == null) {
+      annotationDraftTimeRef.current = currentTime;
+    }
+    canvas.setPointerCapture?.(e.pointerId);
     setIsDrawing(true);
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const xPct = x / rect.width;
-    const yPct = y / rect.height;
+    const point = getPointerPoint(canvas, e);
 
-    setDrawingAnnotation((prev) => {
-      const strokes = prev?.strokes ? [...prev.strokes] : [];
-      strokes.push({ points: [{ xPct, yPct }] });
-      return { strokes };
-    });
+    if (annotationTool === ANNOTATION_TOOLS.PEN) {
+      updateDrawingElements((elements) => [...elements, createPenElement(point)]);
+      return;
+    }
+
+    setDraftShape(createShapeElement(point));
   };
 
   const handleCanvasPointerMove = (e) => {
-    if (!annotationMode || !isDrawing || !annotationCanvasRef.current) return;
-    const rect = annotationCanvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const xPct = x / rect.width;
-    const yPct = y / rect.height;
-    addPointToStroke(xPct, yPct);
+    if (
+      !annotationMode ||
+      !isDrawing ||
+      !annotationCanvasRef.current ||
+      activePointerIdRef.current !== e.pointerId
+    ) {
+      return;
+    }
+
+    const point = getPointerPoint(annotationCanvasRef.current, e);
+
+    if (annotationTool === ANNOTATION_TOOLS.PEN) {
+      updateDrawingElements((elements) => {
+        if (!elements.length) return elements;
+
+        const nextElements = [...elements];
+        const lastElement = nextElements[nextElements.length - 1];
+
+        if (lastElement?.type !== ANNOTATION_TOOLS.PEN) {
+          return nextElements;
+        }
+
+        nextElements[nextElements.length - 1] = {
+          ...lastElement,
+          points: [...(lastElement.points || []), point],
+        };
+
+        return nextElements;
+      });
+      return;
+    }
+
+    setDraftShape((prev) => (prev ? { ...prev, end: point } : prev));
   };
 
-  const handleCanvasPointerUp = () => {
+  const handleCanvasPointerUp = (e) => {
     if (!annotationMode) return;
+
+    if (
+      activePointerIdRef.current !== null &&
+      e?.pointerId !== undefined &&
+      activePointerIdRef.current !== e.pointerId
+    ) {
+      return;
+    }
+
+    try {
+      annotationCanvasRef.current?.releasePointerCapture?.(activePointerIdRef.current);
+    } catch {
+      // Pointer capture can already be released on some browsers.
+    }
+    activePointerIdRef.current = null;
     setIsDrawing(false);
+
+    if (annotationTool === ANNOTATION_TOOLS.PEN || !draftShape) {
+      return;
+    }
+
+    if (!hasVisibleBounds(draftShape)) {
+      setDraftShape(null);
+      return;
+    }
+
+    updateDrawingElements((elements) => [...elements, draftShape]);
+    setDraftShape(null);
   };
 
   useEffect(() => {
     if (!annotationMode) {
       setIsDrawing(false);
+      setDraftShape(null);
       setDrawingAnnotation(null);
+      annotationDraftTimeRef.current = null;
     }
   }, [annotationMode]);
 
-  useEffect(() => {
-  const canvas = annotationCanvasRef.current;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  const w = (canvas.width = canvas.clientWidth);
-  const h = (canvas.height = canvas.clientHeight);
-
-  ctx.clearRect(0, 0, w, h);
-
-  const drawStrokes = (
-    annotation,
-    color = "rgba(254,234,59,0.95)",
-    lineWidth = 3
-  ) => {
-    if (!annotation || !annotation.strokes || !annotation.strokes.forEach) {
+  const handleUndoAnnotation = () => {
+    if (draftShape) {
+      setDraftShape(null);
       return;
     }
 
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = color;
-
-    annotation.strokes.forEach((stroke) => {
-      const pts = stroke.points || [];
-      if (pts.length < 2) return;
-
-      ctx.beginPath();
-      pts.forEach((p, idx) => {
-        const x = p.xPct * w;
-        const y = p.yPct * h;
-        if (idx === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-    });
+    updateDrawingElements((elements) => elements.slice(0, -1));
   };
 
-  const NEAR_THRESHOLD = 0.5;
+  const handleClearAnnotation = () => {
+    setDraftShape(null);
+    setDrawingAnnotation(null);
+  };
 
-  // existing saved annotations (from markers)
-  (markers || []).forEach((m) => {
-    if (!m.annotation) return;
-    if (Math.abs(m.time - currentTime) > NEAR_THRESHOLD) return;
-    drawStrokes(m.annotation, "rgba(254,234,59,0.95)", 3);
-  });
+  const handleFinishDrawing = () => {
+    onFinishAnnotation?.();
+  };
 
-  // pending annotation (already saved draft in parent)
-  if (
-    pendingAnnotation &&
-    pendingAnnotation.annotation &&
-    Math.abs(pendingAnnotation.time - currentTime) <= NEAR_THRESHOLD
-  ) {
-    drawStrokes(
-      pendingAnnotation.annotation,
-      "rgba(129,140,248,0.95)",
-      3
-    );
-  }
+  useEffect(() => {
+    const canvas = annotationCanvasRef.current;
+    if (!canvas) return;
 
-  // in-progress strokes while drawing (local draft)
-  if (annotationMode && drawingAnnotation) {
-    drawStrokes(drawingAnnotation, "rgba(180,180,255,0.95)", 3);
-  }
-}, [
-  markers,
-  currentTime,
-  annotationMode,
-  drawingAnnotation,
-  pendingAnnotation,
-]);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const toCanvasPoint = (point) => ({
+      x: point.xPct * width,
+      y: point.yPct * height,
+    });
+
+    const drawPenElement = (element) => {
+      const points = element.points || [];
+      if (!points.length) return;
+
+      ctx.beginPath();
+
+      if (points.length === 1) {
+        const { x, y } = toCanvasPoint(points[0]);
+        ctx.arc(x, y, Math.max((element.strokeWidth || 3) / 2, 1.5), 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+
+      points.forEach((point, index) => {
+        const { x, y } = toCanvasPoint(point);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+
+      ctx.stroke();
+    };
+
+    const drawArrowElement = (element) => {
+      if (!element.start || !element.end) return;
+
+      const start = toCanvasPoint(element.start);
+      const end = toCanvasPoint(element.end);
+      const angle = Math.atan2(end.y - start.y, end.x - start.x);
+      const headLength = Math.max(12, (element.strokeWidth || 3) * 3);
+
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(end.x, end.y);
+      ctx.lineTo(
+        end.x - headLength * Math.cos(angle - Math.PI / 7),
+        end.y - headLength * Math.sin(angle - Math.PI / 7)
+      );
+      ctx.lineTo(
+        end.x - headLength * Math.cos(angle + Math.PI / 7),
+        end.y - headLength * Math.sin(angle + Math.PI / 7)
+      );
+      ctx.closePath();
+      ctx.fill();
+    };
+
+    const drawRectangleElement = (element) => {
+      if (!element.start || !element.end) return;
+
+      const start = toCanvasPoint(element.start);
+      const end = toCanvasPoint(element.end);
+      const x = Math.min(start.x, end.x);
+      const y = Math.min(start.y, end.y);
+      const rectWidth = Math.abs(end.x - start.x);
+      const rectHeight = Math.abs(end.y - start.y);
+
+      if (!rectWidth && !rectHeight) return;
+      ctx.strokeRect(x, y, rectWidth, rectHeight);
+    };
+
+    const drawEllipseElement = (element) => {
+      if (!element.start || !element.end) return;
+
+      const start = toCanvasPoint(element.start);
+      const end = toCanvasPoint(element.end);
+      const centerX = (start.x + end.x) / 2;
+      const centerY = (start.y + end.y) / 2;
+      const radiusX = Math.abs(end.x - start.x) / 2;
+      const radiusY = Math.abs(end.y - start.y) / 2;
+
+      if (!radiusX && !radiusY) return;
+
+      ctx.beginPath();
+      ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    };
+
+    const drawElement = (element, opacity = 1) => {
+      if (!element) return;
+
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = element.strokeWidth || DEFAULT_ANNOTATION_STROKE_WIDTH;
+      ctx.strokeStyle = element.color || DEFAULT_ANNOTATION_COLOR;
+      ctx.fillStyle = element.color || DEFAULT_ANNOTATION_COLOR;
+
+      switch (element.type) {
+        case ANNOTATION_TOOLS.ARROW:
+          drawArrowElement(element);
+          break;
+        case ANNOTATION_TOOLS.RECTANGLE:
+          drawRectangleElement(element);
+          break;
+        case ANNOTATION_TOOLS.ELLIPSE:
+          drawEllipseElement(element);
+          break;
+        case ANNOTATION_TOOLS.PEN:
+        default:
+          drawPenElement(element);
+          break;
+      }
+
+      ctx.restore();
+    };
+
+    const drawAnnotation = (annotation, opacity = 1) => {
+      normalizeAnnotation(annotation).elements.forEach((element) =>
+        drawElement(element, opacity)
+      );
+    };
+
+    const fps = videoFps || 60;
+    const currentFrame = Math.round(currentTime * fps);
+    const shouldDrawAtCurrentFrame = ({ time, frame }) => {
+      const numericFrame = Number(frame);
+      if (Number.isFinite(numericFrame)) {
+        return numericFrame === currentFrame;
+      }
+
+      const numericTime = Number(time);
+      if (!Number.isFinite(numericTime)) {
+        return false;
+      }
+
+      return Math.round(numericTime * fps) === currentFrame;
+    };
+
+    (markers || []).forEach((marker) => {
+      if (!marker.annotation) return;
+      if (!shouldDrawAtCurrentFrame(marker)) return;
+      drawAnnotation(marker.annotation, 0.95);
+    });
+
+    if (
+      pendingAnnotation?.annotation &&
+      shouldDrawAtCurrentFrame(pendingAnnotation)
+    ) {
+      drawAnnotation(pendingAnnotation.annotation, annotationMode ? 0.25 : 0.92);
+    }
+
+    if (annotationMode && drawingAnnotation) {
+      drawAnnotation(drawingAnnotation, 1);
+    }
+
+    if (annotationMode && draftShape) {
+      drawElement(draftShape, 0.95);
+    }
+  }, [
+    markers,
+    currentTime,
+    annotationMode,
+    drawingAnnotation,
+    draftShape,
+    pendingAnnotation,
+    videoFps,
+  ]);
 
 const muxPlayerStyle = {
   width: "100%",
@@ -398,15 +630,21 @@ const handleTogglePlay = () => {
             {annotationMode && (
               <>
                 <div className="absolute inset-0 bg-black/10 pointer-events-none z-10" />
-                {/* <div className="absolute top-3 right-3 flex gap-2 z-30">
-                  <button
-                    type="button"
-                    onClick={handleCancelOverlay}
-                    className="px-3 py-1 text-[11px] rounded-full bg-black/70 text-gray-200 hover:bg-black/90 border border-white/10"
-                  >
-                    Cancel
-                  </button>
-                </div> */}
+                <AnnotationToolbar
+                  tool={annotationTool}
+                  onToolChange={setAnnotationTool}
+                  color={annotationColor}
+                  onColorChange={setAnnotationColor}
+                  strokeWidth={annotationStrokeWidth}
+                  onStrokeWidthChange={setAnnotationStrokeWidth}
+                  canUndo={
+                    !!draftShape || normalizeAnnotation(drawingAnnotation).elements.length > 0
+                  }
+                  canClear={!!draftShape || hasAnnotationContent(drawingAnnotation)}
+                  onUndo={handleUndoAnnotation}
+                  onClear={handleClearAnnotation}
+                  onDone={handleFinishDrawing}
+                />
               </>
             )}
 
@@ -420,6 +658,7 @@ const handleTogglePlay = () => {
               onPointerDown={handleCanvasPointerDown}
               onPointerMove={handleCanvasPointerMove}
               onPointerUp={handleCanvasPointerUp}
+              onPointerCancel={handleCanvasPointerUp}
             />
           </div>
         </div>

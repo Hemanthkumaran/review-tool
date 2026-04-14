@@ -11,7 +11,6 @@ import AudienceSelect from "../AudienceSelect";
 import { constants } from "../../helpers/enum";
 import { formatClockTime2, formatClockTimeMMSS } from "../../helpers/common";
 import Spinner from "../common/Spinner";
-import VoicePreviewModal from "../modals/VoicePreviewModal";
 import VoiceNotePlayer from "./VoiceNotePlayer";
 import { CommentSendIcon } from "../../assets/svgs/SvgComponents";
 import { useWorkspace } from "../../context/WorkspaceContext";
@@ -28,6 +27,7 @@ export default function CommentBar({
   onCancelVoice,
   onStartAnnotation,
   onCancelAnnotation,
+  onFinishAnnotation,
   pauseVideo,
   sendingComment,
   commentInputRef,
@@ -49,6 +49,7 @@ export default function CommentBar({
   const [emojiPos, setEmojiPos] = useState(null);
 
   const MAX_RECORD_SECONDS = 180;
+  const stopVoiceRef = useRef(onStopVoice);
   const [recordSeconds, setRecordSeconds] = useState(MAX_RECORD_SECONDS);
 
   const fps = videoFps || 60;
@@ -81,19 +82,9 @@ export default function CommentBar({
     };
   }, []);
 
-  // recording timer
-  // useEffect(() => {
-  //   if (!isRecording) {
-  //     setRecordSeconds(0);
-  //     return;
-  //   }
-
-  //   const id = setInterval(() => {
-  //     setRecordSeconds((s) => s + 1);
-  //   }, 1000);
-
-  //   return () => clearInterval(id);
-  // }, [isRecording]);
+  useEffect(() => {
+    stopVoiceRef.current = onStopVoice;
+  }, [onStopVoice]);
 
   useEffect(() => {
   if (!isRecording) {
@@ -101,18 +92,21 @@ export default function CommentBar({
     return;
   }
 
+  setRecordSeconds(MAX_RECORD_SECONDS);
+
   const id = setInterval(() => {
     setRecordSeconds((s) => {
-      if (s <= 1) {
-        onStopVoice?.(); // auto stop
+      const next = s - 1;
+      if (next <= 0) {
+        stopVoiceRef.current?.(); // auto stop
         return 0;
       }
-      return s - 1;
+      return next;
     });
   }, 1000);
 
   return () => clearInterval(id);
-}, [isRecording, onStopVoice]);
+}, [isRecording]);
 
   const toggleEmoji = () => {
     if (!showEmojiPicker) {
@@ -179,6 +173,33 @@ sendingComment ||
 
   return (
    <div className="relative mx-auto w-full max-w-[600px] pb-0 pt-2">
+  {/* Keep attachments out of the card height so the single-viewport review layout never clips the send bar. */}
+  {attachments.length > 0 && (
+    <div className="absolute bottom-full left-0 right-0 z-20 mb-2 rounded-2xl border border-[#1F1F21] bg-[#101213]/95 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.38)] backdrop-blur-md">
+      <div className="flex max-h-[76px] gap-2 overflow-x-auto overflow-y-hidden">
+        {attachments.map((att) => (
+          <div
+            key={att.url}
+            className="relative h-16 w-16 flex-none overflow-hidden rounded-xl border border-[#2A2B2F] bg-black/40"
+          >
+            <img
+              src={att.url}
+              alt={att.name}
+              className="h-full w-full object-cover"
+            />
+            <button
+              type="button"
+              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/75 text-[11px] text-white"
+              onClick={() => removeAttachment(att.url)}
+              aria-label={`Remove ${att.name}`}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
   <div className="bg-[#101213] border border-[#1F1F21] rounded-2xl p-3">
 
     {/* ================= TOP: INPUT + INLINE CHIPS ================= */}
@@ -201,7 +222,7 @@ sendingComment ||
       {/* Drawing chip */}
       {hasPendingAnnotation && (
         <div className="flex items-center gap-2 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
-          <span>Drawing ready</span>
+          <span>Annotation ready</span>
           <button className="cursor-pointer" onClick={onCancelAnnotation}>✕</button>
         </div>
       )}
@@ -224,30 +245,6 @@ sendingComment ||
         </div>
       )}
     </div>
-
-    {/* ================= ATTACHMENTS ================= */}
-    {attachments.length > 0 && (
-      <div className="flex gap-2 mt-2 overflow-x-auto">
-        {attachments.map((att) => (
-          <div
-            key={att.url}
-            className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#1F1F21]"
-          >
-            <img
-              src={att.url}
-              alt={att.name}
-              className="w-full h-full object-cover"
-            />
-            <button
-              className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/70 text-[10px]"
-              onClick={() => removeAttachment(att.url)}
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
-    )}
 
     {/* ================= BOTTOM BAR ================= */}
     <div className="flex items-center justify-between mt-3">
@@ -281,8 +278,8 @@ sendingComment ||
             className={`p-1 rounded-full ${
               isAnnotating || hasPendingAnnotation ? "bg-white/10" : ""
             }`}
-            onClick={onStartAnnotation}
-            title="Add annotation"
+            onClick={isAnnotating ? onFinishAnnotation : onStartAnnotation}
+            title={isAnnotating ? "Done annotating" : "Add annotation"}
           >
             <img src={brushIcon} />
           </button>

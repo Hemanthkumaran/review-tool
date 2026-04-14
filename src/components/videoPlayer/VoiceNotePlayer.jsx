@@ -1,9 +1,9 @@
 // VoiceNotePlayer.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import pauseIcon from '../../assets/svgs/pause.svg';
 import playIcon from '../../assets/svgs/play.svg';
-import { formatClockTime, formatClockTimeMMSS } from "../../helpers/common";
+import { formatClockTimeMMSS } from "../../helpers/common";
 
 export default function VoiceNotePlayer({ src }) {
   const audioRef = useRef(null);
@@ -14,16 +14,33 @@ export default function VoiceNotePlayer({ src }) {
   const [duration, setDuration] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
 
+  useEffect(() => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [src]);
+
   // Attach audio events
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleLoaded = () => {
-      setDuration(audio.duration || 0);
+    const syncDuration = () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration);
+        return;
+      }
+
+      if (audio.seekable?.length) {
+        const seekableEnd = audio.seekable.end(audio.seekable.length - 1);
+        if (Number.isFinite(seekableEnd) && seekableEnd > 0) {
+          setDuration(seekableEnd);
+        }
+      }
     };
 
     const handleTimeUpdate = () => {
+      syncDuration();
       if (!isSeeking) {
         setCurrentTime(audio.currentTime || 0);
       }
@@ -34,24 +51,33 @@ export default function VoiceNotePlayer({ src }) {
       setCurrentTime(0);
     };
 
-    audio.addEventListener("loadedmetadata", handleLoaded);
+    audio.addEventListener("loadedmetadata", syncDuration);
+    audio.addEventListener("durationchange", syncDuration);
+    audio.addEventListener("canplay", syncDuration);
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("ended", handleEnded);
 
     return () => {
-      audio.removeEventListener("loadedmetadata", handleLoaded);
+      audio.removeEventListener("loadedmetadata", syncDuration);
+      audio.removeEventListener("durationchange", syncDuration);
+      audio.removeEventListener("canplay", syncDuration);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [isSeeking]);
+  }, [isSeeking, src]);
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     const audio = audioRef.current;
     if (!audio) return;
 
     if (audio.paused) {
-      audio.play();
-      setIsPlaying(true);
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.error("Failed to play voice note", err);
+        setIsPlaying(false);
+      }
     } else {
       audio.pause();
       setIsPlaying(false);
@@ -96,6 +122,9 @@ export default function VoiceNotePlayer({ src }) {
   const progressPct =
     duration > 0 ? Math.min((currentTime / duration) * 100, 100) : 0;
 
+  const displayTime =
+    duration > 0 ? Math.max(duration - currentTime, 0) : currentTime;
+
   return (
     <div className="flex items-center gap-4">
       {/* hidden native audio element */}
@@ -139,7 +168,7 @@ export default function VoiceNotePlayer({ src }) {
 
       {/* Time pill */}
       <div className="px-4 py-[6px] rounded-full bg-[#101114] text-[12px] text-gray-100 font-medium min-w-[64px] text-center">
-        {formatClockTimeMMSS(Math.max(duration - currentTime, 0))}
+        {formatClockTimeMMSS(displayTime)}
       </div>
     </div>
   );
