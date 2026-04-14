@@ -28,8 +28,8 @@ export default function CommentHeader({
             fps: fps
           })}
         </span>
-        <span className="text-gray-400">•</span>
-        <span className="text-gray-300">#{sNo}</span>
+        <span style={{ color:"#fff" }} className="text-gray-400">•</span>
+        <span style={{ color:"#323232" }}>#{sNo}</span>
       </div>
 
       {/* Right */}

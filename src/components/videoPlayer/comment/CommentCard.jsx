@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import VoiceNotePlayer from "../VoiceNotePlayer";
 import { deleteCommentApi, resolveCommentApi } from "../../../services/api";
 import { formatClockTime, formatRelative } from "../../../helpers/common";
+import { hasAnnotationContent } from "../../../helpers/annotation";
 import ReplyItem from "./ReplyItem";
 import CommentHeader from "./CommentHeader";
 import CommentUserCard from "./CommentUserCard";
@@ -44,6 +45,7 @@ export default function CommentCard({
   const name = marker?.user?.name ?? "John";
   const role = marker?.user?.role ?? "Owner";
   const avatar = marker?.user?.avatarUrl;
+  const hasAnnotation = hasAnnotationContent(marker?.annotation);
   
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -143,7 +145,13 @@ export default function CommentCard({
         formatClockTime={formatClockTime}
         formatRelative={formatRelative}
       />
-      <CommentUserCard avatar={avatar} rawData={marker._raw} role={role} name={name}/>
+      <CommentUserCard
+        avatar={avatar}
+        rawData={marker._raw}
+        role={role}
+        name={name}
+        hasAnnotation={hasAnnotation}
+      />
       {/* main content */}
       <div 
         className="text-[13px] text-gray-200 leading-relaxed mb-3"
