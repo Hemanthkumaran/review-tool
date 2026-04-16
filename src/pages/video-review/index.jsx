@@ -23,6 +23,23 @@ import { constants } from "../../helpers/enum.js";
 import { useWorkspace } from "../../context/WorkspaceContext.jsx";
 import { PATHS } from "../../routes/paths.jsx";
 
+const REVIEWER_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const getValidGuestIdentity = () => {
+  const guest = getGuestIdentity();
+  const reviewerName = guest?.reviewerName?.trim();
+  const reviewerEmail = guest?.reviewerEmail?.trim();
+
+  if (!guest) return null;
+
+  if (!reviewerName || !REVIEWER_EMAIL_REGEX.test(reviewerEmail || "")) {
+    setGuestIdentity(null);
+    return null;
+  }
+
+  return { reviewerName, reviewerEmail };
+};
+
 const getFileFromUrl = async (url, index) => {
   try {
     // ✅ DATA URL
@@ -91,6 +108,7 @@ export default function VideoReview() {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [reviewerPassword, setReviewerPassword] = useState("");
   const [guestModalStep, setGuestModalStep] = useState("identity");
+  const passwordUnlockedProjectRef = useRef(null);
   const commentInputRef = useRef(null);
   const { brandingColor } = useWorkspace();
   const [searchParams] = useSearchParams();
@@ -133,8 +151,12 @@ const passwordRequiredFromLink =
 
   useEffect(() => {
     const storedPwd = getReviewerPassword(projectId);
+    const hasUnlockedPasswordThisOpen =
+      passwordUnlockedProjectRef.current === projectId;
 
-    setReviewerPassword(storedPwd || "");
+    setReviewerPassword(
+      hasUnlockedPasswordThisOpen ? storedPwd || "" : ""
+    );
 
     const bootstrapReview = async () => {
       if (getAuthToken()) {
@@ -142,9 +164,12 @@ const passwordRequiredFromLink =
         return;
       }
 
-      const storedGuest = getGuestIdentity();
+      const storedGuest = getValidGuestIdentity();
 
-      if (passwordRequiredFromLink && !storedPwd) {
+      if (passwordRequiredFromLink && !hasUnlockedPasswordThisOpen) {
+        persistReviewerPassword(projectId, "");
+        setReviewerPassword("");
+        setProjectDetail(null);
         setGuestModalStep("password");
         setError("");
         setLoading(false);
@@ -187,13 +212,15 @@ const passwordRequiredFromLink =
     };
 
     bootstrapReview();
+  }, [projectId, passwordRequiredFromLink]);
 
+  useEffect(() => {
     return () => {
       if (videoSrc && videoSrc.startsWith("blob:")) {
         URL.revokeObjectURL(videoSrc);
       }
     };
-  }, [projectId, passwordRequiredFromLink, videoSrc]);
+  }, [videoSrc]);
 
 const handleGuestSubmit = async ({ name, email }) => {
   const guestData = {
@@ -282,9 +309,12 @@ async function handlePasswordSubmit({ password }) {
   setLoading(true);
   setError("");
 
-  const result = await fetchProject(null, password);
+  const storedGuest = getValidGuestIdentity();
+  const result = await fetchProject(storedGuest, password);
 
   if (result?.status !== "success") {
+    persistReviewerPassword(projectId, "");
+    setReviewerPassword("");
     setLoading(false);
     setGuestModalStep("password");
     setShowGuestModal(true);
@@ -296,12 +326,13 @@ async function handlePasswordSubmit({ password }) {
     return;
   }
 
+  passwordUnlockedProjectRef.current = projectId;
   persistReviewerPassword(projectId, password);
   setReviewerPassword(password);
   setError("");
   setLoading(false);
 
-  if (getGuestIdentity()) {
+  if (storedGuest) {
     setShowGuestModal(false);
     return;
   }
@@ -310,7 +341,7 @@ async function handlePasswordSubmit({ password }) {
   setShowGuestModal(true);
 }
 
-async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPassword || getReviewerPassword(projectId)) {
+async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewerPassword || getReviewerPassword(projectId)) {
   const params = {
     ...(storedGuest && {
       reviewerName: storedGuest.reviewerName, // ✅ FIXED
@@ -580,7 +611,7 @@ async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPass
         let reviewer = null;
 
         if (projectAccess == constants.REVIEWER) {
-          reviewer = getGuestIdentity();
+          reviewer = getValidGuestIdentity();
         }
         
         await addReplyApi(
@@ -764,7 +795,7 @@ async function fetchProject(storedGuest = getGuestIdentity(), pwd = reviewerPass
     let reviewer = null;
 
     if (projectAccess == constants.REVIEWER) {
-      reviewer = getGuestIdentity();
+      reviewer = getValidGuestIdentity();
     }
     const res = await addCommentApi(projectID, versionID, formData, reviewer);
     const backendComment = res.data.comment;
