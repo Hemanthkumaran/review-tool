@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import addVersion from '../assets/svgs/add-version.svg';
 import manageVersion from '../assets/svgs/manage-version.svg';
-import downloadIcon from '../assets/svgs/download-icon.svg';
 import trashIcon from '../assets/svgs/trash-icon.svg';
 import { constants } from "../helpers/enum";
 import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
@@ -15,9 +14,7 @@ export default function VersionSwitcher({
   currentVersionId,
   onSelectVersion,
   onAddNewVersion,
-  onDownloadVersion,
   onDeleteVersion,
-  projectName,
   userAccess
 }) {
   const [open, setOpen] = useState(false);
@@ -209,10 +206,8 @@ export default function VersionSwitcher({
             onSelectVersion && onSelectVersion(v);
           }}
           onAddNewVersion={onAddNewVersion}
-          onDownloadVersion={onDownloadVersion}
           onDeleteVersion={onDeleteVersion}
           userAccess={userAccess}
-          projectName={projectName}
         />
       )}
     </>
@@ -227,10 +222,8 @@ function ManageVersionsModal({
   onClose,
   onSelectVersion,
   onAddNewVersion,
-  onDownloadVersion,
   onDeleteVersion,
   userAccess,
-  projectName
 }) {
 
 //   const sortedVersions = [...versions].sort((a, b) => {

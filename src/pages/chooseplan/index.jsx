@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Modal from "react-modal";
 import ToggleButton from "../../components/buttons/ToggleButton";
 import { useWorkspace } from "../../context/WorkspaceContext";
@@ -31,13 +31,7 @@ const PLAN_MEMBER_LIMITS = {
   team_plus: 10,
 };
 
-const PLAN_ORDER = {
-  freelancer: 1,
-  team: 2,
-  team_plus: 3,
-};
-
-export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, buttonLabel, trialUsed, additionalStorageMinutes = 0, showClose = false }) {
+export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, trialUsed, additionalStorageMinutes = 0, showClose = false }) {
   const { activeWorkspace, workspaceUsers, refreshWorkspacePlan, workspacePlan, brandingColor } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
@@ -48,23 +42,10 @@ export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSucces
   const priceAgency = isAnnual ? 36 : 45;
 
   const memberCount = workspaceUsers?.permissions?.length || 1;
-  console.log(workspaceUsers, 'workspaceUsers');
   
   const subscription = activeWorkspace?.subscription || workspacePlan?.subscription;
 
-  const minutesUsed = subscription?.storageMinutesUsed || 0;
-
-  const totalMinutesAllowed =
-    (subscription?.baseStorageMinutes || 0) +
-    (subscription?.additionalStorageMinutes || 0);
-
   const currentPlan = subscription?.activePlan;
-console.log(workspacePlan?.subscription, 'currentPlan');
-
-  // const canSwitchTo = (planKey) => {
-  //   const limit = PLAN_LIMITS[planKey];
-  //   return minutesUsed <= limit;
-  // };
 
 const canSwitchTo = (planKey) => {
   const limit = PLAN_MEMBER_LIMITS[planKey];
@@ -107,9 +88,8 @@ const getPlanState = (planKey) => {
     if (!activeWorkspace?._id) return;
 
     const isCurrent = currentPlan === planKey;
-    const overLimit = !canSwitchTo(planKey); // ✅ ADD THIS
+    const overLimit = !canSwitchTo(planKey);
 
-    // 🛑 BLOCK: Over limit should never proceed
     if (overLimit) {
       return;
     }
@@ -122,7 +102,6 @@ const getPlanState = (planKey) => {
     try {
       setLoadingPlan(planKey);
 
-      // 🟢 CASE 1 — FREE TRIAL AVAILABLE
       if (!trialUsed) {
 
         await startTrialApi(activeWorkspace._id, {
@@ -189,9 +168,6 @@ const getPlanState = (planKey) => {
   //   }
   // };
 
-const isCurrent = currentPlan === "freelancer";
-const overLimit = !canSwitchTo("freelancer");
-
   return (
     <Modal
       isOpen={open}
@@ -256,7 +232,7 @@ const overLimit = !canSwitchTo("freelancer");
             buttonLabel={getPlanState("freelancer").buttonLabel}
             disabled={getPlanState("freelancer").disabled}
             onClick={() => handleChoosePlan("freelancer")}
-            highlight={false}
+            loading={loadingPlan === "freelancer"}
           />
           <PricingCard
             planKey="team"
@@ -277,7 +253,7 @@ const overLimit = !canSwitchTo("freelancer");
             buttonLabel={getPlanState("team").buttonLabel}
             disabled={getPlanState("team").disabled}
             onClick={() => handleChoosePlan("team")}
-            highlight
+            loading={loadingPlan === "team"}
           />
 
           <PricingCard
@@ -295,7 +271,7 @@ const overLimit = !canSwitchTo("freelancer");
             onClick={() => handleChoosePlan("team_plus")}
             buttonLabel={getPlanState("team_plus").buttonLabel}
             disabled={getPlanState("team_plus").disabled}
-            highlight
+            loading={loadingPlan === "team_plus"}
           />
         </div>
 
@@ -321,7 +297,6 @@ function PricingCard({ title,
   period,
   features,
   buttonLabel,
-  highlight,
   brandingColor,
   disabled,
   onClick,

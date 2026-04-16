@@ -1,16 +1,8 @@
-import React, { useState, useRef, useEffect } from "react";
-import arrowDown from '../../assets/svgs/arrow-down.svg'
+import { useState, useRef, useEffect } from "react";
 import { updateDownloadLinkApi } from "../../services/api";
 import FinalLinkPopover from "../DownloadLinkPopover";
 import { DownloadOriginalTick } from "../../assets/svgs/SvgComponents";
 import { constants } from "../../helpers/enum";
-
-const menuItems = [
-  { id: "rename", label: "Rename", icon: "edit" },
-  { id: "share", label: "Share", icon: "share" },
-  { id: "assign", label: "Assign", icon: "share" },
-  { id: "delete", label: "Delete", icon: "trash" },
-];
 
 export default function DownloadMenuButton({ onAction, projectDetail, onRefresh, userAccess }) {
   const [open, setOpen] = useState(false);
@@ -141,4 +133,3 @@ export default function DownloadMenuButton({ onAction, projectDetail, onRefresh,
     </div>
   );
 }
-

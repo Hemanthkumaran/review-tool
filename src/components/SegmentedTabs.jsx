@@ -1,5 +1,4 @@
-import React from "react";
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, motion as Motion } from "framer-motion";
 
 
 export default function SegmentedTabs({ options, value, onChange, className = "" }) {
@@ -36,7 +35,7 @@ export default function SegmentedTabs({ options, value, onChange, className = ""
             >
               {/* Sliding pill / highlight */}
               {isActive && (
-                <motion.div
+                <Motion.div
                   layoutId="segmented-pill"
                   className="absolute inset-[0px] rounded-full bg-[#1F1F21]"
                   transition={{

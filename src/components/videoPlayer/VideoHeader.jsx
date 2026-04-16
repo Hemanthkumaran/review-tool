@@ -1,8 +1,7 @@
-import DownloadMenuButton from '../Buttons/DownloadMenuBtn'
+import DownloadMenuButton from '../buttons/DownloadMenuBtn'
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import VersionSwitcher from '../VersionSwitcher';
 import { useEffect, useRef, useState } from 'react';
-import ProjectStatusDropdown from '../ProjectStatus';
 import { constants } from '../../helpers/enum';
 import StatusDropdown from '../StatusDropdown';
 import { deleteProjectApi, updateProjectApi } from '../../services/api';
@@ -144,25 +143,11 @@ const closeMoreMenu = () => setOpen(false);
                 onSelectVersion={(v) => onChangeVersion(v)}
                 onAddNewVersion={onAddNewVersion}
                 userAccess={userAccess}
-                projectName={projectDetail.name}
-                onDownloadVersion={() => {
-                // call download API
-                }}
                 onDeleteVersion={onDeleteVersion}
             />
-            {/* <div style={{ marginLeft:10 }}><VersionPill onClick={() => console.log("version pill clicked")} /></div> */}
             </div>
         </div>
         <div className="flex shrink-0 items-center justify-between">
-            {/* <StatusPill/> */}
-            {/* <ProjectStatusDropdown
-              projectId={projectDetail._id}
-              initialStatus={projectDetail.status || "in progress"}
-              onChange={(s) => {
-                // optional: update local projectDetail state
-                console.log("Project status updated:", s);
-              }}
-            /> */}
             <div style={{ margin:"0 10px" }}>
               <StatusDropdown
                 disabled={userAccess == constants.REVIEWER}

@@ -4,7 +4,7 @@ import arrowDown from "../assets/svgs/arrow-down.svg";
 // import ownerLogo from "../assets/svgs/owner.svg";
 import ProfileMenu from "./ProfileMenu";
 import WorkspaceDropdown from "./WorkspaceDropdown";
-import SettingsModal from "./karn-comp/Layout/Settings/SettingsModal";
+import SettingsModal from "./settings/SettingsModal";
 import { constants } from "../helpers/enum";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
@@ -48,8 +48,6 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const usagePercent = minutesCap
     ? Math.min(100, (minutesUsed / minutesCap) * 100)
   : 0;
-  console.log(userAccess === constants.OWNER, !trialUsed);
-  
   const showUsage =
   userAccess === constants.OWNER && trialUsed;
 

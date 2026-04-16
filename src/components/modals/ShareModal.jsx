@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import Select, { components } from "react-select";
+import Select, { components as SelectComponents } from "react-select";
 import Modal from "react-modal";
 
 
@@ -57,10 +57,8 @@ const CustomMultiValue = (props) => {
 
 export default function ShareModal({ projectDetail = null, open = true, onClose, permissions, projectAccess, projectID, onRefresh }) {
   const [role, setRole] = useState(null);
-  const [inputValue, setInputValue] = useState("");
   const [selectedPeople, setSelectedPeople] = useState([]);
   const [removeTarget, setRemoveTarget] = useState(null);
-  const [selectedEmail, setSelectedEmail] = useState(null);
   const [passwordRequired, setPasswordRequired] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -131,22 +129,6 @@ const emailOptions = (permissions || [])
     label: p.email,
     ...p,
   }));
-
-const filteredSuggestions = useMemo(() => {
-  const query = inputValue.toLowerCase();
-  if (!query) return [];
-
-  return (permissions || [])
-    .filter(
-      (p) =>
-        p.permissionType !== "owner" && // ✅ exclude owner
-        (
-          p.email.toLowerCase().includes(query) ||
-          (p.name || "").toLowerCase().includes(query) // ✅ optional improvement
-        )
-    )
-    .slice(0, 3);
-}, [inputValue, permissions]);
 
 const handleSavePassword = async (password) => {
   try {
@@ -266,7 +248,7 @@ const handleSavePassword = async (password) => {
                     ClearIndicator: () => null,
                     IndicatorSeparator: () => null,
                       MenuList: (props) => (
-                      <components.MenuList {...props} className="no-scrollbar" />
+                      <SelectComponents.MenuList {...props} className="no-scrollbar" />
                     ),
                   }}
                   
@@ -325,43 +307,6 @@ const handleSavePassword = async (password) => {
             onSavePassword={handleSavePassword}
           />
         }
-        {/* suggestions dropdown card */}
-        {/* {filteredSuggestions?.length > 0 && (
-          <div className="px-6">
-            <div className="bg-black rounded-2xl border border-[#222229] mt-2 mb-3 max-h-44 overflow-auto">
-              {filteredSuggestions.map((p, idx) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={`w-full flex items-center justify-between px-3 py-2 text-left text-[13px] hover:bg-[#15151B] ${
-                    idx === 0 ? "rounded-t-2xl" : ""
-                  } ${idx === filteredSuggestions?.length - 1 ? "rounded-b-2xl" : ""}`}
-                  onClick={() =>
-                    setSelectedEmail({ value: p.email, label: p.email })
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={p.avatar}
-                      alt={p.name}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <div>
-                      <div className="leading-tight">{p.name}</div>
-                      <div className="text-[11px] text-gray-500">
-                        {p.email}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-gray-400">
-                    {p.role}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )} */}
-
         <div className="mx-6 h-px bg-[#26262E]" />
 
         <div className="px-6 py-3">

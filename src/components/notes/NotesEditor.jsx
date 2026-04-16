@@ -40,14 +40,6 @@ const linkSelectionRef = useRef(null);
     });
     return obj;
   });
-  const [dirtyMap, setDirtyMap] = useState(() => {
-    const obj = {};
-    sections.forEach((s) => {
-      obj[s.id] = false;
-    });
-    return obj;
-  });
-
   const activeSectionRef = useRef(activeSection);
   useEffect(() => {
     activeSectionRef.current = activeSection;
@@ -112,10 +104,6 @@ const linkSelectionRef = useRef(null);
         ...prev,
         [current]: html,
       }));
-      setDirtyMap((prev) => ({
-        ...prev,
-        [current]: true,
-      }));
     },
   });
 
@@ -144,12 +132,6 @@ useEffect(() => {
       next[s.id] = initialBySection[s.id] || "";
     });
     setContents(next);
-
-    const clean = {};
-    sections.forEach((s) => {
-      clean[s.id] = false;
-    });
-    setDirtyMap(clean);
 
     if (editor) {
       editor.commands.setContent(next[activeSection] || "", false);
@@ -277,11 +259,6 @@ const handleSave = async () => {
   const html = contents[activeSection] || "";
   await onSave(activeSection, html);
 
-  setDirtyMap((prev) => ({
-    ...prev,
-    [activeSection]: false,
-  }));
-
   setIsEditing(false);
 
   editor.commands.blur();
@@ -294,11 +271,6 @@ const handleCancel = () => {
   setContents((prev) => ({
     ...prev,
     [activeSection]: original,
-  }));
-
-  setDirtyMap((prev) => ({
-    ...prev,
-    [activeSection]: false,
   }));
 
   setIsEditing(false);

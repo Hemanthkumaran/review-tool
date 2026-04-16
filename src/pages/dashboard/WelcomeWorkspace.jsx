@@ -1,24 +1,22 @@
 import { useState } from 'react';
 
 import CreateFolderModal from '../../components/modals/CreateFolderModal';
-import cutjamm from '../../assets/svgs/cutjamm.svg';
 import Folder from '../../components/Folder/Folder';
 import { PATHS } from '../../routes/paths';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { allFoldersApi, createFolderApi } from '../../services/api';
 import { useEffect } from 'react';
 import SegmentedTabs from '../../components/SegmentedTabs';
-import ProjectAccordion from '../../components/karn-comp/components/Accordion/Accordion';
+import ProjectAccordion from '../../components/dashboard/ProjectAccordion';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 import filterIcon from "../../assets/svgs/filter.svg";
 import ProjectFilter from '../../components/ProjectFilter';
 import ChoosePlanModal from '../../pages/chooseplan';
 import Spinner from '../../components/common/Spinner';
-import ShareModal from '../../components/modals/ShareModal';
 import SubscriptionModal from '../../components/modals/SubscriptionModal';
 import { ResumeSubIcon } from '../../assets/svgs/SvgComponents';
-import SettingsModal from '../../components/karn-comp/Layout/Settings/SettingsModal';
+import SettingsModal from '../../components/settings/SettingsModal';
 import * as Accordion from "@radix-ui/react-accordion";
 
 export default function WelcomeWorkspace({
@@ -178,7 +176,6 @@ export default function WelcomeWorkspace({
   }
   const isLocked = modalStep === "noPlan";
   const isLoading = workspaceLoading || foldersLoading || billingLoading;
-  console.log(modalStep, 'modalStep');
   
   // if (isLocked) {
   //   return <div style={{ top:"8%" }} className="absolute inset-0 z-40 backdrop-blur-sm  pointer-events-none" />
@@ -265,10 +262,6 @@ export default function WelcomeWorkspace({
           getActiveContent()
         }
       </main>
-      {/* <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
-        <img src={cutjamm}/>
-        <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
-      </div> */}
       <CreateFolderModal
         isOpen={isCreateModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -289,7 +282,6 @@ export default function WelcomeWorkspace({
           getAllFolders(true);   // pass flag to detect post-payment
         }}
         trialUsed={trialUsed}
-        buttonLabel={!trialUsed ? "Start free trial" : "Subscribe"}
       />
       {modalStep === "activate" && (
         <SubscriptionModal

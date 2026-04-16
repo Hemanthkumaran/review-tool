@@ -43,7 +43,6 @@ function AssignedEditorsRow({
 }) {
   const visible = permissions.slice(0, 3);
   const extra = permissions.length - visible.length;
-  console.log(visible,'visible');
   
   return (
     <div className="flex items-center gap-1">
@@ -94,8 +93,6 @@ export default function ProjectFolder({
   onStatusChange,
   fetchGetAllProjs
 }) {
-  console.log(project, 'projectprojectproject');
-  
   const createdAtLabel = formatDateTime(project.createdAt);
   const commentCount = getTotalComments(project);
   const [isRenaming, setIsRenaming] = useState(false);

@@ -28,7 +28,7 @@ function SetNewPassword({ setCurrentScreen, changePasswordFlow = false }) {
 
     try {
       setLoading(true);
-      const res = await resetForgotPasswordApi({
+      await resetForgotPasswordApi({
         password,
         confirmPassword,      
       });

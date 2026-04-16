@@ -44,9 +44,7 @@ export function useRazorpay() {
       },
 
       modal: {
-        ondismiss() {
-          console.log("Payment closed by user");
-        },
+        ondismiss() {},
       },
     };
 

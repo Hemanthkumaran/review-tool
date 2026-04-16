@@ -4,7 +4,6 @@ import OutlineInput from '../textInputs/OutlineInput';
 import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { signupApi } from '../../services/api';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 function CreateAccount({ setCurrentScreen }) {
@@ -48,7 +47,7 @@ function CreateAccount({ setCurrentScreen }) {
       // PublicRoute will redirect when auth becomes true
 
     } catch (err) {
-      console.log("Signup error:", err);
+      alert(err?.response?.data?.message || "Failed to create account. Please try again.");
     } finally {
       setLoading(false);
     }

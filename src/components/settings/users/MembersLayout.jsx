@@ -1,0 +1,223 @@
+import { useMemo, useState } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
+import { Clock } from "lucide-react";
+import "./MembersLayout.css";
+import RemoveAccessModal from "../../modals/RemoveAccessModal";
+import { removeUserFromWorkspace } from "../../../services/api";
+import AppLoader from "../../common/AppLoader";
+
+export default function MembersLayout({
+  onInvite = () => {},
+  fetchWorkspaceUsers,
+  workspaceUsers,
+  workspacePlan,
+  ownerWorkspace
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [loading, setIsLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const data = useMemo(() => {
+    return (workspaceUsers?.permissions || []).map((perm) => ({
+      id: perm._id,
+      name: perm.name || null,
+      email: perm.email,
+      role:
+        perm.permissionType === "owner"
+          ? "Owner"
+          : perm.permissionType === "member"
+          ? "Team member"
+          : "Collaborator",
+      pending: !perm.name,
+    }));
+  }, [workspaceUsers?.permissions]);
+
+  const columns = useMemo(
+    () => [
+      {
+        header: "Name",
+        accessorKey: "name",
+        cell: ({ row }) =>
+          row.original.pending ? (
+            <span className="pending">
+              <Clock size={14} />
+              Pending
+            </span>
+          ) : (
+            row.original.name
+          ),
+      },
+      {
+        header: "Email",
+        accessorKey: "email",
+      },
+      {
+        header: "Role",
+        accessorKey: "role",
+        cell: ({ getValue }) => (
+          <span className="role">{getValue()}</span>
+        ),
+      },
+      {
+        header: "Action",
+        id: "action",
+        cell: ({ row }) =>
+          row.original.role !== "Owner" && (
+            <button
+              className="remove-btn"
+              onClick={() => {
+                setSelectedUser(row.original); // ✅ store correct row
+                setIsOpen(true);
+              }}
+            >
+              Remove
+            </button>
+          ),
+      },
+    ],
+    []
+  );
+
+  const table = useReactTable({
+    data,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  /* ---------------------------------------
+   * Counts
+   * ------------------------------------- */
+  const teamCount = data.filter(
+    (d) => d.role === "Team member" || d.role === "Owner"
+  ).length;
+
+  const collaboratorCount = data.filter(
+    (d) => d.role === "Collaborator"
+  ).length;
+
+  const maxUsers = workspacePlan?.subscription?.maxUsers ?? 1;
+  const activePlan = workspacePlan?.subscription?.activePlan;
+  const canInvite = activePlan === 'team_plus' ? true : teamCount < maxUsers;
+  
+  async function handleRemove() {
+    if (!selectedUser) return;
+
+    setIsLoading(true);
+
+    try {
+      await removeUserFromWorkspace(ownerWorkspace._id, {
+        email: selectedUser.email,
+      });
+
+      fetchWorkspaceUsers();
+      setIsOpen(false);
+      setSelectedUser(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (loading)
+    return <AppLoader visible={loading} message="Loading folders…" />;
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="title">Manage workspace members</h1>
+          <p className="subtitle">
+            Add or remove teammates and collaborators.
+          </p>
+        </div>
+      </div>
+
+      {/* Members info */}
+      <div className="members-bar">
+        <div>
+          <div className="members-count">{data.length} members</div>
+          <div className="members-meta">
+            {teamCount}/{maxUsers} team members · {collaboratorCount} collaborator
+          </div>
+        </div>
+
+        <button
+          className="invite-btn"
+          onClick={() => {
+            if (!canInvite) {
+              alert(
+                `Your ${activePlan} plan allows only ${maxUsers} user(s). Please upgrade to add more members.`
+              );
+              return;
+            }
+            onInvite();
+          }}
+          disabled={!canInvite}
+          style={!canInvite ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+        >
+          <span className="plus">+</span>
+          Invite
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="table-container overflow-y-auto border border-[#2A2B2E] rounded-xl">
+  <table className="w-full">
+    
+    <thead className="sticky top-0 bg-[#111216] z-10">
+      {table.getHeaderGroups().map((headerGroup) => (
+        <tr key={headerGroup.id}>
+          {headerGroup.headers.map((header) => (
+            <th key={header.id} className="p-3 text-left text-xs text-gray-400">
+              {flexRender(
+                header.column.columnDef.header,
+                header.getContext()
+              )}
+            </th>
+          ))}
+        </tr>
+      ))}
+    </thead>
+
+    <tbody>
+      {table.getRowModel().rows.map((row) => (
+        <tr key={row.id} className="border-t border-[#2A2B2E]">
+          {row.getVisibleCells().map((cell) => (
+            <td key={cell.id} className="p-3 text-sm text-white">
+              {flexRender(
+                cell.column.columnDef.cell,
+                cell.getContext()
+              )}
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+
+  </table>
+</div>
+
+      {/* ✅ SINGLE MODAL (FIXED) */}
+      <RemoveAccessModal
+        open={isOpen}
+        onClose={() => {
+          setIsOpen(false);
+          setSelectedUser(null);
+        }}
+        title={`Remove ${
+          selectedUser?.name || selectedUser?.email || ""
+        } from your workspace?`}
+        description="This user won't be able to view or work in the workspace once removed. You can add them later from Settings → Users."
+        buttonText="Remove from workspace"
+        handleRemove={handleRemove}
+        loading={loading}
+      />
+    </div>
+  );
+}

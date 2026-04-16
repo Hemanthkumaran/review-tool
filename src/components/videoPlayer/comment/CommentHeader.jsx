@@ -1,8 +1,6 @@
-import { formatClockTime, formatClockTime2, formatRelative } from "../../../helpers/common";
+import { formatClockTime2, formatRelative } from "../../../helpers/common";
 
 export default function CommentHeader({
-  time,
-  index,
   createdAt,
   isResolved,
   resolving,

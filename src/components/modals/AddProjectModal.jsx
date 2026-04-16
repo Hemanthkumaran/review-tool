@@ -22,7 +22,7 @@ const modalStyles = {
   },
 };
 
-export function formatShortDuration(secondsInput) {
+function formatShortDuration(secondsInput) {
   if (!secondsInput || secondsInput <= 0) return "0 sec";
 
   const totalSeconds = Math.round(secondsInput);

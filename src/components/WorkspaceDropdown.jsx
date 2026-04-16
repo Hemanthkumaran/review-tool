@@ -1,4 +1,3 @@
-import ownerLogo from '../assets/svgs/owner.svg';
 import { useWorkspace } from '../context/WorkspaceContext';
 
 export default function WorkspaceDropdown({ workspaces, activeWorkspace, onSelect }) {

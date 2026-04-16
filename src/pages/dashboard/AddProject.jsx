@@ -1,22 +1,16 @@
 import { useEffect, useState } from 'react';
 
-import CreateFolderModal from '../../components/modals/CreateFolderModal';
-import cutjamm from '../../assets/svgs/cutjamm.svg';
 import ProjectFolder from '../../components/ProjectFolder';
-import Folder from '../../components/Folder/Folder';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PATHS } from '../../routes/paths';
 import LeftArrow from '../../assets/svgs/arrow-left.svg';
 import AddProjectModal from '../../components/modals/AddProjectModal';
 import { allProjectsApi, createProjectApi, deleteProjectApi, updateProjectApi } from '../../services/api';
-import DashboardHeader from '../../components/DashboardHeader';
-import AppLoader from '../../components/common/AppLoader';
-import ShareModal from '../../components/modals/ShareModal';
 import { getVideoDuration, uploadToMux } from '../../helpers/muxHelpers';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 import Spinner from '../../components/common/Spinner';
-import SettingsModal from '../../components/karn-comp/Layout/Settings/SettingsModal';
+import SettingsModal from '../../components/settings/SettingsModal';
 
 export default function AddProject({
   onCreateFolder = () => {},
@@ -88,9 +82,7 @@ export default function AddProject({
 
       // 3) Upload in background
       if (muxUploadURL && selectedFile) {
-        uploadToMux(muxUploadURL, selectedFile, pct => {
-          console.log("Uploading in background:", pct);
-        }).catch(err => {
+        uploadToMux(muxUploadURL, selectedFile).catch(err => {
           console.error("Mux upload failed", err);
         });
       }
@@ -119,7 +111,7 @@ export default function AddProject({
       setAllProjects(res.data.projectArray);
       setLoading(false);
     })
-    .catch(err => {
+    .catch(() => {
       setLoading(false);
     })
   }
@@ -210,20 +202,6 @@ export default function AddProject({
           ))}
         </div>
       </main>
-      {/* Bottom-right watermark */}
-      {/* <div className="fixed right-4 bottom-4 flex items-center gap-2 rounded-full bg-[#101213] px-3 py-2">
-        <img src={cutjamm}/>
-        <span style={{ fontFamily:'Gilroy-Light' }} className="text-[#fff]">powered by Cutjamm</span>
-      </div> */}
-      {/* <ShareModal onClose={() => setInviteModal(false)}/> */}
-        {/* <ShareModal
-          open={inviteModal}
-          onClose={() => setInviteModal(false)}
-          permissions={workspaceUsers?.permissions}
-          projectAccess={projectDetail?.permissions}
-          projectID={projectDetail._id}
-          onRefresh={fetchProject}
-        /> */}
       {addProjectOpen && <AddProjectModal
         isOpen={addProjectOpen}
         onClose={() => setAddProjectOpen(false)}
