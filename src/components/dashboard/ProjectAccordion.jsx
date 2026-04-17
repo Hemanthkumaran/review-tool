@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { deleteProjectApi, updateProjectApi } from "../../services/api";
 import ProjectFolder from "../ProjectFolder";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 
 export default function ProjectAccordion({ folder, getAllFolders }) {
 
@@ -16,8 +17,10 @@ export default function ProjectAccordion({ folder, getAllFolders }) {
     try {
       await updateProjectApi(id, payload);
       getAllFolders();
+      showSuccessToast(payload?.status ? "Project status updated" : "Project renamed successfully");
     } catch (err) {
       console.error("Update failed", err);
+      showErrorToast(getApiErrorMessage(err, "Failed to update project"));
     }
   };
 
@@ -25,8 +28,10 @@ export default function ProjectAccordion({ folder, getAllFolders }) {
     try {
       await deleteProjectApi(id);
       getAllFolders();
+      showSuccessToast("Project deleted successfully");
     } catch (err) {
       console.error("Delete failed", err);
+      showErrorToast(getApiErrorMessage(err, "Failed to delete project"));
     }
   };
     

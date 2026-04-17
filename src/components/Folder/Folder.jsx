@@ -14,6 +14,7 @@ import { PenIcon, TrashIcon } from "../../assets/svgs/SvgComponents";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { constants } from "../../helpers/enum";
 import { formatDuration } from "../../helpers/common";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 
 const Folder = ({ folder, onClick, onDeleted, onRenamed, noOfProjects }) => {
   const [hovered, setHovered] = useState(false);
@@ -44,8 +45,10 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed, noOfProjects }) => {
     try {
       await updateFolderApi(folder._id, { name: trimmed });
       onRenamed?.(folder._id, trimmed);
+      showSuccessToast("Folder renamed successfully");
     } catch (e) {
       console.error("Rename failed", e);
+      showErrorToast(getApiErrorMessage(e, "Failed to rename folder"));
       setName(folder.name);
     } finally {
       setSaving(false);
@@ -62,8 +65,10 @@ const Folder = ({ folder, onClick, onDeleted, onRenamed, noOfProjects }) => {
     try {
       await deleteFolderApi(folder._id);
       onDeleted?.(folder._id);
+      showSuccessToast("Folder deleted successfully");
     } catch (e) {
       console.error("Delete failed", e);
+      showErrorToast(getApiErrorMessage(e, "Failed to delete folder"));
     }
   };
 

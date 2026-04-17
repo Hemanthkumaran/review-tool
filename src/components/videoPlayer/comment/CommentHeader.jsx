@@ -1,4 +1,5 @@
 import { formatClockTime2, formatRelative } from "../../../helpers/common";
+import { normalizeVideoFps } from "../../../helpers/videoFrames";
 
 export default function CommentHeader({
   createdAt,
@@ -10,9 +11,7 @@ export default function CommentHeader({
   frame,
   videoFps
 }) {
-
-
-  const fps = frame ? (videoFps && frame ? (arguments[0]?.fps || videoFps) : videoFps) : videoFps;
+  const fps = normalizeVideoFps(videoFps);
   return (
     <div className="flex items-center justify-between mb-3">
       {/* Left */}

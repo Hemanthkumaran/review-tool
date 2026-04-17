@@ -8,6 +8,7 @@ import fullscreenIcon from "../../assets/svgs/fullscreen.svg";
 // import { LoopIcon } from "../../assets/svgs/SvgComponents";
 import { MutedOutlined } from "@ant-design/icons";
 import { formatClockTime2 } from "../../helpers/common";
+import { frameToTime, normalizeVideoFps, timeToFrame } from "../../helpers/videoFrames";
 
 
 const IconButton = ({ onClick, title, children, active }) => (
@@ -46,7 +47,8 @@ export default function PlayerControlsBar({
   volume,
   onVolumeChange,
   playbackId,
-  videoFps
+  videoFps,
+  showMarkers = true
 }) {
   const [qualityMenuOpen, setQualityMenuOpen] = useState(false);
   const [volumeOpen, setVolumeOpen] = useState(false);
@@ -96,10 +98,9 @@ export default function PlayerControlsBar({
     }
   };
 
-    const fps = videoFps || 60;
-
-  const snappedFrame = Math.round(currentTime * fps);
-  const snappedTime = snappedFrame / fps;
+  const fps = normalizeVideoFps(videoFps);
+  const snappedFrame = timeToFrame(currentTime, fps);
+  const snappedTime = frameToTime(snappedFrame, fps);
 
 
   return (
@@ -107,11 +108,12 @@ export default function PlayerControlsBar({
       {/* seek bar with markers */}
       <CustomSeekBar
         duration={duration}
-        currentTime={currentTime}
+        currentTime={snappedTime}
         markers={markers}
         onSeek={onSeek}
         playbackId={playbackId}
-        videoFps={videoFps}
+        videoFps={fps}
+        showMarkers={showMarkers}
       />
       {/* controls row */}
       <div className="mt-3 flex items-center justify-between text-[13px] text-gray-200">
@@ -178,7 +180,7 @@ export default function PlayerControlsBar({
           {/* {formatClockTime2(currentTime, videoFps)}{" "} */}
           {formatClockTime2(snappedTime, fps)}{" "}
           <span className="text-gray-500">
-            / {formatClockTime2(Number.isFinite(duration) ? duration : 0)}
+            / {formatClockTime2(Number.isFinite(duration) ? duration : 0, fps)}
           </span>
         </div>
         {/* right cluster */}

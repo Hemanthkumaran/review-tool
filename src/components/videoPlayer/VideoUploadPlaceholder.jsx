@@ -1,10 +1,13 @@
 // src/components/videoPlayer/VideoUploadPlaceholder.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getOneProjectApi, getVideoUploadUrl } from "../../services/api";
 import uploadIcon from '../../assets/svgs/upload.svg';
 import { constants } from "../../helpers/enum";
 import { getVideoDuration } from "../../helpers/muxHelpers";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
+import { useProjectUpload } from "../../context/UploadContext";
 
+const POLLABLE_MUX_STATUSES = new Set(["waiting", "preparing", "processing"]);
 
 function UploadFrameLoader({ progress = 0, label = "Uploading" }) {
   const fillWidth = Math.max(progress, 8); // never look empty
@@ -26,83 +29,79 @@ function UploadFrameLoader({ progress = 0, label = "Uploading" }) {
   );
 }
 
-/* ---------- Mux upload helper (same as add-project) ---------- */
-
-function uploadToMux(muxUploadURL, file, onProgress) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", muxUploadURL, true);
-
-    xhr.setRequestHeader(
-      "Content-Type",
-      file.type || "application/octet-stream"
-    );
-
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && typeof onProgress === "function") {
-        const pct = Math.round((event.loaded / event.total) * 100);
-        onProgress(pct);
-      }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
-      } else {
-        reject(
-          new Error(`Mux upload failed: ${xhr.status} ${xhr.responseText}`)
-        );
-      }
-    };
-
-    xhr.onerror = () => {
-      reject(new Error("Network error while uploading to Mux"));
-    };
-
-    xhr.send(file);
-  });
-}
-
 export default function VideoUploadPlaceholder({ projectId, onVideoUploaded, muxStatus, userAccess }) {
   const inputRef = useRef(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const onVideoUploadedRef = useRef(onVideoUploaded);
+  const [isPreparingUpload, setIsPreparingUpload] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  
   const [error, setError] = useState("");
-const showProcessing =
-  !isUploading && muxStatus === "waiting";
+  const { uploadTask, startMuxUpload, clearUpload } = useProjectUpload(projectId);
+
+  useEffect(() => {
+    onVideoUploadedRef.current = onVideoUploaded;
+  }, [onVideoUploaded]);
+
+  const isUploading = uploadTask?.status === "uploading";
+  const hasUploadError = uploadTask?.status === "error";
+  const uploadProgress = isPreparingUpload ? 0 : uploadTask?.progress || 0;
+  const isProcessing =
+    !hasUploadError &&
+    !isPreparingUpload &&
+    !isUploading &&
+    (
+      uploadTask?.status === "processing" ||
+      POLLABLE_MUX_STATUSES.has(muxStatus)
+    );
+
+  useEffect(() => {
+    if (uploadTask?.status !== "error") return;
+
+    const message = uploadTask.error || "Failed to upload video";
+    setError(message);
+  }, [uploadTask]);
 
 useEffect(() => {
-  if (isUploading) return;
+  if (!projectId || isPreparingUpload || isUploading || !isProcessing) return;
 
-  const interval = setInterval(async () => {
+  let cancelled = false;
+
+  const pollProject = async () => {
     try {
       const res = await getOneProjectApi(projectId);
       const project = res.data.project;
 
       const latest = project?.versions?.[project.versions.length - 1];
       
-      if (latest?.muxStatus === "ready") {
-        onVideoUploaded?.(project);
-        clearInterval(interval);
+      if (!cancelled && latest?.muxStatus === "ready") {
+        onVideoUploadedRef.current?.(project);
+        clearUpload(projectId);
+        showSuccessToast("Video is ready");
       }
     } catch (e) {
-      console.warn("Mux polling failed", e);
+      if (!cancelled) {
+        console.warn("Mux polling failed", e);
+      }
     }
-  }, 3000);
+  };
 
-  return () => clearInterval(interval);
-}, [isUploading, projectId]);
+  pollProject();
+  const interval = setInterval(pollProject, 3000);
+
+  return () => {
+    cancelled = true;
+    clearInterval(interval);
+  };
+}, [clearUpload, isPreparingUpload, isProcessing, isUploading, projectId]);
 
 
 
 
 
   const openFilePicker = () => {
-    if (isUploading) return;
+    if (isPreparingUpload || isUploading || isProcessing) return;
     if (!projectId) {
       console.error("VideoUploadPlaceholder: projectId is required");
+      showErrorToast("Project is not ready for upload yet");
       return;
     }
     inputRef.current?.click();
@@ -121,8 +120,7 @@ useEffect(() => {
     if (!file) return;
 
     setError("");
-    setIsUploading(true);
-    setProgress(0);
+    setIsPreparingUpload(true);
     try {
       const duration = await getVideoDuration(file);
       const res = await getVideoUploadUrl(projectId, duration, file.name);
@@ -130,15 +128,23 @@ useEffect(() => {
 
       if (!muxUploadURL) throw new Error("No muxUploadURL returned");
 
-      await uploadToMux(muxUploadURL, file, (pct) => setProgress(pct));
-
-      // await onVideoUploaded?.();
+      setIsPreparingUpload(false);
+      startMuxUpload({
+        projectId,
+        muxUploadURL,
+        file,
+        source: "project-upload",
+      }).catch((err) => {
+        console.error("Video upload failed", err);
+        showErrorToast(getApiErrorMessage(err, "Failed to upload video"));
+      });
     } catch (err) {
       console.error("Video upload failed", err.response);
-      // setError(err.response.error || "Failed to upload video.");
+      const message = getApiErrorMessage(err, "Failed to upload video");
+      setError(message);
+      showErrorToast(message);
     } finally {
-      setIsUploading(false);
-      setProgress(0);
+      setIsPreparingUpload(false);
     }
   };
 
@@ -172,25 +178,29 @@ useEffect(() => {
             handleFile(file);
           } else {
             setError("Please drop a video file");
+            showErrorToast("Please drop a video file");
           }
         }}
       >
         {/* Inner dark panel */}
         <div className="absolute inset-[3px] rounded-[22px] bg-[#18191b] flex items-center justify-center">
           {/* Idle vs uploading state */}
-          {isUploading ? (
+          {(isPreparingUpload || isUploading) ? (
           /* --- UPLOADING: real progress --- */
           <div className="flex flex-col items-center gap-3 select-none">
-            <UploadFrameLoader progress={progress} label="Uploading" />
+            <UploadFrameLoader
+              progress={uploadProgress}
+              label={isPreparingUpload ? "Preparing" : "Uploading"}
+            />
             <div className="text-[11px] text-gray-400">
-              Uploading… {progress}%
+              {isPreparingUpload ? "Preparing upload…" : `Uploading… ${uploadProgress}%`}
             </div>
           </div>
-        ) : showProcessing ? (
+        ) : isProcessing ? (
           <div className="flex flex-col items-center gap-3 select-none">
             <UploadFrameLoader progress={100} label="Processing" />
             <div className="text-[11px] text-gray-400">
-              Processing video…
+              Upload complete. Processing video…
             </div>
           </div>
         ) : (

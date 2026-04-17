@@ -8,6 +8,7 @@ import ConfirmPlanModal from "../../modals/ConfirmPlanModal";
 import "./StorageSlider.css";
 import FeatureLockedModal from "../../modals/FeatureLockedModal";
 import { UpgradeIcon } from "../../../assets/svgs/SvgComponents";
+import { getApiErrorMessage, showErrorToast } from "../../../helpers/showToast";
 
 const STEP = 10;
 const MIN = 100;
@@ -90,7 +91,7 @@ export default function StorageSlider({ setActive }) {
         brandingColor: brandingColor
       });
     } catch (e) {
-      alert("Payment failed", e);
+      showErrorToast(getApiErrorMessage(e, "Payment failed. Please try again."));
     }
   };
 

@@ -9,6 +9,7 @@ import "./MembersLayout.css";
 import RemoveAccessModal from "../../modals/RemoveAccessModal";
 import { removeUserFromWorkspace } from "../../../services/api";
 import AppLoader from "../../common/AppLoader";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../../helpers/showToast";
 
 export default function MembersLayout({
   onInvite = () => {},
@@ -116,8 +117,10 @@ export default function MembersLayout({
       fetchWorkspaceUsers();
       setIsOpen(false);
       setSelectedUser(null);
+      showSuccessToast("Workspace member removed");
     } catch (e) {
       console.error(e);
+      showErrorToast(getApiErrorMessage(e, "Failed to remove workspace member"));
     } finally {
       setIsLoading(false);
     }
@@ -151,14 +154,12 @@ export default function MembersLayout({
           className="invite-btn"
           onClick={() => {
             if (!canInvite) {
-              alert(
-                `Your ${activePlan} plan allows only ${maxUsers} user(s). Please upgrade to add more members.`
-              );
+              showErrorToast(`Your ${activePlan} plan allows only ${maxUsers} user(s). Please upgrade to add more members.`);
               return;
             }
             onInvite();
           }}
-          disabled={!canInvite}
+          aria-disabled={!canInvite}
           style={!canInvite ? { opacity: 0.5, cursor: "not-allowed" } : {}}
         >
           <span className="plus">+</span>

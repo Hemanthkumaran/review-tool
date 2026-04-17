@@ -13,6 +13,7 @@ import {
   hasAnnotationContent,
   normalizeAnnotation,
 } from "../../helpers/annotation";
+import { getFrameFromMarker, normalizeVideoFps, snapTimeToFrame, timeToFrame } from "../../helpers/videoFrames";
 
 export default function VideoPlayerWithSeekbar({
   src,
@@ -30,7 +31,8 @@ export default function VideoPlayerWithSeekbar({
   onAnnotationDraftChange,
   onFinishAnnotation,
   markers = [],
-  videoFps
+  videoFps,
+  timelineSettled = true
   // projectId
 }) {
   const annotationCanvasRef = useRef(null);
@@ -52,6 +54,7 @@ export default function VideoPlayerWithSeekbar({
   const [showOverlayIcon, setShowOverlayIcon] = useState(false);
   const [volume, setVolume] = useState(1);
   const [lastAction, setLastAction] = useState("play");
+  const fps = normalizeVideoFps(videoFps);
   
 useEffect(() => {
   const player = playerRef.current;
@@ -224,7 +227,7 @@ useEffect(() => {
 
     activePointerIdRef.current = e.pointerId;
     if (annotationDraftTimeRef.current == null) {
-      annotationDraftTimeRef.current = currentTime;
+      annotationDraftTimeRef.current = snapTimeToFrame(currentTime, fps);
     }
     canvas.setPointerCapture?.(e.pointerId);
     setIsDrawing(true);
@@ -470,20 +473,9 @@ useEffect(() => {
       );
     };
 
-    const fps = videoFps || 60;
-    const currentFrame = Math.round(currentTime * fps);
-    const shouldDrawAtCurrentFrame = ({ time, frame }) => {
-      const numericFrame = Number(frame);
-      if (Number.isFinite(numericFrame)) {
-        return numericFrame === currentFrame;
-      }
-
-      const numericTime = Number(time);
-      if (!Number.isFinite(numericTime)) {
-        return false;
-      }
-
-      return Math.round(numericTime * fps) === currentFrame;
+    const currentFrame = timeToFrame(currentTime, fps);
+    const shouldDrawAtCurrentFrame = (marker) => {
+      return getFrameFromMarker(marker, fps) === currentFrame;
     };
 
     (markers || []).forEach((marker) => {
@@ -513,7 +505,7 @@ useEffect(() => {
     drawingAnnotation,
     draftShape,
     pendingAnnotation,
-    videoFps,
+    fps,
   ]);
 
 const muxPlayerStyle = {
@@ -574,9 +566,9 @@ const handleTogglePlay = () => {
 
 
   return (
-    <div className="rounded-2xl overflow-hidden shadow-lg">
-      <div className="p-3 pb-0 lg:p-4 lg:pb-0">
-        <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-[#1b1b1b] bg-black">
+    <div className="flex h-full min-h-0 flex-col rounded-2xl overflow-hidden shadow-lg">
+      <div className="flex-1 min-h-0 p-3 pb-0 lg:p-4 lg:pb-0">
+        <div className="relative w-full h-full rounded-xl overflow-hidden border border-[#1b1b1b] bg-black">
             {!ready && src && (
               <img
                 src={`https://image.mux.com/${src}/thumbnail.jpg?time=0`}
@@ -585,7 +577,11 @@ const handleTogglePlay = () => {
               />
             )}
 
-            <div onClick={() => handleTogglePlay()} tabIndex={-1} className="w-full h-full flex items-center justify-center bg-black">
+            <div
+              onClick={() => handleTogglePlay()}
+              tabIndex={-1}
+              className="w-full h-full flex items-center justify-center bg-black"
+            >
                         <div
                 className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
               >
@@ -681,7 +677,8 @@ const handleTogglePlay = () => {
         onVolumeChange={handleVolumeChange}
         onToggleMute={handleToggleMute}
         playbackId={src}
-        videoFps={videoFps}
+        videoFps={fps}
+        showMarkers={timelineSettled}
       />
       <div className="h-1 lg:h-2" />
     </div>

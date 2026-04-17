@@ -4,6 +4,7 @@ import ReplyInput from "./ReplyInput";
 import { formatRelative, getInitials } from "../../../helpers/common";
 import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
 import { getGuestIdentity } from "../../../helpers/storage";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../../helpers/showToast";
 
 export default function ReplyItem({
   reply,
@@ -126,13 +127,18 @@ const isOwnReply =
                     <button
                       className="hover:text-white cursor-pointer"
                       onClick={async () => {
-                        await deleteReplyApi(
-                          projectId,
-                          versionId,
-                          commentId,
-                          reply.id
-                        );
-                        onReplyDeleted(commentId, reply.id);
+                        try {
+                          await deleteReplyApi(
+                            projectId,
+                            versionId,
+                            commentId,
+                            reply.id
+                          );
+                          onReplyDeleted(commentId, reply.id);
+                          showSuccessToast("Reply deleted successfully");
+                        } catch (err) {
+                          showErrorToast(getApiErrorMessage(err, "Failed to delete reply"));
+                        }
                       }}
                     >
                       <TrashIcon color="#666666"/>
@@ -168,15 +174,20 @@ const isOwnReply =
                 <button
                   className="px-4 py-1 rounded-full bg-[#F9EF38] text-black"
                   onClick={async () => {
-                    await updateReplyApi(
-                      projectId,
-                      versionId,
-                      commentId,
-                      reply.id,
-                      { text: draftText }
-                    );
-                    onReplyUpdated(commentId, reply.id, draftText);
-                    setIsEditing(false);
+                    try {
+                      await updateReplyApi(
+                        projectId,
+                        versionId,
+                        commentId,
+                        reply.id,
+                        { text: draftText }
+                      );
+                      onReplyUpdated(commentId, reply.id, draftText);
+                      setIsEditing(false);
+                      showSuccessToast("Reply updated successfully");
+                    } catch (err) {
+                      showErrorToast(getApiErrorMessage(err, "Failed to update reply"));
+                    }
                   }}
                 >
                   Save

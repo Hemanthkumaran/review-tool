@@ -6,6 +6,7 @@ import { createPaymentOrderApi, startTrialApi } from "../../services/api";
 import SubscriptionModal from "../../components/modals/SubscriptionModal";
 import { useRazorpay } from "../../hooks/useRazorpay";
 import { Tooltip } from "react-tooltip";
+import { getApiErrorMessage, showErrorToast } from "../../helpers/showToast";
 
 const modalStyles = {
   overlay: {
@@ -142,7 +143,7 @@ const getPlanState = (planKey) => {
 
     } catch (err) {
       console.error("Plan selection failed", err);
-      alert("Something went wrong");
+      showErrorToast(getApiErrorMessage(err, "We couldn't start your plan. Please try again."));
     } finally {
       setLoadingPlan(null);
     }

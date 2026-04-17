@@ -12,6 +12,7 @@ import ReplyInput from "./ReplyInput";
 import DeleteCommentModal from "../../modals/DeleteCommentModal";
 import { PenIcon, TrashIcon } from "../../../assets/svgs/SvgComponents";
 import { getGuestIdentity } from "../../../helpers/storage";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../../helpers/showToast";
 
 
 
@@ -94,7 +95,9 @@ export default function CommentCard({
       );
     } catch (err) {
       console.error("Failed to update resolved state", err);
+      updateCommentResolvedLocal(marker.id, activeVersionId, !next);
       setIsResolved(!next); // rollback
+      showErrorToast(getApiErrorMessage(err, "Failed to update comment status"));
     } finally {
       setResolving(false);
     }
@@ -113,6 +116,7 @@ export default function CommentCard({
       setShowReplyBox(false);
     } catch (e) {
       console.error("Failed to send reply", e);
+      showErrorToast(getApiErrorMessage(e, "Failed to send reply"));
     } finally {
       setSending(false);
     }
@@ -128,7 +132,7 @@ export default function CommentCard({
   return (
     <div onClick={onGo} className="
         transition-colors duration-250
-    hover:bg-[#121212] 121212
+    hover:bg-[#323232] 121212
     active:bg-[#0a0a0b]
     cursor-pointer group/comment relative  bg-[#050506] rounded-2xl border border-black px-4 py-3 mb-3 last:mb-0 text-[13px]">
       <CommentHeader
@@ -322,12 +326,14 @@ export default function CommentCard({
         onConfirm={async () => {
           try {
             setDeleting(true);
-            deleteCommentLocal(marker.id, activeVersionId);
             await deleteCommentApi(projectId, activeVersionId, marker.id);
+            deleteCommentLocal(marker.id, activeVersionId);
             onCommentDeleted(marker.id); // optimistic remove
             setShowDeleteModal(false);
+            showSuccessToast("Comment deleted successfully");
           } catch (err) {
             console.error("Delete comment failed", err);
+            showErrorToast(getApiErrorMessage(err, "Failed to delete comment"));
           } finally {
             setDeleting(false);
           }

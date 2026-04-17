@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import "./InviteMembersLayout.css";
 import { inviteUserToWorkspace } from "../../../services/api";
-import { showSuccessToast } from "../../../helpers/showToast";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../../helpers/showToast";
 import { LockIcon } from "../../../assets/svgs/SvgComponents";
 
 export default function InviteMembersLayout({
@@ -68,7 +68,7 @@ export default function InviteMembersLayout({
 
 
     if (role === "Team member" && emails.length + 1 > availableTeamSlots) {
-      showSuccessToast(`Limit reached. Max ${maxUsers} team members allowed`);
+      showErrorToast(`Limit reached. Max ${maxUsers} team members allowed`);
       return;
     }
 
@@ -93,7 +93,7 @@ export default function InviteMembersLayout({
   function handleInvite() {
 
     if (role === "Team member" && emails.length > availableTeamSlots) {
-      showSuccessToast(`You can only invite ${remainingSlots} more team members`);
+      showErrorToast(`You can only invite ${remainingSlots} more team members`);
       return;
     }
 
@@ -111,6 +111,7 @@ export default function InviteMembersLayout({
       })
       .catch((err) => {
         console.error(err?.response?.data?.error);
+        showErrorToast(getApiErrorMessage(err, "Failed to send invitation"));
       });
   }
 

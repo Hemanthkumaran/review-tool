@@ -10,6 +10,7 @@ import ShareModal from '../modals/ShareModal';
 import DeleteConfirmModal from '../modals/DeleteConfirmationModal';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { AssignIcon, PenIcon, ShareIcon, TrashIcon } from '../../assets/svgs/SvgComponents';
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from '../../helpers/showToast';
 
 
 
@@ -79,11 +80,15 @@ const closeMoreMenu = () => setOpen(false);
   }
 
   const onStatusChange = async (id, payload) => {
+    const previousStatus = projectStatus;
     setProjectStatus(payload);
     try {
       await updateProjectApi(id, {status: payload});
+      showSuccessToast("Project status updated");
     } catch (err) {
       console.error("Update failed", err);
+      setProjectStatus(previousStatus);
+      showErrorToast(getApiErrorMessage(err, "Failed to update project status"));
     }
   };
 
@@ -265,8 +270,13 @@ const closeMoreMenu = () => setOpen(false);
           confirmText="DELETE"
           confirmLabel="Delete permanently"
           onConfirm={async () => {
-            await deleteProjectApi(projectDetail._id);
-            goBack(); // return to project list
+            try {
+              await deleteProjectApi(projectDetail._id);
+              showSuccessToast("Project deleted successfully");
+              goBack(); // return to project list
+            } catch (err) {
+              showErrorToast(getApiErrorMessage(err, "Failed to delete project"));
+            }
           }}
         />
     </div>

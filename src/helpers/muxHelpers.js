@@ -2,6 +2,16 @@ import dummy from "../assets/images/dummy.svg";
 
 export function uploadToMux(muxUploadURL, file, onProgress) {
   return new Promise((resolve, reject) => {
+    if (!muxUploadURL) {
+      reject(new Error("Mux upload URL is missing"));
+      return;
+    }
+
+    if (!file) {
+      reject(new Error("Video file is missing"));
+      return;
+    }
+
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", muxUploadURL, true);
 
@@ -19,13 +29,24 @@ export function uploadToMux(muxUploadURL, file, onProgress) {
 
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve();
+        onProgress?.(100);
+        resolve({ status: xhr.status });
       } else {
-        reject(new Error("Mux upload failed"));
+        reject(
+          new Error(`Mux upload failed: ${xhr.status} ${xhr.responseText || ""}`.trim())
+        );
       }
     };
 
-    xhr.onerror = reject;
+    xhr.onerror = () => {
+      reject(new Error("Network error while uploading to Mux"));
+    };
+
+    xhr.onabort = () => {
+      reject(new Error("Mux upload was cancelled"));
+    };
+
+    onProgress?.(0);
     xhr.send(file);
   });
 }

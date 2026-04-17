@@ -5,6 +5,7 @@ import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { signupApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { getApiErrorMessage, showErrorToast } from '../../helpers/showToast';
 
 function CreateAccount({ setCurrentScreen }) {
     
@@ -47,7 +48,7 @@ function CreateAccount({ setCurrentScreen }) {
       // PublicRoute will redirect when auth becomes true
 
     } catch (err) {
-      alert(err?.response?.data?.message || "Failed to create account. Please try again.");
+      showErrorToast(getApiErrorMessage(err, "Failed to create account. Please try again."));
     } finally {
       setLoading(false);
     }

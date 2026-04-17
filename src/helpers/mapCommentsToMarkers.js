@@ -32,7 +32,12 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
 
     const sNo = c.sNo;
 
-    const frame = c.frame;
+    const frameRaw = Number(c.frame);
+    const frame = Number.isFinite(frameRaw) ? Math.max(0, Math.round(frameRaw)) : null;
+
+    const timelineRaw = Number(c.timeline);
+    const timeline = Number.isFinite(timelineRaw) ? Math.max(0, timelineRaw) : 0;
+
 
     const annotation = safeParseAnnotation(c.annotation);
 
@@ -75,7 +80,7 @@ export function mapCommentsToMarkers(comments = [], userLookup = {}) {
 
     return {
       id: c._id,
-      time: typeof c.timeline === "number" ? c.timeline : 0,
+      time: timeline,
       type: baseType,
       text: c.text || "",
       audioUrl,

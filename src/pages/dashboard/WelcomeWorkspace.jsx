@@ -18,6 +18,7 @@ import SubscriptionModal from '../../components/modals/SubscriptionModal';
 import { ResumeSubIcon } from '../../assets/svgs/SvgComponents';
 import SettingsModal from '../../components/settings/SettingsModal';
 import * as Accordion from "@radix-ui/react-accordion";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from '../../helpers/showToast';
 
 export default function WelcomeWorkspace({
   onCreateFolder = () => {},
@@ -77,9 +78,11 @@ export default function WelcomeWorkspace({
       setCreateLoading(false);
       setCreateModalOpen(false);
       getAllFolders();
+      showSuccessToast("Folder created successfully");
     })
-    .catch(() => {
+    .catch((err) => {
       setCreateLoading(false);
+      showErrorToast(getApiErrorMessage(err, "Failed to create folder"));
     })
   }
 
@@ -108,7 +111,10 @@ export default function WelcomeWorkspace({
         setModalStep(null);
       }
     })
-    .catch(console.error)
+    .catch((err) => {
+      console.error(err);
+      showErrorToast(getApiErrorMessage(err, "Failed to load folders"));
+    })
     .finally(() => setFoldersLoading(false));
 }
 

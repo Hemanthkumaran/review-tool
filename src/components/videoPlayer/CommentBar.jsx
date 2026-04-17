@@ -14,6 +14,7 @@ import Spinner from "../common/Spinner";
 import VoiceNotePlayer from "./VoiceNotePlayer";
 import { CommentSendIcon } from "../../assets/svgs/SvgComponents";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { frameToTime, normalizeVideoFps, timeToFrame } from "../../helpers/videoFrames";
 
 export default function CommentBar({
   currentTime,
@@ -52,10 +53,9 @@ export default function CommentBar({
   const stopVoiceRef = useRef(onStopVoice);
   const [recordSeconds, setRecordSeconds] = useState(MAX_RECORD_SECONDS);
 
-  const fps = videoFps || 60;
-
-  const snappedFrame = Math.round(currentTime * fps);
-  const snappedTime = snappedFrame / fps;
+  const fps = normalizeVideoFps(videoFps);
+  const snappedFrame = timeToFrame(currentTime, fps);
+  const snappedTime = frameToTime(snappedFrame, fps);
 
   
   useEffect(() => {
@@ -175,7 +175,7 @@ sendingComment ||
    <div className="relative mx-auto w-full max-w-[600px] pb-0 pt-2">
   {/* Keep attachments out of the card height so the single-viewport review layout never clips the send bar. */}
   {attachments.length > 0 && (
-    <div className="absolute bottom-full left-0 right-0 z-20 mb-2 rounded-2xl border border-[#1F1F21] bg-[#101213]/95 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.38)] backdrop-blur-md">
+    <div className="absolute bottom-full left-0 right-0 z-200 mb-2 rounded-2xl border border-[#1F1F21] bg-[#101213]/95 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.38)] backdrop-blur-md">
       <div className="flex max-h-[76px] gap-2 overflow-x-auto overflow-y-hidden">
         {attachments.map((att) => (
           <div

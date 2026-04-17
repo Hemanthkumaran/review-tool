@@ -9,6 +9,8 @@ import { getUserProfileApi, updateNotesApi } from "../../services/api";
 import ToggleButton from "../buttons/ToggleButton";
 import { constants } from "../../helpers/enum";
 import CommentFilterDropdown from "./CommentFilterDropdown";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
+import { getTimeFromMarker, normalizeVideoFps } from "../../helpers/videoFrames";
 
 export default function CommentsColumn({
   isOpen,
@@ -49,6 +51,7 @@ export default function CommentsColumn({
   const [commentFilters, setCommentFilters] = useState([constants.MEMBER, constants.COLLABORATOR, constants.REVIEWER]);
   const [user, setUser] = useState(null);
   const filterBtnRef = useRef(null);
+  const fps = normalizeVideoFps(videoFps);
   
   useEffect(() => {
     fetchUserProfile();
@@ -170,8 +173,10 @@ const handleSaveNotesSection = async (sectionId, html) => {
       ...prev,
       [sectionId]: new Date(),
     }));
+    showSuccessToast("Notes saved successfully");
   } catch (err) {
     console.error("Failed to update notes", err);
+    showErrorToast(getApiErrorMessage(err, "Failed to save notes"));
   } finally {
     setSavingSectionId(null);
   }
@@ -306,15 +311,7 @@ const handleSaveNotesSection = async (sectionId, html) => {
                       projectId={projectId}
                       index={idx}
                       onGo={() => {
-                        const fps = m.fps || projectDetail?.versions?.[0]?.fps || 60;
-                        const frame = m.frame;
-
-                        const exactTime = frame / fps;
-
-                        // small offset to ensure correct frame landing
-                        const epsilon = 0.000001;
-                        
-                        onSeek(exactTime + epsilon);
+                        onSeek(getTimeFromMarker(m, fps));
                       }}
                       activeVersionId={activeVersionId}
                       onReplySubmit={(text) =>

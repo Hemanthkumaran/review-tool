@@ -129,6 +129,12 @@ export default function DownloadMenuButton({ onAction, projectDetail, onRefresh,
           onSave={(link) =>
             updateDownloadLinkApi(projectDetail._id, {downloadLink: link})
           }
+          toastMessages={{
+            saveSuccess: "Final video link saved",
+            saveError: "Failed to save final video link",
+            clearSuccess: "Final video link cleared",
+            clearError: "Failed to clear final video link",
+          }}
         />)}
     </div>
   );

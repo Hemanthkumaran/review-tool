@@ -8,6 +8,7 @@ import { useUser } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { PATHS } from "../../routes/paths";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 
 const Profile = ({ onClose }) => {
   const { user, refreshUserProfile } = useUser();
@@ -51,8 +52,10 @@ const Profile = ({ onClose }) => {
       await updateUserProfileApi(formData);
 
       await refreshUserProfile();
+      showSuccessToast("Profile updated successfully");
     } catch (err) {
       console.error(err);
+      showErrorToast(getApiErrorMessage(err, "Failed to update profile"));
     } finally {
       setLoading(false);
     }

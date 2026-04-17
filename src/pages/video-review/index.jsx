@@ -10,7 +10,7 @@ import { addCommentApi, addReplyApi, deleteProjectVersionApi, getOneProjectApi, 
 import AppLoader from "../../components/common/AppLoader";
 import { hasAnnotationContent } from "../../helpers/annotation";
 import { mapCommentsToMarkers } from "../../helpers/mapCommentsToMarkers";
-import { getVideoDuration, uploadToMux } from "../../helpers/muxHelpers";
+import { getVideoDuration } from "../../helpers/muxHelpers";
 import GuestIdentityModal from "../../components/modals/GuestIdentityModal";
 import {
   getAuthToken,
@@ -22,6 +22,9 @@ import {
 import { constants } from "../../helpers/enum.js";
 import { useWorkspace } from "../../context/WorkspaceContext.jsx";
 import { PATHS } from "../../routes/paths.jsx";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
+import { useProjectUpload } from "../../context/UploadContext.jsx";
+import { frameToTime, getFrameSeekTime, getSnappedSeekTime, normalizeVideoFps, snapTimeToFrame, timeToFrame } from "../../helpers/videoFrames.js";
 
 const REVIEWER_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -82,7 +85,7 @@ export default function VideoReview() {
   const navigate = useNavigate();
 
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(120);
+  const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -103,7 +106,11 @@ export default function VideoReview() {
   const chunksRef = useRef([]);
   const voiceStartTimeRef = useRef(0);
   const cancelledRef = useRef(false);
+  const [timelineSettled, setTimelineSettled] = useState(false);
+  const timelineSettleTokenRef = useRef(0);
+  const frameDisplayLockRef = useRef(null);
   const { projectId } = useParams();
+  const { startMuxUpload } = useProjectUpload(projectId);
   const [error, setError] = useState("");
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [reviewerPassword, setReviewerPassword] = useState("");
@@ -116,8 +123,6 @@ export default function VideoReview() {
   const [pendingAnnotation, setPendingAnnotation] = useState(null); // { time, annotation }
   const annotationStartTimeRef = useRef(0);
   const fileInputRef = useRef(null);
-  const [_uploadPct, setUploadPct] = useState(null); // 0–100
-  const [_isUploading, setIsUploading] = useState(false);
   const rawVersions = projectDetail?.versions || [];
   const isLatestVersion =
     rawVersions.length > 0 &&
@@ -129,7 +134,11 @@ export default function VideoReview() {
   }, [activeVersionId, rawVersions]);
 
 const playbackId = activeRawVersion?.muxPlaybackID || null;
-const videoFps = activeRawVersion?.fps || null;
+const videoFps = normalizeVideoFps(
+  activeRawVersion?.fps ??
+  activeRawVersion?.videoFps ??
+  activeRawVersion?.frameRate
+);
 const passwordRequiredFromLink =
   searchParams.get("passwordRequired") === "true";
   
@@ -294,12 +303,41 @@ useEffect(() => {
   setMarkers(mapped);
 }, [projectDetail, activeVersionId]);
 
+  // Avoid brief "clumped markers" on first mount/refresh while duration + comments hydrate.
+  // Single settling gate: hide markers until duration is known and layout had a tick to settle.
+  useEffect(() => {
+    const token = ++timelineSettleTokenRef.current;
+    setTimelineSettled(false);
+
+    const hasDuration = Number.isFinite(duration) && duration > 0;
+    if (!hasDuration || !playbackId || !projectDetail) return;
+
+    let raf1 = 0;
+    let raf2 = 0;
+
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        if (timelineSettleTokenRef.current === token) {
+          setTimelineSettled(true);
+        }
+      });
+    });
+
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, [activeVersionId, duration, playbackId, projectDetail, markers.length]);
+
+
 const handleUpdateProject = async (id, payload) => {
   try {
     await updateProjectApi(id, payload);
     fetchProject();
+    showSuccessToast(payload?.status ? "Project status updated" : "Project renamed successfully");
   } catch (err) {
     console.error("Update failed", err);
+    showErrorToast(getApiErrorMessage(err, "Failed to update project"));
   }
 };
 
@@ -403,8 +441,12 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
 
   // called AFTER upload finishes in VideoUploadPlaceholder
   const handleVideoUploaded = (projectData) => {
-    
     setProjectDetail(projectData);
+
+    const latest = projectData?.versions?.[projectData.versions.length - 1];
+    if (latest?._id) {
+      setActiveVersionId(latest._id);
+    }
   };
 
 
@@ -473,11 +515,33 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
   // };
 
   const handleTogglePlay = (playing) => {
+    if (playing) {
+      frameDisplayLockRef.current = null;
+    }
     setIsPlaying(playing);
   };
 
   const handleTimeUpdate = (e) => {
     const t = e?.target?.currentTime ?? playerRef.current?.currentTime ?? 0;
+    const displayLock = frameDisplayLockRef.current;
+
+    if (displayLock) {
+      if (!isPlaying && displayLock.expiresAt && Date.now() < displayLock.expiresAt) {
+        setCurrentTime(displayLock.time);
+        return;
+      }
+
+      const mediaFrame = timeToFrame(t, videoFps);
+      const frameDelta = mediaFrame - displayLock.frame;
+
+      if (!isPlaying && Math.abs(frameDelta) <= 1) {
+        setCurrentTime(displayLock.time);
+        return;
+      }
+
+      frameDisplayLockRef.current = null;
+    }
+
     setCurrentTime(t);
   };
 
@@ -487,10 +551,17 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
   };
 
   const handleSeek = (newTime) => {
+    const snappedTime = snapTimeToFrame(newTime, videoFps, duration);
+    const snappedFrame = timeToFrame(snappedTime, videoFps);
+    frameDisplayLockRef.current = {
+      frame: snappedFrame,
+      time: snappedTime,
+      expiresAt: Date.now() + 750,
+    };
     if (playerRef.current) {
-      playerRef.current.currentTime = newTime;
+      playerRef.current.currentTime = getFrameSeekTime(snappedFrame, videoFps, duration);
     }
-    setCurrentTime(newTime);
+    setCurrentTime(snappedTime);
   };
 
 
@@ -498,7 +569,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
     pauseVideo();
     setAnnotationMode(false);
     if (!navigator.mediaDevices?.getUserMedia) {
-      alert("Recording not supported in this browser");
+      showErrorToast("Recording is not supported in this browser");
       return;
     }
     try {
@@ -507,7 +578,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
       mediaRecorderRef.current = mr;
       chunksRef.current = [];
       cancelledRef.current = false;
-      voiceStartTimeRef.current = currentTime;
+      voiceStartTimeRef.current = snapTimeToFrame(currentTime, videoFps, duration);
       setPendingVoice(null);
 
       mr.ondataavailable = (ev) => {
@@ -543,7 +614,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
       setIsRecording(true);
     } catch (err) {
       console.error("Failed to start recording", err);
-      alert("Unable to start recording");
+      showErrorToast(getApiErrorMessage(err, "Unable to start recording"));
     }
   };
 
@@ -557,7 +628,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
 
   const handleStartAnnotation = () => {
     pauseVideo();
-    annotationStartTimeRef.current = currentTime;
+    annotationStartTimeRef.current = snapTimeToFrame(currentTime, videoFps, duration);
     setPendingAnnotation(null);
     setAnnotationMode(true);
   };
@@ -626,6 +697,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
 
       } catch (err) {
         console.error("Failed to add reply", err);
+        showErrorToast(getApiErrorMessage(err, "Failed to add reply"));
       }
     };
 
@@ -649,23 +721,38 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
       return;
     }
 
-  const baseTime = isEdit
-    ? existingMarker.time        
-    : hasAnnotation
-      ? pendingAnnotation.time ?? currentTime ?? 0
-      : hasVoice
-        ? pendingVoice.startTime ?? currentTime ?? 0
-        : currentTime || 0;
+  const baseTime = snapTimeToFrame(
+    isEdit
+      ? existingMarker.time
+      : hasAnnotation
+        ? pendingAnnotation.time ?? currentTime ?? 0
+        : hasVoice
+          ? pendingVoice.startTime ?? currentTime ?? 0
+          : currentTime || 0,
+    videoFps,
+    duration
+  );
 
   /* ---------- 2) Build FormData for backend ---------- */
 
   const formData = new FormData();
   formData.append('commentType', commentType);
 
-  const fps = videoFps || 60;
-  const frame = Math.round(baseTime * fps);
-  
-  const snappedTime = frame / fps;
+  const fps = normalizeVideoFps(videoFps);
+  const frame = timeToFrame(baseTime, fps);
+  const snappedTime = frameToTime(frame, fps);
+
+  if (!isEdit) {
+    frameDisplayLockRef.current = {
+      frame,
+      time: snappedTime,
+      expiresAt: Date.now() + 750,
+    };
+    if (playerRef.current) {
+      playerRef.current.currentTime = getFrameSeekTime(frame, fps, duration);
+    }
+    setCurrentTime(snappedTime);
+  }
 
   formData.append("timeline", snappedTime.toFixed(6));
   formData.append("frame", frame);
@@ -701,6 +788,9 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
         formData.append("voiceNote", voiceFile);
       } catch (err) {
         console.error("Failed to attach voice note file", err);
+        showErrorToast("Failed to attach voice note");
+        setSendingComment(false);
+        return;
       }
     }
 
@@ -716,8 +806,17 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
         if (!file) return;
         formData.append("images", file);
       });
+
+      if (!files.some(Boolean)) {
+        showErrorToast("Failed to attach image");
+        setSendingComment(false);
+        return;
+      }
     } catch (err) {
       console.error("Failed to attach images", err);
+      showErrorToast("Failed to attach image");
+      setSendingComment(false);
+      return;
     }
   }
 
@@ -823,7 +922,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
   } catch (err) {
     setSendingComment(false);
     console.error("addComment API failed", err?.response?.data || err);
-    // TODO: optionally show a toast or mark the local marker as "failed"
+    showErrorToast(getApiErrorMessage(err, isEdit ? "Failed to update comment" : "Failed to add comment"));
   } finally {
   if (!isEdit) {
     if (hasAnnotation) {
@@ -892,9 +991,10 @@ const handleDeleteVersion = async (version) => {
   try {
     await deleteProjectVersionApi(projectDetail._id, version._id);
     fetchProject();
+    showSuccessToast("Version deleted successfully");
   } catch (err) {
     console.error("Delete version failed", err);
-    alert("Failed to delete version");
+    showErrorToast(getApiErrorMessage(err, "Failed to delete version"));
   }
 };
 
@@ -902,42 +1002,46 @@ const handleNewVersionFile = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   e.target.value = "";
+  const previousVersionId = activeVersionId;
 
   try {
-    setIsUploading(true);
-    setUploadPct(0);
-
     const duration = await getVideoDuration(file);
     const uploadRes = await getVideoUploadUrl(projectId, duration, file.name);
     const { muxUploadURL } = uploadRes.data;
 
-    await uploadToMux(muxUploadURL, file, (pct) => {
-      setUploadPct(pct);
-    });
-
-    // Upload finished → backend webhook still processing
-    setUploadPct(null);
-    setIsUploading(false);
-
-    const response = await getOneProjectApi(projectId);
-    const project = response.data.project;
-
-    setProjectDetail(project);
-
-    const latest =
-      project.versions[project.versions.length - 1];
-
-    setActiveVersionId(latest._id);
-
-    if (latest.muxStatus === "ready") {
-      setVideoSrc(latest.muxPlaybackID);
-    } else {
-      setVideoSrc(null);
+    if (!muxUploadURL) {
+      throw new Error("Mux upload URL is missing");
     }
+
+    setVideoSrc(null);
+    setActiveVersionId(null);
+
+    try {
+      const response = await getOneProjectApi(projectId);
+      const project = response.data.project;
+
+      setProjectDetail(project);
+
+      const latest =
+        project.versions?.[project.versions.length - 1];
+
+      if (latest?._id && latest.muxStatus !== "ready") {
+        setActiveVersionId(latest._id);
+      }
+    } catch (refreshErr) {
+      console.warn("Failed to refresh project before version upload", refreshErr);
+    }
+
+    await startMuxUpload({
+      projectId,
+      muxUploadURL,
+      file,
+      source: "version-upload",
+    });
   } catch (err) {
     console.error(err);
-    setIsUploading(false);
-    setUploadPct(null);
+    setActiveVersionId(previousVersionId);
+    showErrorToast(getApiErrorMessage(err, "Failed to upload new version"));
   }
 };
 
@@ -999,9 +1103,9 @@ const handleNewVersionFile = async (e) => {
     }}
   >
     {/* ================= COLUMN 1 ================= */}
-    <div className="flex min-w-0 flex-1 select-none min-h-0 items-center">
+    <div className="flex min-w-0 flex-1 select-none min-h-0 items-stretch">
       <div
-        className="mx-auto flex h-full w-full min-w-0 flex-col justify-center"
+        className="mx-auto flex h-full w-full min-w-0 flex-col"
         style={{
           maxWidth: isCommentsOpen
             ? "min(1240px, calc((100svh - 230px) * 1.78), calc(100vw - clamp(380px, 29vw, 450px) - 48px))"
@@ -1010,28 +1114,29 @@ const handleNewVersionFile = async (e) => {
         }}
       >
         {/* Video container */}
-        <div className="relative w-full flex-none rounded-3xl bg-black">
+        <div className="relative w-full flex-1 min-h-0 rounded-3xl bg-black">
           {showVideo ? (
-             <div className="relative w-full h-full overflow-hidden rounded-3xl">
-            <VideoPlayerWithSeekbar
-              activeVersionId={activeVersionId}
-              projectId={projectId}
-              src={playbackId}
-              playerRef={playerRef}
-              currentTime={currentTime}
-              duration={duration}
-              isPlaying={isPlaying}
-              markers={markers}
-              pendingAnnotation={pendingAnnotation}
-              annotationMode={annotationMode}
-              onTimeUpdate={handleTimeUpdate}
-              onLoadedMetadata={handleLoadedMetadata}
-              onTogglePlay={handleTogglePlay}
-              onSeek={handleSeek}
-              onAnnotationDraftChange={handleAnnotationDraftChange}
-              onFinishAnnotation={handleFinishAnnotation}
-              videoFps={videoFps}
-            />
+            <div className="relative w-full h-full overflow-hidden rounded-3xl">
+              <VideoPlayerWithSeekbar
+                activeVersionId={activeVersionId}
+                projectId={projectId}
+                src={playbackId}
+                playerRef={playerRef}
+                currentTime={currentTime}
+                duration={duration}
+                isPlaying={isPlaying}
+                markers={markers}
+                pendingAnnotation={pendingAnnotation}
+                annotationMode={annotationMode}
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onTogglePlay={handleTogglePlay}
+                onSeek={handleSeek}
+                onAnnotationDraftChange={handleAnnotationDraftChange}
+                onFinishAnnotation={handleFinishAnnotation}
+                videoFps={videoFps}
+                timelineSettled={timelineSettled}
+              />
             </div>
           ) : (
             <VideoUploadPlaceholder

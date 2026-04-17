@@ -7,6 +7,7 @@ import {
 } from "../../services/api";
 import RemoveAccessModal from "./RemoveAccessModal";
 import { getInitials } from "../../helpers/common";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 
 export default function AssignEditorsModal({
   open,
@@ -87,8 +88,9 @@ useEffect(() => {
       setQuery("");
       setShowDropdown(false);
       onRefresh?.();
+      showSuccessToast("Editors assigned successfully");
     } catch(e) {
-      alert(e.response.data.error);
+      showErrorToast(getApiErrorMessage(e, "Failed to assign editors"));
     }
   };
 
@@ -101,8 +103,10 @@ const handleRemove = async (email) => {
   try {
     await removeUserFromProjectApi(projectID, email);
     onRefresh?.(); // still sync with backend
+    showSuccessToast("Project access removed");
   } catch (e) {
     console.error(e);
+    showErrorToast(getApiErrorMessage(e, "Failed to remove project access"));
   }
 };
 
@@ -342,4 +346,3 @@ function mapPermissions(permissions = []) {
       avatar: p?.profileImage?.url ? p?.profileImage?.url : null,
     }));
 }
-

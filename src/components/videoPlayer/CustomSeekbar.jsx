@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { formatClockTime2, getInitials } from "../../helpers/common";
+import { getTimeFromMarker, normalizeVideoFps, snapTimeToFrame } from "../../helpers/videoFrames";
 
 
 function getMuxThumbnail(playbackId, time) {
@@ -14,10 +15,12 @@ export default function CustomSeekBar({
   onSeek,
   markers = [],
   playbackId,
-  videoFps
+  videoFps,
+  showMarkers = true
 }) {
   const [hoverTime, setHoverTime] = useState(null);
   const [hoverX, setHoverX] = useState(0);
+  const fps = normalizeVideoFps(videoFps);
   
   const safeDuration =
     Number.isFinite(duration) && duration > 0 ? duration : 0;
@@ -30,7 +33,7 @@ export default function CustomSeekBar({
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const ratio = Math.min(Math.max(x / rect.width, 0), 1);
-    const t = ratio * safeDuration;
+    const t = snapTimeToFrame(ratio * safeDuration, fps, safeDuration);
 
     setHoverTime(t);
     setHoverX(x);
@@ -48,9 +51,9 @@ export default function CustomSeekBar({
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const ratio = Math.min(Math.max(x / rect.width, 0), 1);
-      onSeek?.(ratio * safeDuration);
+      onSeek?.(snapTimeToFrame(ratio * safeDuration, fps, safeDuration));
     },
-    [onSeek, safeDuration]
+    [fps, onSeek, safeDuration]
   );
 
   /* ---------- drag ---------- */
@@ -67,7 +70,7 @@ export default function CustomSeekBar({
       const update = (ev) => {
         const x = ev.clientX - rect.left;
         const ratio = Math.min(Math.max(x / rect.width, 0), 1);
-        onSeek?.(ratio * safeDuration);
+        onSeek?.(snapTimeToFrame(ratio * safeDuration, fps, safeDuration));
       };
 
       const move = (ev) => {
@@ -85,7 +88,7 @@ export default function CustomSeekBar({
 
       update(e);
     },
-    [onSeek, safeDuration]
+    [fps, onSeek, safeDuration]
   );
 
   const thumbLeft = Math.min(
@@ -121,10 +124,12 @@ export default function CustomSeekBar({
 
       {/* MARKERS */}
       <div className="absolute inset-x-0 top-6.5 h-10 pointer-events-none">
-        {markers.map((m) => {
-          const leftPct = safeDuration
-            ? (m.time / safeDuration) * 100
-            : 0;
+        {!showMarkers && markers.length > 0 && (
+        <div className="absolute left-1/2 top-2 -translate-x-1/2 h-2 w-24 rounded-full bg-white/10 animate-pulse" />
+      )}
+      {showMarkers && safeDuration > 0 && markers.map((m) => {
+          const markerTime = getTimeFromMarker(m, fps, safeDuration);
+          const leftPct = (markerTime / safeDuration) * 100;
 
           return (
               <button
@@ -135,7 +140,7 @@ export default function CustomSeekBar({
                   left: `${leftPct}%`,
                   transform: "translateX(-50%)",
                 }}
-                onClick={() => onSeek?.(m.time)}
+                onClick={() => onSeek?.(markerTime)}
               >
               <div  className="w-4 h-4 rounded-full border border-[var(--brand-color)] overflow-hidden bg-black mb-[6px]">
                 { m.user?.avatarUrl ? 
@@ -164,7 +169,7 @@ export default function CustomSeekBar({
               className="w-full h-20"
             />
             <div className="text-[11px] text-center text-white py-1 bg-black/70">
-              {formatClockTime2(hoverTime, videoFps)}
+              {formatClockTime2(hoverTime, fps)}
             </div>
           </div>
         </div>

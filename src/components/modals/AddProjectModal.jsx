@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import Modal from "react-modal";
 import OutlineInput from "../textInputs/OutlineInput";
 import { useWorkspace } from "../../context/WorkspaceContext";
+import { showErrorToast } from "../../helpers/showToast";
 
 const modalStyles = {
   overlay: {
@@ -61,7 +62,7 @@ const AddProjectModal = ({ isOpen, onClose, handleCreate, createLoading }) => {
     if (!file) return;
 
     if (!file.type.startsWith("video/")) {
-      alert("Please upload a video file");
+      showErrorToast("Please upload a video file");
       return;
     }
 
@@ -103,7 +104,7 @@ const handleDrop = (e) => {
 
   const onCreateClick = () => {
     if (!projectName.trim()) {
-      alert("Please enter a project name");
+      showErrorToast("Please enter a project name");
       return;
     }
     // pass both name + video file (can be null)

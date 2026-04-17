@@ -8,7 +8,7 @@ import RemoveAccessModal from "./RemoveAccessModal";
 import { addUserToProjectApi, removeUserFromProjectApi, updateReviewerPasswordApi } from "../../services/api";
 import { constants } from "../../helpers/enum";
 import PublicLinkAccessCard from "../PublicLinkAccessCard";
-import { showSuccessToast } from "../../helpers/showToast";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import { reactSelectStyles, reactSelectStyles2 } from "../../styles/reactSelectStyles";
 import { getInitials } from "../../helpers/common";
@@ -118,7 +118,7 @@ const handleTogglePassword = async () => {
     onRefresh();
   } catch (err) {
     console.error(err);
-    alert("Failed to update");
+    showErrorToast(getApiErrorMessage(err, "Failed to remove password"));
   }
 };
   
@@ -140,7 +140,7 @@ const handleSavePassword = async (password) => {
     showSuccessToast("Password saved");
   } catch (err) {
     console.error(err);
-    alert("Failed to save password");
+    showErrorToast(getApiErrorMessage(err, "Failed to save password"));
   }
 };
 
@@ -154,31 +154,41 @@ const handleSavePassword = async (password) => {
 
       setSelectedPeople([]);
       onRefresh?.();
+      showSuccessToast("Project access updated");
     } catch(e) {
-      alert(e.response.data.error)
+      showErrorToast(getApiErrorMessage(e, "Failed to share project"));
     }
 
   };
 
-  function handleCopy() {
+  async function handleCopy() {
     const url = `${window.location.origin}/video-review/${projectID}?ws=${
       activeWorkspace?._id
     }&color=${encodeURIComponent(
       activeWorkspace?.colourCode || ""
     )}&passwordRequired=${passwordRequired}`;
 
-    navigator.clipboard.writeText(url);
-    // showSuccessToast("Link copied!");
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(url);
+      showSuccessToast("Review link copied");
+      setCopied(true);
 
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000); // 2 seconds
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000); // 2 seconds
+    } catch (err) {
+      showErrorToast(getApiErrorMessage(err, "Failed to copy review link"));
+    }
   }
 
   const handleRemove = async (email) => {
-    await removeUserFromProjectApi(projectID, email);
-    onRefresh?.();
+    try {
+      await removeUserFromProjectApi(projectID, email);
+      onRefresh?.();
+      showSuccessToast("Project access removed");
+    } catch (err) {
+      showErrorToast(getApiErrorMessage(err, "Failed to remove project access"));
+    }
   };
 
   function handleXBtn(p) {

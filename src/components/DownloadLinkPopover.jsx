@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../helpers/showToast";
 
 export default function FinalLinkPopover({
   open,
   onClose,
   onSave,
   initialValue = "",
-  title = "Add your final video link here"
+  title = "Add your final video link here",
+  toastMessages = null,
 }) {
   const ref = useRef(null);
   const [link, setLink] = useState(initialValue);
@@ -39,12 +41,17 @@ export default function FinalLinkPopover({
   const handleClear = async () => {
 
     setLink("");
-    onSave(""); 
     try {
       await onSave("");
       onClose?.();
+      if (toastMessages?.clearSuccess) {
+        showSuccessToast(toastMessages.clearSuccess);
+      }
     } catch (err) {
       console.error("Failed to clear link", err);
+      if (toastMessages?.clearError) {
+        showErrorToast(getApiErrorMessage(err, toastMessages.clearError));
+      }
     } finally {
       setSaving(false);
     }
@@ -57,8 +64,14 @@ export default function FinalLinkPopover({
       setSaving(true);
       await onSave(link.trim());
       onClose?.();
+      if (toastMessages?.saveSuccess) {
+        showSuccessToast(toastMessages.saveSuccess);
+      }
     } catch (err) {
       console.error("Failed to save link", err);
+      if (toastMessages?.saveError) {
+        showErrorToast(getApiErrorMessage(err, toastMessages.saveError));
+      }
     } finally {
       setSaving(false);
     }

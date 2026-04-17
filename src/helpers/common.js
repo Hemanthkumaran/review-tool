@@ -1,4 +1,5 @@
 import { clearAuth } from "./storage";
+import { normalizeVideoFps, timeToFrame } from "./videoFrames";
 
 export function formatDuration(duration) {
   if (!duration || duration < 0) return "0s";
@@ -81,7 +82,7 @@ export function formatClockTime(t = 0) {
 
 export function formatClockTime2(
   tOrObj = 0,
-  fps = 60
+  fps = 30
 ) {
   let time = 0;
   let frame = null;
@@ -95,20 +96,18 @@ export function formatClockTime2(
     time = tOrObj;
   }
 
-  if (!Number.isFinite(fps) || fps <= 0) fps = 60;
+  const normalizedFps = normalizeVideoFps(fps);
 
   let totalFrames;
 
-  // 🔥 PRIORITY: frame if exists
   if (Number.isFinite(frame)) {
-    totalFrames = Math.floor(frame);
+    totalFrames = Math.max(0, Math.round(frame));
   } else {
-    if (!Number.isFinite(time)) time = 0;
-    totalFrames = Math.floor(time * fps);
+    totalFrames = timeToFrame(time, normalizedFps);
   }
 
-  const frames = Math.floor(totalFrames % fps);
-  const totalSeconds = Math.floor(totalFrames / fps);
+  const frames = totalFrames % normalizedFps;
+  const totalSeconds = Math.floor(totalFrames / normalizedFps);
 
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

@@ -10,7 +10,7 @@ import { useWorkspace } from "../context/WorkspaceContext";
 import { constants } from "../helpers/enum";
 import AssignEditorsModal from "./modals/AssignEditorsModal";
 import { addUserToProjectApi } from "../services/api";
-import { showSuccessToast } from "../helpers/showToast";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../helpers/showToast";
 import ShareModal from "./modals/ShareModal";
 import { formatDuration, getInitials } from "../helpers/common";
 import timerIcon from "../assets/svgs/timer.svg";
@@ -119,7 +119,7 @@ const handleAssignEditors = async (editors) => {
     setOpenAssign(false);
   } catch (err) {
     console.error(err);
-    alert("Failed to assign editors");
+    showErrorToast(getApiErrorMessage(err, "Failed to assign editors"));
   }
 };
 

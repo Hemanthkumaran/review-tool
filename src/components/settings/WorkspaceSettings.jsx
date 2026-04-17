@@ -9,6 +9,7 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import { updateWorkspaceApi } from "../../services/api";
 import FeatureLockedModal from "../modals/FeatureLockedModal";
 import { Confetti } from "../../assets/svgs/SvgComponents";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 
 const WorkspaceSettings = ({ onClose }) => {
 
@@ -27,37 +28,6 @@ const WorkspaceSettings = ({ onClose }) => {
     setWorkspaceName(ownerWorkspace.name || "");
     setLogoUrl(ownerWorkspace.logo?.url || null);
   }, [ownerWorkspace]);
-
-  // const handleUnlockBranding = async () => {
-  //   setShowModal(false);
-  //   const payload = {
-  //     activePlan: subscription?.activePlan,
-  //     interval: subscription?.interval,
-  //     additionalStorageMinutes: subscription?.additionalStorageMinutes,
-  //     purpose: "upgrade",
-  //     addons: ["white_label"],
-  //   }
-  // try {
-  //   const res = await createAddonPaymentApi(activeWorkspace._id, payload);
-  //   const order = res.data.razorpay;
-    
-  //   openCheckout({
-  //     orderId: order.orderID,
-  //     amount: order.amount,
-  //     currency: order.currency,
-  //     name: activeWorkspace.name,
-  //     onSuccess: async () => {
-  //       refreshWorkspacePlan(activeWorkspace._id);
-  //       setSuccessModal(true);
-  //     },
-  //     brandingColor: brandingColor
-  //   });
-
-  //   } catch (err) {
-  //     alert(err.response.data.error)
-  //     console.error(err.response.data.error);
-  //   }
-  // };
 
   const handleSave = async () => {
     if (!activeWorkspace?._id) return;
@@ -79,8 +49,10 @@ const WorkspaceSettings = ({ onClose }) => {
       await updateWorkspaceApi(activeWorkspace._id, formData);
 
       await refreshWorkspace();
+      showSuccessToast("Workspace settings updated");
     } catch (err) {
       console.error("Failed to update workspace", err);
+      showErrorToast(getApiErrorMessage(err, "Failed to update workspace settings"));
     } finally {
       setLoading(false);
     }

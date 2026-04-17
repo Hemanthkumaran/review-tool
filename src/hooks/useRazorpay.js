@@ -1,3 +1,5 @@
+import { showErrorToast } from "../helpers/showToast";
+
 export function useRazorpay() {
   const openCheckout = ({
     orderId,
@@ -12,7 +14,7 @@ export function useRazorpay() {
     brandingColor
   }) => {
     if (!window.Razorpay) {
-      alert("Razorpay SDK not loaded");
+      showErrorToast("Payment service is not ready. Please refresh and try again.");
       return;
     }
 

@@ -11,6 +11,8 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { constants } from '../../helpers/enum';
 import Spinner from '../../components/common/Spinner';
 import SettingsModal from '../../components/settings/SettingsModal';
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from '../../helpers/showToast';
+import { useUploads } from '../../context/UploadContext';
 
 export default function AddProject({
   onCreateFolder = () => {},
@@ -26,6 +28,7 @@ export default function AddProject({
   const folderId = params.get("folder");
   const folderName = params.get("folderName");
   const { activeWorkspace, brandingColor, userAccess, refreshWorkspacePlan, setSubscriptionStatus, setTrialUsed } = useWorkspace();
+  const { startMuxUpload } = useUploads();
   
   useEffect(() => {
       if (activeWorkspace !== null) {
@@ -37,8 +40,10 @@ export default function AddProject({
     try {
       await updateProjectApi(id, payload);
       getAllProjects();
+      showSuccessToast(payload?.status ? "Project status updated" : "Project renamed successfully");
     } catch (err) {
       console.error("Update failed", err);
+      showErrorToast(getApiErrorMessage(err, "Failed to update project"));
     }
   };
 
@@ -47,8 +52,10 @@ export default function AddProject({
       await deleteProjectApi(id);
       getAllProjects();
       refreshWorkspacePlan(activeWorkspace._id);
+      showSuccessToast("Project deleted successfully");
     } catch (err) {
       console.error("Delete failed", err);
+      showErrorToast(getApiErrorMessage(err, "Failed to delete project"));
     }
   };
 
@@ -73,23 +80,51 @@ export default function AddProject({
       // 1) Create project immediately
       const res = await createProjectApi(data);
       const { muxUploadURL } = res.data || {};
+      const createdProjectId =
+        res.data?.project?._id ||
+        res.data?.projectID ||
+        res.data?.projectId ||
+        res.data?._id ||
+        res.data?.data?._id;
+      let uploadStarted = false;
+
+      const startBackgroundUpload = (projectIdForUpload = null) => {
+        if (!muxUploadURL || !selectedFile || uploadStarted) return;
+        uploadStarted = true;
+
+        const uploadPromise = projectIdForUpload
+          ? startMuxUpload({
+            projectId: projectIdForUpload,
+            muxUploadURL,
+            file: selectedFile,
+            source: "project-create",
+          })
+          : uploadToMux(muxUploadURL, selectedFile);
+
+        uploadPromise.catch((err) => {
+          console.error("Mux upload failed", err);
+          showErrorToast(getApiErrorMessage(err, "Project created, but video upload failed"));
+        });
+      };
+
+      startBackgroundUpload(createdProjectId);
 
       // 2) Close modal + refresh
       setAddProjectOpen(false);
       setCreateLoading(false);
       refreshWorkspacePlan(activeWorkspace._id);
-      await getAllProjects();
+      const refreshedProjects = await getAllProjects();
 
-      // 3) Upload in background
-      if (muxUploadURL && selectedFile) {
-        uploadToMux(muxUploadURL, selectedFile).catch(err => {
-          console.error("Mux upload failed", err);
-        });
+      if (selectedFile && !uploadStarted) {
+        const createdProject = refreshedProjects?.find((project) => project.name === name);
+        startBackgroundUpload(createdProject?._id);
       }
+
+      showSuccessToast(selectedFile ? "Project created. Video upload started." : "Project created successfully");
 
     } catch (err) {
       console.error(err);
-      alert(err.response.data.error)
+      showErrorToast(getApiErrorMessage(err, "Failed to create project"));
       setCreateLoading(false);
     }
   }
@@ -104,14 +139,16 @@ export default function AddProject({
       workspaceID: activeWorkspace._id
     };
     
-    allProjectsApi(params)
+    return allProjectsApi(params)
     .then(res => {
       setSubscriptionStatus(res.data.subscriptionStatus);
       setTrialUsed(res.data.trialUsed);
       setAllProjects(res.data.projectArray);
       setLoading(false);
+      return res.data.projectArray;
     })
     .catch(() => {
+      showErrorToast("Failed to load projects");
       setLoading(false);
     })
   }
