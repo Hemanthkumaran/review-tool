@@ -2,9 +2,9 @@ import { useState } from "react";
 import Modal from "react-modal";
 import ToggleButton from "../../components/buttons/ToggleButton";
 import { useWorkspace } from "../../context/WorkspaceContext";
-import { createPaymentOrderApi, startTrialApi } from "../../services/api";
-import SubscriptionModal from "../../components/modals/SubscriptionModal";
+import { activateSubscriptionApi, startTrialApi } from "../../services/api";
 import { useRazorpay } from "../../hooks/useRazorpay";
+import SubscriptionModal from "../../components/modals/SubscriptionModal";
 import { Tooltip } from "react-tooltip";
 import { getApiErrorMessage, showErrorToast } from "../../helpers/showToast";
 
@@ -32,10 +32,20 @@ const PLAN_MEMBER_LIMITS = {
   team_plus: 10,
 };
 
-export default function ChoosePlanModal({ open, onClose, setChosenPlan, onSuccess, trialUsed, additionalStorageMinutes = 0, showClose = false }) {
+export default function ChoosePlanModal({
+  open,
+  onClose,
+  setChosenPlan,
+  onSuccess,
+  trialUsed,
+  additionalStorageMinutes = 0,
+  showClose = false,
+  showPaymentSuccessModal = false,
+}) {
   const { activeWorkspace, workspaceUsers, refreshWorkspacePlan, workspacePlan, brandingColor } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
+  const [isPaymentSuccessOpen, setIsPaymentSuccessOpen] = useState(false);
   const { openCheckout } = useRazorpay();
 
   const priceFreelancer = isAnnual ? 6 : 7;
@@ -117,32 +127,40 @@ const getPlanState = (planKey) => {
         return;
       }
 
-      // 🔵 CASE 2 — TRIAL ALREADY USED → PAYMENT FLOW
-
-      const res = await createPaymentOrderApi(activeWorkspace._id, {
+      const res = await activateSubscriptionApi(activeWorkspace._id, {
         activePlan: planKey,
         interval: isAnnual ? "yearly" : "monthly",
         purpose: "subscribe",
-        additionalStorageMinutes: additionalStorageMinutes
+        additionalStorageMinutes,
       });
 
-      const order = res.data.razorpay;
+      const order = res?.data?.razorpay;
+
+      if (!order?.orderID || !order?.amount || !order?.currency) {
+        throw new Error("Invalid payment order response.");
+      }
 
       openCheckout({
         orderId: order.orderID,
         amount: order.amount,
         currency: order.currency,
         name: activeWorkspace.name,
-        brandingColor: brandingColor,
+        workspaceId: activeWorkspace._id,
+        purpose: "subscribe",
+        brandingColor,
         onSuccess: async () => {
           await refreshWorkspacePlan(activeWorkspace._id);
           setChosenPlan(planKey);
-          onSuccess();
+          if (showPaymentSuccessModal) {
+            setIsPaymentSuccessOpen(true);
+          }
+          onSuccess?.();
         },
       });
 
     } catch (err) {
       console.error("Plan selection failed", err);
+      onClose?.();
       showErrorToast(getApiErrorMessage(err, "We couldn't start your plan. Please try again."));
     } finally {
       setLoadingPlan(null);
@@ -170,14 +188,15 @@ const getPlanState = (planKey) => {
   // };
 
   return (
-    <Modal
-      isOpen={open}
-      onRequestClose={onClose}
-      style={modalStyles}
-      shouldCloseOnOverlayClick
-      shouldCloseOnEsc
-    >
-      <div className="relative min-h-[80vh] w-full p-6 bg-[#0f0f0f] rounded-[28px]">
+    <>
+      <Modal
+        isOpen={open}
+        onRequestClose={onClose}
+        style={modalStyles}
+        shouldCloseOnOverlayClick
+        shouldCloseOnEsc
+      >
+        <div className="relative min-h-[80vh] w-full p-6 bg-[#0f0f0f] rounded-[28px]">
         {/* Close button */}
         {showClose && (
           <button
@@ -287,8 +306,17 @@ const getPlanState = (planKey) => {
           </div>
         }
         
-      </div>
-    </Modal>
+        </div>
+      </Modal>
+      <SubscriptionModal
+        open={isPaymentSuccessOpen}
+        onClose={() => setIsPaymentSuccessOpen(false)}
+        title="Plan changed successfully"
+        subtitle="Your subscription has been updated successfully."
+        buttonTitle="Okay"
+        onBtnClick={() => setIsPaymentSuccessOpen(false)}
+      />
+    </>
   );
 }
 

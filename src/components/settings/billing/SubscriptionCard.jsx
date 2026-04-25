@@ -3,8 +3,10 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import "./SubscriptionCard.css";
 import { DateFormat } from "../../../helpers/common";
-import { cancelAddonApi } from "../../../services/api";
+import { cancelAddonApi, cancelSubscriptionApi } from "../../../services/api";
+import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../../helpers/showToast";
 import RemoveAccessModal from "../../modals/RemoveAccessModal";
+import SubscriptionModal from "../../modals/SubscriptionModal";
 
 export default function SubscriptionCard({
   subscription,
@@ -23,30 +25,55 @@ export default function SubscriptionCard({
     totalAmount,
   } = subscription;
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const totalMinutes =
-    baseStorageMinutes + additionalStorageMinutes;
+  const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelSuccessOpen, setIsCancelSuccessOpen] = useState(false);
+  const [addonLoading, setAddonLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const totalMinutes = baseStorageMinutes + additionalStorageMinutes;
 
   const usedMinutes = storageMinutesUsed;
 
-  const remainingMinutes = Math.max(
-    totalMinutes - usedMinutes,
-    0
-  );
+  const remainingMinutes = Math.max(totalMinutes - usedMinutes, 0);
 
-  const percentage =
-    totalMinutes === 0
-      ? 0
-      : (usedMinutes / totalMinutes) * 100;
+  const percentage = totalMinutes === 0 ? 0 : (usedMinutes / totalMinutes) * 100;
 
   const handleCancelAddon = async () => {
-    setLoading(true);
-    await cancelAddonApi(ownerWorkspace._id);
+    if (addonLoading || !ownerWorkspace?._id) return;
+
+    try {
+      setAddonLoading(true);
+      await cancelAddonApi(ownerWorkspace._id);
+      await refreshWorkspace();
+      await refreshWorkspacePlan(ownerWorkspace._id);
+      setIsAddonModalOpen(false);
+    } catch (error) {
+      showErrorToast(getApiErrorMessage(error, "We couldn't remove the add-on. Please try again."));
+    } finally {
+      setAddonLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (cancelLoading || !ownerWorkspace?._id) return;
+
+    try {
+      setCancelLoading(true);
+      const res = await cancelSubscriptionApi(ownerWorkspace._id);
+      setIsCancelModalOpen(false);
+      setIsCancelSuccessOpen(true);
+      showSuccessToast(res?.data?.message || "Subscription cancelled successfully");
+    } catch (error) {
+      showErrorToast(getApiErrorMessage(error, "We couldn't cancel the subscription. Please try again."));
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const handleCloseCancelSuccess = async () => {
+    setIsCancelSuccessOpen(false);
     await refreshWorkspace();
     await refreshWorkspacePlan(ownerWorkspace._id);
-    setLoading(false);
-    setIsOpen(false);
   };
 
   return (
@@ -102,8 +129,15 @@ export default function SubscriptionCard({
           <p className="sub-price-caption">
             Billed {interval}
           </p>
-        <div style={{ color:"#C4C4C4", fontSize:12, marginTop:20, cursor:'pointer' }}>Cancel subscription</div>
-        <div style={{ background:"#C4C4C4", height:0.5, marginTop:-1 }}/>
+          <button
+            type="button"
+            className="sub-cancel-btn"
+            onClick={() => setIsCancelModalOpen(true)}
+            disabled={cancelLoading}
+          >
+            {cancelLoading ? "Cancelling subscription..." : "Cancel subscription"}
+          </button>
+          <div className="sub-cancel-divider" />
 
         </div>
       </div>
@@ -140,13 +174,29 @@ export default function SubscriptionCard({
         </button>
       </div>
       <RemoveAccessModal
-          open={isOpen}
-          onClose={() => setIsOpen(false)}
-          title="Remove Addon"
-          description="Following addon will be removed from the plan"
-          buttonText={loading ? "Removing..." : "Remove Addon"}
-          handleRemove={handleCancelAddon}
-        />
+        open={isAddonModalOpen}
+        onClose={() => setIsAddonModalOpen(false)}
+        title="Remove Addon"
+        description="Following addon will be removed from the plan"
+        buttonText={addonLoading ? "Removing..." : "Remove Addon"}
+        handleRemove={handleCancelAddon}
+      />
+      <RemoveAccessModal
+        open={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        title="Cancel Subscription"
+        description="Your current subscription will be cancelled for this workspace."
+        buttonText={cancelLoading ? "Cancelling..." : "Cancel Subscription"}
+        handleRemove={handleCancelSubscription}
+      />
+      <SubscriptionModal
+        open={isCancelSuccessOpen}
+        onClose={handleCloseCancelSuccess}
+        title="Subscription cancelled successfully"
+        subtitle="Your workspace subscription has been cancelled."
+        buttonTitle="Okay"
+        onBtnClick={handleCloseCancelSuccess}
+      />
     </div>
   );
 }

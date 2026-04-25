@@ -307,8 +307,14 @@ export const startTrialApi = (workspaceID, payload) =>
 export const getWorkspacePlanApi = (workspaceID) =>
   axiosClient.get(`/billing/getWorkspacePlanDetails?workspaceID=${workspaceID}`);
 
+export const activateSubscriptionApi = (workspaceID, payload) =>
+  axiosClient.post(`/billing/activateSubscription?workspaceID=${workspaceID}`, payload);
+
 export const createPaymentOrderApi = (workspaceID, payload) =>
   axiosClient.post(`/billing/createPaymentOrder?workspaceID=${workspaceID}`, payload);
+
+export const cancelSubscriptionApi = (workspaceID) =>
+  axiosClient.post(`/billing/cancelSubscription?workspaceID=${workspaceID}`);
 
 export const updateUserProfileApi = (payload) =>
   axiosClient.patch("/user/updateUserProfile", payload, {

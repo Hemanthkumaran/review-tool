@@ -83,6 +83,7 @@ const Billing = () => {
         trialUsed={trialUsed}
         buttonLabel={!trialUsed ? "Start free trial" : "Subscribe"}
         showClose={true}
+        showPaymentSuccessModal={true}
       />
     </>
   );

@@ -106,6 +106,27 @@
   color: #C4C4C4;
 }
 
+.sub-cancel-btn {
+  margin-top: 20px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: #C4C4C4;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.sub-cancel-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.sub-cancel-divider {
+  background: #C4C4C4;
+  height: 0.5px;
+  margin-top: -1px;
+}
+
 /* ----- Dividers ----- */
 .sub-divider {
   height: 1px;
