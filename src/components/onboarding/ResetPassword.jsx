@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import logo from '../../assets/svgs/reviewtool-logo.svg';
 import OutlineInput from '../textInputs/OutlineInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { forgotPasswordApi, verifyResetCodeApi } from '../../services/api';
@@ -79,7 +78,6 @@ function ResetPassword({ setCurrentScreen, changePasswordFlow = false }) {
 
   return (
     <div className="w-full max-w-sm">
-      <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />
       <div style={{ textAlign:'center' }}>
         <div style={{ fontFamily:'Gilroy-Regular', fontSize:24 }}>
           Need a reset?

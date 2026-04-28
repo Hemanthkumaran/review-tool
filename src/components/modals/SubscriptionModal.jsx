@@ -9,7 +9,13 @@ export default function SubscriptionModal({
   buttonTitle = "",
   ModalImg = <Confetti/>,
   onBtnClick,
-  showBtn = true
+  showBtn = true,
+  footerText = "",
+  footerLinkText = "",
+  footerLinkHref = "",
+  footerLinkOnClick,
+  maxWidthClassName = "max-w-md",
+  zIndexClassName = "z-40",
 }) {
   
   if (!open) return null;
@@ -17,7 +23,7 @@ export default function SubscriptionModal({
   return createPortal(
     <div
       // className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      className="fixed left-0 right-0 bottom-0 top-[72px] z-40 flex items-center justify-center"
+      className={`fixed left-0 right-0 bottom-0 top-[72px] ${zIndexClassName} flex items-center justify-center`}
       aria-modal="true"
       role="dialog"
     >
@@ -28,7 +34,7 @@ export default function SubscriptionModal({
         aria-hidden="true"
       />
       {/* Card */}
-      <div className="relative z-10 w-full max-w-md rounded-[20px] bg-[#131313] text-white border border-[#24262A] shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden">
+      <div className={`relative z-10 w-full ${maxWidthClassName} rounded-[20px] bg-[#131313] text-white border border-[#24262A] shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden`}>
         {/* subtle inner glow / vignette */}
         <div className="cursor-pointer absolute inset-0 rounded-[20px] bg-[radial-gradient(120%_80%_at_50%_-20%,rgba(255,255,255,0.06),rgba(0,0,0,0)_55%)]" />
         {/* Close button */}
@@ -62,6 +68,33 @@ export default function SubscriptionModal({
           >
             {buttonTitle}
           </button>}
+          {(footerText || footerLinkText) && (
+            <p className="mt-6 text-sm text-[#BFBFBF]">
+              {footerText}
+              {footerLinkText && (
+                footerLinkHref ? (
+                  <a
+                    href={footerLinkHref}
+                    className="underline underline-offset-4"
+                  >
+                    {footerLinkText}
+                  </a>
+                ) : footerLinkOnClick ? (
+                  <button
+                    type="button"
+                    onClick={footerLinkOnClick}
+                    className="underline underline-offset-4"
+                  >
+                    {footerLinkText}
+                  </button>
+                ) : (
+                  <span className="underline underline-offset-4">
+                    {footerLinkText}
+                  </span>
+                )
+              )}
+            </p>
+          )}
         </div>
       </div>
     </div>,

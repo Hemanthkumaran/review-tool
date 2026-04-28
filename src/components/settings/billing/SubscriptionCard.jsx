@@ -7,6 +7,7 @@ import { cancelAddonApi, cancelSubscriptionApi } from "../../../services/api";
 import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../../helpers/showToast";
 import RemoveAccessModal from "../../modals/RemoveAccessModal";
 import SubscriptionModal from "../../modals/SubscriptionModal";
+import { useWorkspace } from "../../../context/WorkspaceContext";
 
 export default function SubscriptionCard({
   subscription,
@@ -15,6 +16,7 @@ export default function SubscriptionCard({
   refreshWorkspace,
   refreshWorkspacePlan,
 }) {
+  const { activeWorkspace, setOwnerWorkspacePlan, setWorkspacePlan } = useWorkspace();
   const {
     activePlan,
     interval,
@@ -60,6 +62,20 @@ export default function SubscriptionCard({
     try {
       setCancelLoading(true);
       const res = await cancelSubscriptionApi(ownerWorkspace._id);
+      const updatedSubscription = res?.data?.subscription;
+
+      if (updatedSubscription) {
+        setOwnerWorkspacePlan((prev) =>
+          prev ? { ...prev, subscription: updatedSubscription } : prev
+        );
+
+        if (activeWorkspace?._id === ownerWorkspace?._id) {
+          setWorkspacePlan((prev) =>
+            prev ? { ...prev, subscription: updatedSubscription } : prev
+          );
+        }
+      }
+
       setIsCancelModalOpen(false);
       setIsCancelSuccessOpen(true);
       showSuccessToast(res?.data?.message || "Subscription cancelled successfully");

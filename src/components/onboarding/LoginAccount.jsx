@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import logo from '../../assets/svgs/reviewtool-logo.svg';
 import OutlineInput from '../textInputs/OutlineInput';
 import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
@@ -56,7 +55,6 @@ function LoginAccount({ setCurrentScreen }) {
 
   return (
     <div className="w-full max-w-sm">
-        <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />
         <div style={{ fontFamily:'Gilroy-SemiBold', fontSize:24, textAlign:'center' }}>Hello again</div>
         <div style={{ textAlign:'center' }} className='mt-2 mb-2 text-[#BFBFBF]'>Pick up right where you left off.</div>
         <form className="space-y-4 mt-8" onSubmit={handleSubmit}>

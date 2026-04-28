@@ -8,7 +8,6 @@ import clipIcon from "../../assets/svgs/clip.svg";
 import emojiIcon from "../../assets/svgs/emoji.svg";
 import micIcon from "../../assets/svgs/mic.svg";
 import AudienceSelect from "../AudienceSelect";
-import { constants } from "../../helpers/enum";
 import { formatClockTime2, formatClockTimeMMSS } from "../../helpers/common";
 import Spinner from "../common/Spinner";
 import VoiceNotePlayer from "./VoiceNotePlayer";
@@ -40,7 +39,7 @@ export default function CommentBar({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [attachments, setAttachments] = useState([]); // [{ url, name }]
   const fileInputRef = useRef(null);
-  const [audience, setAudience] = useState("everyone");
+  const [audience, setAudience] = useState("team only");
   const [showVoicePreview, setShowVoicePreview] = useState(false);
 
   const { brandingColor } = useWorkspace();
@@ -58,11 +57,11 @@ export default function CommentBar({
   const snappedTime = frameToTime(snappedFrame, fps);
 
   
-  useEffect(() => {
-    if (userAccess) {
-      setAudience((userAccess == constants.OWNER || userAccess == constants.COLLABORATOR) ? "team only" : "everyone")
-    }
-  }, [userAccess]);
+  // useEffect(() => {
+  //   if (userAccess) {
+  //     setAudience((userAccess == constants.OWNER || userAccess == constants.COLLABORATOR) ? "team only" : "everyone")
+  //   }
+  // }, [userAccess]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -251,14 +250,13 @@ sendingComment ||
 
       {/* LEFT: time + audience */}
       <div className="flex items-center gap-2">
-
         {/* Time chip */}
-        <div className="flex items-center gap-1 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
-          <img src={clockIcon} />
-          <span>{formatClockTime2(snappedTime, fps)}</span>
-          
+        <div className="flex w-[110px] shrink-0 items-center gap-1 bg-[#18191b] rounded-full px-3 py-1 text-[11px]">
+          <img src={clockIcon} className="shrink-0" />
+          <span className="block min-w-0 flex-1 text-left tabular-nums">
+            {formatClockTime2(snappedTime, fps)}
+          </span>
         </div>
-
         {/* Audience */}
         <AudienceSelect
           value={audience}

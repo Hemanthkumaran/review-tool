@@ -219,7 +219,8 @@ if (next) {
         brandingColor,
         setBrandingColor,
         ownerWorkspacePlan,
-        setOwnerWorkspacePlan
+        setOwnerWorkspacePlan,
+        setWorkspacePlan
       }}
     >
       {children}

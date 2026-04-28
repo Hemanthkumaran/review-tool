@@ -227,6 +227,37 @@ export const ResumeSubIcon = (props) => (
   </svg>
 )
 
+export const PaymentFailureIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={100}
+    height={100}
+    fill="none"
+    {...props}
+  >
+    <circle cx={50} cy={50} r={50} fill="#F9EF38" opacity={0.1} />
+    <path
+      stroke="#F9EF38"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={4}
+      d="M40.333 34h19.334c4.05 0 7.333 3.283 7.333 7.333v17.334c0 4.05-3.283 7.333-7.333 7.333H40.333C36.283 66 33 62.717 33 58.667V41.333C33 37.283 36.283 34 40.333 34Z"
+    />
+    <path
+      stroke="#F9EF38"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={4}
+      d="M33 45h34"
+    />
+    <circle cx={67.5} cy={62.5} r={12.5} fill="#F9EF38" />
+    <path
+      fill="#131313"
+      d="M67.5 68.667a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm2-7.334h-4v-9.166h4v9.166Z"
+    />
+  </svg>
+)
+
 export const DownloadOriginalTick = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

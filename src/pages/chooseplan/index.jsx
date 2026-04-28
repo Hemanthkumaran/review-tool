@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "react-modal";
 import ToggleButton from "../../components/buttons/ToggleButton";
 import { useWorkspace } from "../../context/WorkspaceContext";
-import { activateSubscriptionApi, startTrialApi } from "../../services/api";
+import {
+  activateSubscriptionApi,
+  reactivateSubscriptionApi,
+  startTrialApi,
+} from "../../services/api";
 import { useRazorpay } from "../../hooks/useRazorpay";
 import SubscriptionModal from "../../components/modals/SubscriptionModal";
 import { Tooltip } from "react-tooltip";
 import { getApiErrorMessage, showErrorToast } from "../../helpers/showToast";
+import { PaymentFailureIcon } from "../../assets/svgs/SvgComponents";
 
 const modalStyles = {
   overlay: {
@@ -32,6 +37,16 @@ const PLAN_MEMBER_LIMITS = {
   team_plus: 10,
 };
 
+const DEFAULT_SUCCESS_MODAL_CONTENT = {
+  title: "Plan changed successfully",
+  subtitle: "Your subscription has been updated successfully.",
+};
+
+const REACTIVATION_SUCCESS_MODAL_CONTENT = {
+  title: "Plan reactivated successfully",
+  subtitle: "Your subscription has been reactivated successfully.",
+};
+
 export default function ChoosePlanModal({
   open,
   onClose,
@@ -41,12 +56,27 @@ export default function ChoosePlanModal({
   additionalStorageMinutes = 0,
   showClose = false,
   showPaymentSuccessModal = false,
+  subscriptionOverride = null,
 }) {
   const { activeWorkspace, workspaceUsers, refreshWorkspacePlan, workspacePlan, brandingColor } = useWorkspace();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [isPaymentSuccessOpen, setIsPaymentSuccessOpen] = useState(false);
+  const [isPaymentFailureOpen, setIsPaymentFailureOpen] = useState(false);
+  const [pendingSuccessPlan, setPendingSuccessPlan] = useState(null);
+  const [successModalContent, setSuccessModalContent] = useState(DEFAULT_SUCCESS_MODAL_CONTENT);
   const { openCheckout } = useRazorpay();
+  const shouldHidePlanModal = isPaymentSuccessOpen || isPaymentFailureOpen;
+
+  useEffect(() => {
+    if (!open) return;
+
+    setLoadingPlan(null);
+    setIsPaymentSuccessOpen(false);
+    setIsPaymentFailureOpen(false);
+    setPendingSuccessPlan(null);
+    setSuccessModalContent(DEFAULT_SUCCESS_MODAL_CONTENT);
+  }, [open]);
 
   const priceFreelancer = isAnnual ? 6 : 7;
   const priceTeam = isAnnual ? 20 : 25;
@@ -54,46 +84,74 @@ export default function ChoosePlanModal({
 
   const memberCount = workspaceUsers?.permissions?.length || 1;
   
-  const subscription = activeWorkspace?.subscription || workspacePlan?.subscription;
-
+  const subscription =
+    subscriptionOverride ||
+    workspacePlan?.subscription ||
+    activeWorkspace?.subscription;
   const currentPlan = subscription?.activePlan;
+  const isScheduledForCancellation = Boolean(subscription?.scheduledCancellation);
 
-const canSwitchTo = (planKey) => {
-  const limit = PLAN_MEMBER_LIMITS[planKey];
-  return memberCount <= limit;
-};
+  const canSwitchTo = (planKey) => {
+    const limit = PLAN_MEMBER_LIMITS[planKey];
+    return memberCount <= limit;
+  };
 
+  const isTrialing = subscription?.status === "trialing";
 
-const isTrialing = subscription?.status === "trialing";
+  const handlePaymentSuccessClose = async () => {
+    const completedPlan = pendingSuccessPlan;
 
-const getPlanState = (planKey) => {
-  const isCurrent = currentPlan === planKey;
+    setIsPaymentSuccessOpen(false);
+    setPendingSuccessPlan(null);
+    setSuccessModalContent(DEFAULT_SUCCESS_MODAL_CONTENT);
+    onSuccess?.();
 
-  const overLimit = !canSwitchTo(planKey);
+    if (activeWorkspace?._id) {
+      await refreshWorkspacePlan(activeWorkspace._id);
+    }
 
-  // 🔴 Trial override
-  if (isTrialing) {
+    if (completedPlan) {
+      await setChosenPlan?.(completedPlan);
+    }
+  };
+
+  const getPlanState = (planKey) => {
+    const isCurrent = currentPlan === planKey;
+
+    const overLimit = !canSwitchTo(planKey);
+
+    // 🔴 Trial override
+    if (isTrialing) {
+      return {
+        isCurrent,
+        overLimit,
+        buttonLabel: "Upgrade",
+        disabled: false,
+      };
+    }
+
+    if (isCurrent && isScheduledForCancellation) {
+      return {
+        isCurrent,
+        overLimit,
+        buttonLabel: "Reactivate plan",
+        disabled: false,
+      };
+    }
+
     return {
       isCurrent,
       overLimit,
-      buttonLabel: "Upgrade",
-      disabled: false,
+      buttonLabel: overLimit
+        ? "Over limits"
+        : !trialUsed
+        ? "Start free trial"
+        : isCurrent
+        ? "Continue with Current Plan"
+        : "Switch Plan",
+      disabled: overLimit,
     };
-  }
-
-  return {
-    isCurrent,
-    overLimit,
-    buttonLabel: overLimit
-      ? "Over limits"
-      : !trialUsed
-      ? "Start free trial"
-      : isCurrent
-      ? "Continue with Current Plan"
-      : "Switch Plan",
-    disabled: overLimit,
   };
-};
 
   const handleChoosePlan = async (planKey) => {
     if (!activeWorkspace?._id) return;
@@ -103,6 +161,31 @@ const getPlanState = (planKey) => {
 
     if (overLimit) {
       return;
+    }
+
+    if (isCurrent && isScheduledForCancellation) {
+      try {
+        setLoadingPlan(planKey);
+        await reactivateSubscriptionApi(activeWorkspace._id);
+
+        if (showPaymentSuccessModal) {
+          setPendingSuccessPlan(planKey);
+          setSuccessModalContent(REACTIVATION_SUCCESS_MODAL_CONTENT);
+          setIsPaymentSuccessOpen(true);
+          return;
+        }
+
+        await refreshWorkspacePlan(activeWorkspace._id);
+        await setChosenPlan?.(planKey);
+        onSuccess?.();
+        return;
+      } catch (err) {
+        console.error("Plan reactivation failed", err);
+        showErrorToast(getApiErrorMessage(err, "We couldn't reactivate your plan. Please try again."));
+        return;
+      } finally {
+        setLoadingPlan(null);
+      }
     }
 
     if (isCurrent) {
@@ -134,27 +217,47 @@ const getPlanState = (planKey) => {
         additionalStorageMinutes,
       });
 
-      const order = res?.data?.razorpay;
+      const payment = res?.data?.razorpay;
+      const summary = res?.data?.summary;
+      const subscriptionId =
+        payment?.subscriptionId ||
+        payment?.subscriptionID ||
+        payment?.id ||
+        res?.data?.subscriptionId;
+      const orderId = payment?.orderID || payment?.orderId;
+      const amount = payment?.amount || summary?.cycleAmount;
+      const currency = payment?.currency || summary?.currency;
 
-      if (!order?.orderID || !order?.amount || !order?.currency) {
+      if (!subscriptionId && !orderId) {
         throw new Error("Invalid payment order response.");
       }
 
       openCheckout({
-        orderId: order.orderID,
-        amount: order.amount,
-        currency: order.currency,
+        orderId,
+        amount,
+        currency,
+        subscriptionId,
         name: activeWorkspace.name,
         workspaceId: activeWorkspace._id,
         purpose: "subscribe",
         brandingColor,
         onSuccess: async () => {
+          if (showPaymentSuccessModal) {
+            setPendingSuccessPlan(planKey);
+            setSuccessModalContent(DEFAULT_SUCCESS_MODAL_CONTENT);
+            setIsPaymentSuccessOpen(true);
+            return;
+          }
+
           await refreshWorkspacePlan(activeWorkspace._id);
           setChosenPlan(planKey);
-          if (showPaymentSuccessModal) {
-            setIsPaymentSuccessOpen(true);
-          }
           onSuccess?.();
+        },
+        onFailure: () => {
+          setIsPaymentFailureOpen(true);
+        },
+        onDismiss: () => {
+          setIsPaymentFailureOpen(true);
         },
       });
 
@@ -190,7 +293,7 @@ const getPlanState = (planKey) => {
   return (
     <>
       <Modal
-        isOpen={open}
+        isOpen={open && !shouldHidePlanModal}
         onRequestClose={onClose}
         style={modalStyles}
         shouldCloseOnOverlayClick
@@ -297,7 +400,7 @@ const getPlanState = (planKey) => {
 
         {/* Footer note */}
         {
-          workspacePlan?.subscription?.status === "trialing" ? null :
+          subscription?.status === "trialing" ? null :
           <div className="flex justify-center mt-6 text-xs">
             <span style={{ fontFamily: "Gilroy-Bold", marginRight: 4 }}>
               Note:
@@ -310,11 +413,25 @@ const getPlanState = (planKey) => {
       </Modal>
       <SubscriptionModal
         open={isPaymentSuccessOpen}
-        onClose={() => setIsPaymentSuccessOpen(false)}
-        title="Plan changed successfully"
-        subtitle="Your subscription has been updated successfully."
+        onClose={handlePaymentSuccessClose}
+        title={successModalContent.title}
+        subtitle={successModalContent.subtitle}
         buttonTitle="Okay"
-        onBtnClick={() => setIsPaymentSuccessOpen(false)}
+        onBtnClick={handlePaymentSuccessClose}
+        zIndexClassName="z-[100001]"
+      />
+      <SubscriptionModal
+        open={isPaymentFailureOpen}
+        onClose={() => setIsPaymentFailureOpen(false)}
+        title="We hit a snag"
+        subtitle="Something went wrong while charging your card."
+        buttonTitle="Choose plan and complete payment"
+        onBtnClick={() => setIsPaymentFailureOpen(false)}
+        ModalImg={<PaymentFailureIcon />}
+        footerText="If you believe this is a mistake, "
+        footerLinkText="reach out to us."
+        maxWidthClassName="max-w-[720px]"
+        zIndexClassName="z-[100001]"
       />
     </>
   );

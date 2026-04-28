@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import logo from '../../assets/svgs/reviewtool-logo.svg';
 import PasswordInput from '../textInputs/PasswordInput';
 import PrimaryButton from '../buttons/PrimaryButton';
 import { resetForgotPasswordApi } from '../../services/api';
@@ -44,7 +43,6 @@ function SetNewPassword({ setCurrentScreen, changePasswordFlow = false }) {
 
   return (
     <div className="w-full max-w-sm">
-      <img src={logo} alt="logo" className="block mx-auto mb-6 h-12 w-auto" />
       <div style={{ textAlign:'center' }}>
         <div style={{ fontFamily:'Gilroy-SemiBold', fontSize:24 }}>
           Set a New Password

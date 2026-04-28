@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import VideoPlayerWithSeekbar from "../../components/videoPlayer/VideoPlayerWithSeekbar";
 import CommentBar from "../../components/videoPlayer/CommentBar";
@@ -24,7 +24,7 @@ import { useWorkspace } from "../../context/WorkspaceContext.jsx";
 import { PATHS } from "../../routes/paths.jsx";
 import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 import { useProjectUpload } from "../../context/UploadContext.jsx";
-import { frameToTime, getFrameSeekTime, getSnappedSeekTime, normalizeVideoFps, snapTimeToFrame, timeToFrame } from "../../helpers/videoFrames.js";
+import { frameToTime, getFrameSeekTime, normalizeVideoFps, snapTimeToFrame, timeToFrame } from "../../helpers/videoFrames.js";
 
 const REVIEWER_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -109,6 +109,12 @@ export default function VideoReview() {
   const [timelineSettled, setTimelineSettled] = useState(false);
   const timelineSettleTokenRef = useRef(0);
   const frameDisplayLockRef = useRef(null);
+  const playbackStateRef = useRef({
+    currentTime: 0,
+    duration: 0,
+    videoFps: null,
+  });
+  const isPlayingRef = useRef(false);
   const { projectId } = useParams();
   const { startMuxUpload } = useProjectUpload(projectId);
   const [error, setError] = useState("");
@@ -139,6 +145,7 @@ const videoFps = normalizeVideoFps(
   activeRawVersion?.videoFps ??
   activeRawVersion?.frameRate
 );
+playbackStateRef.current = { currentTime, duration, videoFps };
 const passwordRequiredFromLink =
   searchParams.get("passwordRequired") === "true";
   
@@ -268,28 +275,6 @@ const handleGuestModalClose = () => {
     }
   }, [rawVersions, activeVersionId]);
 
-useEffect(() => {
-  const handler = (e) => {
-    // Don't steal focus if user is typing
-    const tag = document.activeElement?.tagName;
-    const isTyping =
-      tag === "INPUT" ||
-      tag === "TEXTAREA" ||
-      document.activeElement?.isContentEditable;
-
-    if (isTyping) return;
-
-    if (e.key.toLowerCase() === "c") {
-      e.preventDefault();
-      commentInputRef.current?.focus();
-    }
-  };
-
-  window.addEventListener("keydown", handler);
-  return () => window.removeEventListener("keydown", handler);
-}, []);
-
-  
 useEffect(() => {
   if (!projectDetail) {
     setMarkers([]);
@@ -515,6 +500,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
   // };
 
   const handleTogglePlay = (playing) => {
+    isPlayingRef.current = playing;
     if (playing) {
       frameDisplayLockRef.current = null;
     }
@@ -524,9 +510,10 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
   const handleTimeUpdate = (e) => {
     const t = e?.target?.currentTime ?? playerRef.current?.currentTime ?? 0;
     const displayLock = frameDisplayLockRef.current;
+    const playing = isPlayingRef.current;
 
     if (displayLock) {
-      if (!isPlaying && displayLock.expiresAt && Date.now() < displayLock.expiresAt) {
+      if (!playing && displayLock.expiresAt && Date.now() < displayLock.expiresAt) {
         setCurrentTime(displayLock.time);
         return;
       }
@@ -534,7 +521,7 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
       const mediaFrame = timeToFrame(t, videoFps);
       const frameDelta = mediaFrame - displayLock.frame;
 
-      if (!isPlaying && Math.abs(frameDelta) <= 1) {
+      if (!playing && Math.abs(frameDelta) <= 1) {
         setCurrentTime(displayLock.time);
         return;
       }
@@ -563,6 +550,76 @@ async function fetchProject(storedGuest = getValidGuestIdentity(), pwd = reviewe
     }
     setCurrentTime(snappedTime);
   };
+
+  const seekByFrames = useCallback((delta) => {
+    const player = playerRef.current;
+    const { currentTime: latestCurrentTime, duration: latestDuration, videoFps: latestFps } =
+      playbackStateRef.current;
+    const safeDuration =
+      Number.isFinite(Number(latestDuration)) && Number(latestDuration) > 0
+        ? Number(latestDuration)
+        : 0;
+    const step = Math.trunc(Number(delta));
+
+    if (!player || !safeDuration || !step) return;
+
+    const fps = normalizeVideoFps(latestFps);
+    const maxFrame = Math.max(0, timeToFrame(safeDuration, fps));
+    const lockedFrame = Number(frameDisplayLockRef.current?.frame);
+    const currentFrame = Number.isFinite(lockedFrame)
+      ? lockedFrame
+      : timeToFrame(latestCurrentTime, fps);
+    const targetFrame = Math.min(Math.max(currentFrame + step, 0), maxFrame);
+    const targetTime =
+      targetFrame >= maxFrame
+        ? snapTimeToFrame(safeDuration, fps, safeDuration)
+        : frameToTime(targetFrame, fps);
+
+    player.pause?.();
+    isPlayingRef.current = false;
+    setIsPlaying(false);
+
+    frameDisplayLockRef.current = {
+      frame: targetFrame,
+      time: targetTime,
+      expiresAt: Date.now() + 750,
+    };
+    player.currentTime = getFrameSeekTime(targetFrame, fps, safeDuration);
+    playbackStateRef.current = {
+      ...playbackStateRef.current,
+      currentTime: targetTime,
+    };
+    setCurrentTime(targetTime);
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const tag = document.activeElement?.tagName;
+      const isTyping =
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        document.activeElement?.isContentEditable;
+
+      if (isTyping) return;
+
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+        e.preventDefault();
+        seekByFrames(e.key === "ArrowRight" ? 1 : -1);
+        return;
+      }
+
+      if (e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        commentInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [seekByFrames]);
 
 
   const startVoiceRecording = async () => {

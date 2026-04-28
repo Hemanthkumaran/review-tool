@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Range } from "react-range";
-import { useRazorpay } from "../../../hooks/useRazorpay";
-import { createPaymentOrderApi } from "../../../services/api";
+import { addStorageApi } from "../../../services/api";
 import { useWorkspace } from "../../../context/WorkspaceContext";
 import AppLoader from "../../common/AppLoader";
 import ConfirmPlanModal from "../../modals/ConfirmPlanModal";
@@ -15,8 +14,7 @@ const MIN = 100;
 const MAX = 2000;
 
 export default function StorageSlider({ setActive }) {
-  const { openCheckout } = useRazorpay();
-  const { ownerWorkspace, ownerWorkspacePlan, billingLoading, brandingColor, refreshOwnerWorkspacePlan } = useWorkspace();
+  const { ownerWorkspace, ownerWorkspacePlan, billingLoading, refreshOwnerWorkspacePlan } = useWorkspace();
 
   const [values, setValues] = useState([MIN]);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -65,31 +63,16 @@ export default function StorageSlider({ setActive }) {
 
 
   const handleUpgrade = async () => {
-
     if (!ownerWorkspace?._id) return;
-    setShowConfirm(false)
+    setShowConfirm(false);
 
     try {
-      const res = await createPaymentOrderApi(ownerWorkspace._id, {
-        activePlan: ownerWorkspacePlan.subscription.activePlan,
-        interval: ownerWorkspacePlan.subscription.interval,
-        additionalStorageMinutes: increaseMinutes,
-        purpose: "upgrade",
+      await addStorageApi(ownerWorkspace._id, {
+        additionalMinutes: increaseMinutes,
       });
-      
-      const order = res.data.razorpay;
 
-      openCheckout({
-        orderId: order.orderID,
-        amount: order.amount,
-        currency: order.currency,
-        name: ownerWorkspace.name,
-        onSuccess: () => {
-          refreshOwnerWorkspacePlan();
-          setShowModal(true);
-        },
-        brandingColor: brandingColor
-      });
+      await refreshOwnerWorkspacePlan();
+      setShowModal(true);
     } catch (e) {
       showErrorToast(getApiErrorMessage(e, "Payment failed. Please try again."));
     }

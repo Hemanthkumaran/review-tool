@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import logoSmall from '../../assets/svgs/logo-small.svg'
 import OutlineInput from '../textInputs/OutlineInput'
 import PrimaryButton from '../buttons/PrimaryButton'
 import { PATHS } from '../../routes/paths'
@@ -70,18 +69,12 @@ function VerifyAccount({ setCurrentScreen }) {
   }
 
   return (
-    <div className="w-full max-w-sm relative">
-      {/* top-left logo */}
-      <img
-        src={logoSmall}
-        alt="logo"
-        className="fixed top-10 left-10 z-50 pointer-events-none h-12 w-auto"
-      />
-      <div style={{ fontFamily: 'Gilroy-SemiBold', fontSize: 24 }} className="mt-20">
+    <div className="w-full max-w-sm">
+      <div style={{ fontFamily: 'Gilroy-SemiBold', fontSize: 24, textAlign:'center' }}>
         Check your email
       </div>
 
-      <div className="mt-2 mb-8 text-[#BFBFBF]">
+      <div className="mt-2 mb-8 text-[#BFBFBF] text-center">
         Enter the code we sent to your inbox.
       </div>
 

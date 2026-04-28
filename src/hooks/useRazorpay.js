@@ -4,6 +4,7 @@ export function useRazorpay() {
   const openCheckout = ({
     orderId,
     amount,
+    subscriptionId,
     currency,
     name,
     email,
@@ -11,6 +12,7 @@ export function useRazorpay() {
     purpose = "upgrade",
     onSuccess,
     onFailure,
+    onDismiss,
     brandingColor
   }) => {
     if (!window.Razorpay) {
@@ -18,13 +20,15 @@ export function useRazorpay() {
       return;
     }
 
+    if (!orderId && !subscriptionId) {
+      showErrorToast("Payment details are missing. Please try again.");
+      return;
+    }
+
     const options = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID, // ✅ KEY ID only
-      amount,
-      currency,
       name: "CutJamm",
       description: "Workspace upgrade",
-      order_id: orderId,
 
       prefill: {
         name,
@@ -46,9 +50,21 @@ export function useRazorpay() {
       },
 
       modal: {
-        ondismiss() {},
+        ondismiss() {
+          onDismiss?.();
+        },
       },
     };
+
+    if (orderId) {
+      options.order_id = orderId;
+      options.amount = amount;
+      options.currency = currency;
+    }
+
+    if (subscriptionId) {
+      options.subscription_id = subscriptionId;
+    }
 
     const razor = new window.Razorpay(options);
 

@@ -73,17 +73,15 @@ const Billing = () => {
       <ChoosePlanModal
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        setChosenPlan={() => {
-          refreshOwnerWorkspacePlan()
-        }}
+        setChosenPlan={() => refreshOwnerWorkspacePlan()}
         onSuccess={() => {
           setIsOpen(false);
-
         }}
         trialUsed={trialUsed}
         buttonLabel={!trialUsed ? "Start free trial" : "Subscribe"}
         showClose={true}
         showPaymentSuccessModal={true}
+        subscriptionOverride={subscription}
       />
     </>
   );
