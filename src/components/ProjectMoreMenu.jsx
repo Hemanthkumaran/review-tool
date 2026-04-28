@@ -89,14 +89,16 @@ export default function ProjectMoreMenu({
               }}
             />
 
-            <MenuItem
-              label="Assign to"
-              icon={<AssignIcon color="#FFF" />}
-              onClick={() => {
-                onOpenAssign()
-                setOpen(false)
-              }}
-            />
+            {userAccess === constants.OWNER && (
+              <MenuItem
+                label="Assign to"
+                icon={<AssignIcon color="#FFF" />}
+                onClick={() => {
+                  onOpenAssign()
+                  setOpen(false)
+                }}
+              />
+            )}
 
             <div className="h-px bg-[#1F1F21]" />
 

@@ -25,6 +25,7 @@ export default function SubscriptionCard({
     storageMinutesUsed,
     subscriptionEndAt,
     totalAmount,
+    scheduledCancellation,
   } = subscription;
 
   const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
@@ -101,7 +102,13 @@ export default function SubscriptionCard({
           <span className="sub-plan-name">
             {activePlan.charAt(0).toUpperCase() + activePlan.slice(1)}
           </span>
-          <span className="sub-status-pill">{subscription.status == "trialing" ? "Free trial" : subscription.status}</span>
+          <span className="sub-status-pill">
+            {scheduledCancellation
+              ? "Cancellation scheduled"
+              : subscription.status == "trialing"
+              ? "Free trial"
+              : subscription.status}
+          </span>
         </div>
 
         <div className="sub-end-right">
@@ -145,18 +152,28 @@ export default function SubscriptionCard({
           <p className="sub-price-caption">
             Billed {interval}
           </p>
-          <button
-            type="button"
-            className="sub-cancel-btn"
-            onClick={() => setIsCancelModalOpen(true)}
-            disabled={cancelLoading}
-          >
-            {cancelLoading ? "Cancelling subscription..." : "Cancel subscription"}
-          </button>
-          <div className="sub-cancel-divider" />
+          {!scheduledCancellation && (
+            <>
+              <button
+                type="button"
+                className="sub-cancel-btn"
+                onClick={() => setIsCancelModalOpen(true)}
+                disabled={cancelLoading}
+              >
+                {cancelLoading ? "Cancelling subscription..." : "Cancel subscription"}
+              </button>
+              <div className="sub-cancel-divider" />
+            </>
+          )}
 
         </div>
       </div>
+
+      {scheduledCancellation && (
+        <div className="sub-cancel-notice">
+          Your plan will end on {DateFormat(subscriptionEndAt)}.
+        </div>
+      )}
 
       {/* ---------- WARNING ---------- */}
       {/* {isUsageBlockingDowngrade && (

@@ -21,6 +21,7 @@ export default function CustomSeekBar({
   const [hoverTime, setHoverTime] = useState(null);
   const [hoverX, setHoverX] = useState(0);
   const fps = normalizeVideoFps(videoFps);
+  const visibleMarkers = markers.filter((marker) => !marker?.isResolved);
   
   const safeDuration =
     Number.isFinite(duration) && duration > 0 ? duration : 0;
@@ -124,10 +125,10 @@ export default function CustomSeekBar({
 
       {/* MARKERS */}
       <div className="absolute inset-x-0 top-6.5 h-10 pointer-events-none">
-        {!showMarkers && markers.length > 0 && (
+        {!showMarkers && visibleMarkers.length > 0 && (
         <div className="absolute left-1/2 top-2 -translate-x-1/2 h-2 w-24 rounded-full bg-white/10 animate-pulse" />
       )}
-      {showMarkers && safeDuration > 0 && markers.map((m) => {
+      {showMarkers && safeDuration > 0 && visibleMarkers.map((m) => {
           const markerTime = getTimeFromMarker(m, fps, safeDuration);
           const leftPct = (markerTime / safeDuration) * 100;
 

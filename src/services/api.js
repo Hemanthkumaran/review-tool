@@ -313,6 +313,9 @@ export const activateSubscriptionApi = (workspaceID, payload) =>
 export const reactivateSubscriptionApi = (workspaceID) =>
   axiosClient.post(`/billing/reactivateSubscription?workspaceID=${workspaceID}`);
 
+export const upgradePlanApi = (workspaceID, payload) =>
+  axiosClient.post(`/billing/upgradePlan?workspaceID=${workspaceID}`, payload);
+
 export const createPaymentOrderApi = (workspaceID, payload) =>
   axiosClient.post(`/billing/createPaymentOrder?workspaceID=${workspaceID}`, payload);
 

@@ -18,10 +18,12 @@ export default function ConfirmPlanModal({
   newMonthlyTotal,
   decreaseMinutes,
   costPerMinute,
-  addons
+  addons,
+  payNowAmount = newAdditonalCost,
+  confirmLoading = false,
 }) {
   
-  const payNow = newAdditonalCost > 0;
+  const payNow = payNowAmount > 0;
 
   return (
     <Modal
@@ -119,7 +121,7 @@ export default function ConfirmPlanModal({
       {/* Charge note */}
       <p className="note">
         {/* You will only be charged ${extraCost} this time. */}
-        You will only be charged ${newAdditonalCost} this time.
+        You will only be charged ${payNowAmount.toFixed(2)} this time.
       </p>
 
       {/* Actions */}
@@ -127,9 +129,11 @@ export default function ConfirmPlanModal({
         <button className="cancel-btn" onClick={onClose}>
           Cancel
         </button>
-        <button className="confirm-btn" onClick={onConfirm}>
-          {payNow
-            ? `Pay $${newAdditonalCost.toFixed(2)} to upgrade`
+        <button className="confirm-btn" onClick={onConfirm} disabled={confirmLoading}>
+          {confirmLoading
+            ? "Preparing checkout..."
+            : payNow
+            ? `Pay $${payNowAmount.toFixed(2)} to upgrade`
             : "Confirm changes"}
         </button>
       </div>

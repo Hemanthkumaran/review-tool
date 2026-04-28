@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { constants } from "../../helpers/enum";
+import { useWorkspace } from "../../context/WorkspaceContext";
 
 
 export default function CommentFilterDropdown({
@@ -9,6 +10,28 @@ export default function CommentFilterDropdown({
    triggerRef,
 }) {
   const ref = useRef(null);
+  const { ownerWorkspacePlan } = useWorkspace();
+  const subscription = ownerWorkspacePlan?.subscription?.activePlan;
+  const filterOptions = [
+    {
+      label: "Team",
+      value: constants.MEMBER,
+    },
+    {
+      label: "Collaborator",
+      value: constants.COLLABORATOR,
+    },
+    {
+      label: "Reviewer",
+      value: constants.REVIEWER,
+    },
+  ].filter((item) => {
+    if (subscription === "team" && item.value === constants.COLLABORATOR) {
+      return false;
+    }
+
+    return true;
+  });
 
   useEffect(() => {
     const handler = (e) => {
@@ -46,20 +69,7 @@ export default function CommentFilterDropdown({
         p-2
       "
     >
-      {[
-        {
-          label: "Team",
-          value: constants.MEMBER,
-        },
-        {
-          label: "Collaborator",
-          value: constants.COLLABORATOR,
-        },
-        {
-          label: "Reviewer",
-          value: constants.REVIEWER,
-        },
-      ].map((item) => (
+      {filterOptions.map((item) => (
         <button
           key={item.value}
           onClick={() => toggle(item.value)}

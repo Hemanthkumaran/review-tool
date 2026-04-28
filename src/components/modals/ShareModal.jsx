@@ -83,7 +83,7 @@ export default function ShareModal({ projectDetail = null, open = true, onClose,
       return [
         { value: "collaborator", label: "Collaborator" },
         { value: "reviewer", label: "Reviewer" },
-        { value: "team", label: "Team member" }
+        // { value: "team", label: "Team member" }
       ];
     }
 

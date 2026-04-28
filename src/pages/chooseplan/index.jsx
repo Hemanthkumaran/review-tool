@@ -6,6 +6,7 @@ import {
   activateSubscriptionApi,
   reactivateSubscriptionApi,
   startTrialApi,
+  upgradePlanApi,
 } from "../../services/api";
 import { useRazorpay } from "../../hooks/useRazorpay";
 import SubscriptionModal from "../../components/modals/SubscriptionModal";
@@ -35,6 +36,12 @@ const PLAN_MEMBER_LIMITS = {
   freelancer: 1,
   team: 5,
   team_plus: 10,
+};
+
+const PLAN_RANK = {
+  freelancer: 1,
+  team: 2,
+  team_plus: 3,
 };
 
 const DEFAULT_SUCCESS_MODAL_CONTENT = {
@@ -89,7 +96,9 @@ export default function ChoosePlanModal({
     workspacePlan?.subscription ||
     activeWorkspace?.subscription;
   const currentPlan = subscription?.activePlan;
+  const isActiveSubscription = subscription?.status === "active";
   const isScheduledForCancellation = Boolean(subscription?.scheduledCancellation);
+  const isLockedSubscription = subscription?.status === "locked";
 
   const canSwitchTo = (planKey) => {
     const limit = PLAN_MEMBER_LIMITS[planKey];
@@ -97,6 +106,18 @@ export default function ChoosePlanModal({
   };
 
   const isTrialing = subscription?.status === "trialing";
+
+  const getBillingInterval = () => (isAnnual ? "annual" : "monthly");
+
+  const normalizeInterval = (interval) =>
+    interval === "yearly" ? "annual" : interval;
+
+  const currentInterval = normalizeInterval(subscription?.interval);
+
+  const isHigherPlan = (planKey) => {
+    if (!currentPlan) return true;
+    return PLAN_RANK[planKey] > PLAN_RANK[currentPlan];
+  };
 
   const handlePaymentSuccessClose = async () => {
     const completedPlan = pendingSuccessPlan;
@@ -117,16 +138,39 @@ export default function ChoosePlanModal({
 
   const getPlanState = (planKey) => {
     const isCurrent = currentPlan === planKey;
+    const isCurrentSelection = isCurrent && currentInterval === getBillingInterval();
 
     const overLimit = !canSwitchTo(planKey);
 
-    // 🔴 Trial override
+    if (isLockedSubscription) {
+      return {
+        isCurrent,
+        overLimit,
+        buttonLabel: overLimit
+          ? "Over limits"
+          : isCurrent
+          ? "Reactivate plan"
+          : "Subscribe",
+        disabled: overLimit,
+        disabledReason: overLimit
+          ? "You currently have more team members or storage than this plan allows for"
+          : "",
+      };
+    }
+
     if (isTrialing) {
       return {
         isCurrent,
         overLimit,
-        buttonLabel: "Upgrade",
-        disabled: false,
+        buttonLabel: overLimit
+          ? "Over limits"
+          : isCurrentSelection
+          ? "Continue with Current Plan"
+          : "Switch Trial Plan",
+        disabled: overLimit,
+        disabledReason: overLimit
+          ? "You currently have more team members or storage than this plan allows for"
+          : "",
       };
     }
 
@@ -135,7 +179,30 @@ export default function ChoosePlanModal({
         isCurrent,
         overLimit,
         buttonLabel: "Reactivate plan",
-        disabled: false,
+        disabled: overLimit,
+        disabledReason: overLimit
+          ? "You currently have more team members or storage than this plan allows for"
+          : "",
+      };
+    }
+
+    if (isActiveSubscription && isCurrent && !isCurrentSelection) {
+      return {
+        isCurrent,
+        overLimit,
+        buttonLabel: "Unavailable",
+        disabled: true,
+        disabledReason: "Changing billing interval is not supported yet.",
+      };
+    }
+
+    if (isActiveSubscription && !isCurrent && !isHigherPlan(planKey)) {
+      return {
+        isCurrent,
+        overLimit,
+        buttonLabel: "Unavailable",
+        disabled: true,
+        disabledReason: "Downgrades are not supported yet.",
       };
     }
 
@@ -150,23 +217,100 @@ export default function ChoosePlanModal({
         ? "Continue with Current Plan"
         : "Switch Plan",
       disabled: overLimit,
+      disabledReason: overLimit
+        ? "You currently have more team members or storage than this plan allows for"
+        : "",
     };
+  };
+
+  const openPlanCheckout = ({
+    payment,
+    summary,
+    planKey,
+    purpose,
+    description,
+  }) => {
+    const subscriptionId =
+      payment?.subscriptionId ||
+      payment?.subscriptionID ||
+      payment?.id;
+    const orderId = payment?.orderID || payment?.orderId;
+    const amount = payment?.amount || summary?.cycleAmount;
+    const currency = payment?.currency || summary?.currency;
+
+    if (!subscriptionId && !orderId) {
+      throw new Error("Invalid payment response.");
+    }
+
+    openCheckout({
+      key: payment?.key,
+      orderId,
+      amount,
+      currency,
+      subscriptionId,
+      name: activeWorkspace.name,
+      workspaceId: activeWorkspace._id,
+      purpose,
+      description,
+      brandingColor,
+      onSuccess: async () => {
+        if (showPaymentSuccessModal) {
+          setPendingSuccessPlan(planKey);
+          setSuccessModalContent(DEFAULT_SUCCESS_MODAL_CONTENT);
+          setIsPaymentSuccessOpen(true);
+          return;
+        }
+
+        await refreshWorkspacePlan(activeWorkspace._id);
+        setChosenPlan(planKey);
+        onSuccess?.();
+      },
+      onFailure: () => {
+        setIsPaymentFailureOpen(true);
+      },
+      onDismiss: () => {
+        setIsPaymentFailureOpen(true);
+      },
+    });
+  };
+
+  const activatePlanCheckout = async (planKey, purpose) => {
+    const res = await activateSubscriptionApi(activeWorkspace._id, {
+      activePlan: planKey,
+      interval: getBillingInterval(),
+      purpose,
+      additionalStorageMinutes,
+    });
+
+    openPlanCheckout({
+      payment: res?.data?.razorpay,
+      summary: res?.data?.summary,
+      planKey,
+      purpose,
+      description: `${planKey.replace("_", " ")} plan`,
+    });
   };
 
   const handleChoosePlan = async (planKey) => {
     if (!activeWorkspace?._id) return;
 
     const isCurrent = currentPlan === planKey;
+    const isCurrentSelection = isCurrent && currentInterval === getBillingInterval();
     const overLimit = !canSwitchTo(planKey);
 
     if (overLimit) {
       return;
     }
 
-    if (isCurrent && isScheduledForCancellation) {
+    if (isLockedSubscription) {
       try {
         setLoadingPlan(planKey);
-        await reactivateSubscriptionApi(activeWorkspace._id);
+        const res = await reactivateSubscriptionApi(activeWorkspace._id);
+
+        if (res?.data?.requiresActivation) {
+          await activatePlanCheckout(planKey, "resubscribe");
+          return;
+        }
 
         if (showPaymentSuccessModal) {
           setPendingSuccessPlan(planKey);
@@ -188,7 +332,37 @@ export default function ChoosePlanModal({
       }
     }
 
-    if (isCurrent) {
+    if (isCurrent && isScheduledForCancellation) {
+      try {
+        setLoadingPlan(planKey);
+        const res = await reactivateSubscriptionApi(activeWorkspace._id);
+
+        if (res?.data?.requiresActivation) {
+          await activatePlanCheckout(planKey, "resubscribe");
+          return;
+        }
+
+        if (showPaymentSuccessModal) {
+          setPendingSuccessPlan(planKey);
+          setSuccessModalContent(REACTIVATION_SUCCESS_MODAL_CONTENT);
+          setIsPaymentSuccessOpen(true);
+          return;
+        }
+
+        await refreshWorkspacePlan(activeWorkspace._id);
+        await setChosenPlan?.(planKey);
+        onSuccess?.();
+        return;
+      } catch (err) {
+        console.error("Plan reactivation failed", err);
+        showErrorToast(getApiErrorMessage(err, "We couldn't reactivate your plan. Please try again."));
+        return;
+      } finally {
+        setLoadingPlan(null);
+      }
+    }
+
+    if (isCurrentSelection) {
       onClose?.();
       return;
     }
@@ -196,11 +370,11 @@ export default function ChoosePlanModal({
     try {
       setLoadingPlan(planKey);
 
-      if (!trialUsed) {
+      if (!trialUsed || isTrialing) {
 
         await startTrialApi(activeWorkspace._id, {
           activePlan: planKey,
-          interval: isAnnual ? "yearly" : "monthly",
+          interval: getBillingInterval(),
         });
 
         setChosenPlan(planKey);
@@ -210,56 +384,27 @@ export default function ChoosePlanModal({
         return;
       }
 
-      const res = await activateSubscriptionApi(activeWorkspace._id, {
-        activePlan: planKey,
-        interval: isAnnual ? "yearly" : "monthly",
-        purpose: "subscribe",
-        additionalStorageMinutes,
-      });
+      if (isActiveSubscription) {
+        if (!isHigherPlan(planKey)) {
+          showErrorToast("Downgrades are not supported yet.");
+          return;
+        }
 
-      const payment = res?.data?.razorpay;
-      const summary = res?.data?.summary;
-      const subscriptionId =
-        payment?.subscriptionId ||
-        payment?.subscriptionID ||
-        payment?.id ||
-        res?.data?.subscriptionId;
-      const orderId = payment?.orderID || payment?.orderId;
-      const amount = payment?.amount || summary?.cycleAmount;
-      const currency = payment?.currency || summary?.currency;
+        const res = await upgradePlanApi(activeWorkspace._id, {
+          activePlan: planKey,
+        });
 
-      if (!subscriptionId && !orderId) {
-        throw new Error("Invalid payment order response.");
+        openPlanCheckout({
+          payment: res?.data?.razorpay,
+          summary: res?.data?.summary,
+          planKey,
+          purpose: "upgrade",
+          description: `Upgrade to ${planKey.replace("_", " ")}`,
+        });
+        return;
       }
 
-      openCheckout({
-        orderId,
-        amount,
-        currency,
-        subscriptionId,
-        name: activeWorkspace.name,
-        workspaceId: activeWorkspace._id,
-        purpose: "subscribe",
-        brandingColor,
-        onSuccess: async () => {
-          if (showPaymentSuccessModal) {
-            setPendingSuccessPlan(planKey);
-            setSuccessModalContent(DEFAULT_SUCCESS_MODAL_CONTENT);
-            setIsPaymentSuccessOpen(true);
-            return;
-          }
-
-          await refreshWorkspacePlan(activeWorkspace._id);
-          setChosenPlan(planKey);
-          onSuccess?.();
-        },
-        onFailure: () => {
-          setIsPaymentFailureOpen(true);
-        },
-        onDismiss: () => {
-          setIsPaymentFailureOpen(true);
-        },
-      });
+      await activatePlanCheckout(planKey, "subscribe");
 
     } catch (err) {
       console.error("Plan selection failed", err);
@@ -354,6 +499,7 @@ export default function ChoosePlanModal({
             ]}
             buttonLabel={getPlanState("freelancer").buttonLabel}
             disabled={getPlanState("freelancer").disabled}
+            disabledReason={getPlanState("freelancer").disabledReason}
             onClick={() => handleChoosePlan("freelancer")}
             loading={loadingPlan === "freelancer"}
           />
@@ -375,6 +521,7 @@ export default function ChoosePlanModal({
             ]}
             buttonLabel={getPlanState("team").buttonLabel}
             disabled={getPlanState("team").disabled}
+            disabledReason={getPlanState("team").disabledReason}
             onClick={() => handleChoosePlan("team")}
             loading={loadingPlan === "team"}
           />
@@ -394,6 +541,7 @@ export default function ChoosePlanModal({
             onClick={() => handleChoosePlan("team_plus")}
             buttonLabel={getPlanState("team_plus").buttonLabel}
             disabled={getPlanState("team_plus").disabled}
+            disabledReason={getPlanState("team_plus").disabledReason}
             loading={loadingPlan === "team_plus"}
           />
         </div>
@@ -445,6 +593,7 @@ function PricingCard({ title,
   buttonLabel,
   brandingColor,
   disabled,
+  disabledReason,
   onClick,
   loading, }) {
   return (
@@ -481,11 +630,7 @@ function PricingCard({ title,
             <div className="mt-10 mt-auto flex justify-center ">
               <button
                 data-tooltip-id={`tooltip-${title}`}
-                data-tooltip-content={
-                  buttonLabel === "Over limits"
-                    ? "You currently have more team members or storage than this plan allows for"
-                    : ""
-                }
+                data-tooltip-content={disabledReason || ""}
                 onClick={onClick}
                 style={
                   buttonLabel === "Over limits"
@@ -502,7 +647,7 @@ function PricingCard({ title,
               >
                 {loading ? "Starting..." : buttonLabel}
               </button>
-              {buttonLabel === "Over limits" && (
+              {disabledReason && (
                 <Tooltip
                   id={`tooltip-${title}`}
                   place="top"

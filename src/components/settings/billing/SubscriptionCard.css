@@ -127,6 +127,16 @@
   margin-top: -1px;
 }
 
+.sub-cancel-notice {
+  margin-top: 18px;
+  border: 1px solid rgba(249, 239, 56, 0.3);
+  background: rgba(249, 239, 56, 0.08);
+  color: #f5ef8a;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
 /* ----- Dividers ----- */
 .sub-divider {
   height: 1px;

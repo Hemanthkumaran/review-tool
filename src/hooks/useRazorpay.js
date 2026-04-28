@@ -2,11 +2,13 @@ import { showErrorToast } from "../helpers/showToast";
 
 export function useRazorpay() {
   const openCheckout = ({
+    key,
     orderId,
     amount,
     subscriptionId,
     currency,
     name,
+    description = "Workspace upgrade",
     email,
     workspaceId,
     purpose = "upgrade",
@@ -26,9 +28,9 @@ export function useRazorpay() {
     }
 
     const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID, // ✅ KEY ID only
+      key: key || import.meta.env.VITE_RAZORPAY_KEY_ID,
       name: "CutJamm",
-      description: "Workspace upgrade",
+      description,
 
       prefill: {
         name,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Range } from "react-range";
 import { addStorageApi } from "../../../services/api";
+import { useRazorpay } from "../../../hooks/useRazorpay";
 import { useWorkspace } from "../../../context/WorkspaceContext";
 import AppLoader from "../../common/AppLoader";
 import ConfirmPlanModal from "../../modals/ConfirmPlanModal";
@@ -14,11 +15,14 @@ const MIN = 100;
 const MAX = 2000;
 
 export default function StorageSlider({ setActive }) {
-  const { ownerWorkspace, ownerWorkspacePlan, billingLoading, refreshOwnerWorkspacePlan } = useWorkspace();
+  const { openCheckout } = useRazorpay();
+  const { ownerWorkspace, ownerWorkspacePlan, billingLoading, brandingColor, refreshOwnerWorkspacePlan } = useWorkspace();
 
   const [values, setValues] = useState([MIN]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [storageOrder, setStorageOrder] = useState(null);
+  const [storageOrderLoading, setStorageOrderLoading] = useState(false);
   
   const subscription = ownerWorkspacePlan?.subscription;
   const addons = subscription?.addons || [];
@@ -61,24 +65,64 @@ export default function StorageSlider({ setActive }) {
     setValues([currentTotalStorage]);
   }, [currentTotalStorage, subscription]);
 
+  useEffect(() => {
+    setStorageOrder(null);
+  }, [increaseMinutes]);
 
-  const handleUpgrade = async () => {
-    if (!ownerWorkspace?._id) return;
-    setShowConfirm(false);
+  const handleOpenConfirm = async () => {
+    if (!ownerWorkspace?._id || increaseMinutes <= 0 || storageOrderLoading) return;
 
     try {
-      await addStorageApi(ownerWorkspace._id, {
+      setStorageOrderLoading(true);
+      const res = await addStorageApi(ownerWorkspace._id, {
         additionalMinutes: increaseMinutes,
       });
 
-      await refreshOwnerWorkspacePlan();
-      setShowModal(true);
+      setStorageOrder(res?.data);
+      setShowConfirm(true);
     } catch (e) {
-      showErrorToast(getApiErrorMessage(e, "Payment failed. Please try again."));
+      showErrorToast(getApiErrorMessage(e, "We couldn't prepare your storage upgrade. Please try again."));
+    } finally {
+      setStorageOrderLoading(false);
     }
   };
 
-  const isDisabled = subscription?.status == "trialing";
+  const handleUpgrade = async () => {
+    const order = storageOrder?.razorpay;
+    const orderId = order?.orderID || order?.orderId;
+
+    if (!orderId || !order?.amount || !order?.currency) {
+      showErrorToast("Payment details are missing. Please try again.");
+      return;
+    }
+
+    setShowConfirm(false);
+
+    openCheckout({
+      key: order?.key,
+      orderId,
+      amount: order.amount,
+      currency: order.currency,
+      name: ownerWorkspace.name,
+      workspaceId: ownerWorkspace._id,
+      purpose: "storage",
+      description: `${increaseMinutes} minutes storage top-up`,
+      brandingColor,
+      onSuccess: async () => {
+        await refreshOwnerWorkspacePlan();
+        setStorageOrder(null);
+        setShowModal(true);
+      },
+      onFailure: () => {
+        showErrorToast("Payment failed. Please try again.");
+      },
+      onDismiss: () => {
+        showErrorToast("Payment was not completed.");
+      },
+    });
+  };
+
+  const isDisabled = subscription?.status == "trialing" || increaseMinutes <= 0 || storageOrderLoading;
 
   if (billingLoading) return <AppLoader />;
 
@@ -211,11 +255,11 @@ export default function StorageSlider({ setActive }) {
         <div className="plan-action">
           <button
             disabled={isDisabled}
-            onClick={() => setShowConfirm(true)}
+            onClick={handleOpenConfirm}
             className="change-btn"
             style={{ fontFamily:'Gilroy-SemiBold', opacity: isDisabled ? 0.5 : 1 }}
           >
-            Add storage
+            {storageOrderLoading ? "Preparing..." : "Add storage"}
           </button>
         </div>
       </div>
@@ -237,6 +281,8 @@ export default function StorageSlider({ setActive }) {
         decreaseMinutes={decreaseMinutes}
         costPerMinute={costPerMinute}
         addons={addons}
+        payNowAmount={storageOrder?.summary?.proratedAmount ?? extraCost}
+        confirmLoading={storageOrderLoading}
       />
       <FeatureLockedModal
         open={showModal}
