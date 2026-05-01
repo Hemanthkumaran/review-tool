@@ -21,9 +21,10 @@ export default function ConfirmPlanModal({
   addons,
   payNowAmount = newAdditonalCost,
   confirmLoading = false,
+  forceConfirmLabel = false,
 }) {
   
-  const payNow = payNowAmount > 0;
+  const payNow = payNowAmount > 0 && !forceConfirmLabel;
 
   return (
     <Modal
@@ -96,8 +97,8 @@ export default function ConfirmPlanModal({
           ))}
           {newAdditionalStorage > 0 && (
             <div style={{ color:"#BFBFBF", fontSize:14 }} className="flex justify-between mb-4">
-              <span>Additional storage (+{newAdditionalStorage} min)</span>
-              <span>+${newAdditonalCost.toFixed(2)}</span>
+              <span>Additional storage total ({newAdditionalStorage} min)</span>
+              <span>${(newAdditionalStorage * costPerMinute).toFixed(2)}</span>
             </div>
           )}
 
@@ -131,7 +132,7 @@ export default function ConfirmPlanModal({
         </button>
         <button className="confirm-btn" onClick={onConfirm} disabled={confirmLoading}>
           {confirmLoading
-            ? "Preparing checkout..."
+            ? "Updating..."
             : payNow
             ? `Pay $${payNowAmount.toFixed(2)} to upgrade`
             : "Confirm changes"}

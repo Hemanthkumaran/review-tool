@@ -6,7 +6,10 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import { useEffect, useState } from "react";
 import SubscriptionModal from "../modals/SubscriptionModal";
 import { constants } from "../../helpers/enum";
-import { ActivateIcon, Confetti } from "../../assets/svgs/SvgComponents";
+import { ActivateIcon, Confetti, LockIcon, PaymentFailureIcon } from "../../assets/svgs/SvgComponents";
+
+const BLOCKED_SUBSCRIPTION_STATUSES = ["none", "inactive", "expired", "locked"];
+const BLOCKED_MODAL_STEPS = ["trialStarted", "welcomeAboard", "choosePlan"];
 
 export default function DashboardLayout() {
   const { user, profileLoading } = useUser();
@@ -31,24 +34,23 @@ export default function DashboardLayout() {
     subscriptionStatus !== undefined &&
     userAccess !== undefined;
 
-  const BLOCKED_STEPS = ["trialStarted", "welcomeAboard", "choosePlan"];
+  const isTrialEndedForOwner =
+    userAccess === constants.OWNER &&
+    trialUsed &&
+    BLOCKED_SUBSCRIPTION_STATUSES.includes(subscriptionStatus);
 
   useEffect(() => {
     if (!isWorkspaceReady) return;
 
     // 🚫 DO NOT override success modals
-    if (BLOCKED_STEPS.includes(modalStep)) return;
+    if (BLOCKED_MODAL_STEPS.includes(modalStep)) return;
 
     if (
       subscriptionStatus === "active" ||
       subscriptionStatus === "trialing"
     ) {
       setModalStep(null);
-    } else if (
-      subscriptionStatus === "none" ||
-      subscriptionStatus === "inactive" ||
-      subscriptionStatus === "expired"
-    ) {
+    } else if (BLOCKED_SUBSCRIPTION_STATUSES.includes(subscriptionStatus)) {
       setModalStep("noPlan");
     }
   }, [isWorkspaceReady, subscriptionStatus, modalStep]);
@@ -76,27 +78,41 @@ export default function DashboardLayout() {
         <SubscriptionModal
           open={true}
           title={
-            userAccess === constants.OWNER
+            isTrialEndedForOwner
+              ? "Your 7-day free trial has ended"
+              : userAccess === constants.OWNER
               ? trialUsed
                 ? "You don't have an active plan"
                 : "Activate your workspace"
               : "No active plan switch workspace"
           }
           subtitle={
-            userAccess === constants.OWNER
+            isTrialEndedForOwner
+              ? "Pick a plan to continue using your workspace."
+              : userAccess === constants.OWNER
               ? trialUsed
                 ? "Choose a plan to continue using this workspace."
                 : "Select a 7-day free trial plan so we can set up your workspace for use."
               : ""
           }
           ModalImg={
-            userAccess === constants.OWNER
+            isTrialEndedForOwner
+              ? <PaymentFailureIcon />
+              : userAccess === constants.OWNER
               ? <ActivateIcon />
               : <Confetti />
           }
-          buttonTitle="Choose plan"
+          buttonTitle={isTrialEndedForOwner ? "See options" : "Choose plan"}
           onBtnClick={() => setModalStep("choosePlan")}
           showBtn={userAccess === constants.OWNER}
+          maxWidthClassName={isTrialEndedForOwner ? "max-w-[720px]" : "max-w-md"}
+          topRightBadge={
+            isTrialEndedForOwner ? (
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#F9EF38]">
+                <LockIcon />
+              </span>
+            ) : null
+          }
         />
       )}
 

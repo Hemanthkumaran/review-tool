@@ -16,6 +16,7 @@ export default function SubscriptionModal({
   footerLinkOnClick,
   maxWidthClassName = "max-w-md",
   zIndexClassName = "z-40",
+  topRightBadge = null,
 }) {
   
   if (!open) return null;
@@ -37,6 +38,11 @@ export default function SubscriptionModal({
       <div className={`relative z-10 w-full ${maxWidthClassName} rounded-[20px] bg-[#131313] text-white border border-[#24262A] shadow-[0_10px_30px_rgba(0,0,0,0.35)] overflow-hidden`}>
         {/* subtle inner glow / vignette */}
         <div className="cursor-pointer absolute inset-0 rounded-[20px] bg-[radial-gradient(120%_80%_at_50%_-20%,rgba(255,255,255,0.06),rgba(0,0,0,0)_55%)]" />
+        {topRightBadge && (
+          <div className="absolute right-8 top-8 z-20">
+            {topRightBadge}
+          </div>
+        )}
         {/* Close button */}
         {/* <button
           onClick={onClose}

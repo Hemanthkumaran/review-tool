@@ -4,15 +4,15 @@ import ToggleButton from "../../components/buttons/ToggleButton";
 import { useWorkspace } from "../../context/WorkspaceContext";
 import {
   activateSubscriptionApi,
+  changePlanApi,
   reactivateSubscriptionApi,
   startTrialApi,
-  upgradePlanApi,
 } from "../../services/api";
 import { useRazorpay } from "../../hooks/useRazorpay";
 import SubscriptionModal from "../../components/modals/SubscriptionModal";
 import { Tooltip } from "react-tooltip";
 import { getApiErrorMessage, showErrorToast } from "../../helpers/showToast";
-import { PaymentFailureIcon } from "../../assets/svgs/SvgComponents";
+import { LockIcon, PaymentFailureIcon } from "../../assets/svgs/SvgComponents";
 
 const modalStyles = {
   overlay: {
@@ -38,12 +38,6 @@ const PLAN_MEMBER_LIMITS = {
   team_plus: 10,
 };
 
-const PLAN_RANK = {
-  freelancer: 1,
-  team: 2,
-  team_plus: 3,
-};
-
 const DEFAULT_SUCCESS_MODAL_CONTENT = {
   title: "Plan changed successfully",
   subtitle: "Your subscription has been updated successfully.",
@@ -52,6 +46,26 @@ const DEFAULT_SUCCESS_MODAL_CONTENT = {
 const REACTIVATION_SUCCESS_MODAL_CONTENT = {
   title: "Plan reactivated successfully",
   subtitle: "Your subscription has been reactivated successfully.",
+};
+
+const SUBSCRIPTION_CHECKOUT_CONFIG = {
+  display: {
+    blocks: {
+      creditCard: {
+        name: "Credit Card",
+        instruments: [
+          {
+            method: "card",
+            types: ["credit"],
+          },
+        ],
+      },
+    },
+    sequence: ["block.creditCard"],
+    preferences: {
+      show_default_blocks: false,
+    },
+  },
 };
 
 export default function ChoosePlanModal({
@@ -98,7 +112,10 @@ export default function ChoosePlanModal({
   const currentPlan = subscription?.activePlan;
   const isActiveSubscription = subscription?.status === "active";
   const isScheduledForCancellation = Boolean(subscription?.scheduledCancellation);
-  const isLockedSubscription = subscription?.status === "locked";
+  const requiresPaidActivation =
+    trialUsed &&
+    subscription?.status !== "active" &&
+    subscription?.status !== "trialing";
 
   const canSwitchTo = (planKey) => {
     const limit = PLAN_MEMBER_LIMITS[planKey];
@@ -113,11 +130,6 @@ export default function ChoosePlanModal({
     interval === "yearly" ? "annual" : interval;
 
   const currentInterval = normalizeInterval(subscription?.interval);
-
-  const isHigherPlan = (planKey) => {
-    if (!currentPlan) return true;
-    return PLAN_RANK[planKey] > PLAN_RANK[currentPlan];
-  };
 
   const handlePaymentSuccessClose = async () => {
     const completedPlan = pendingSuccessPlan;
@@ -141,22 +153,6 @@ export default function ChoosePlanModal({
     const isCurrentSelection = isCurrent && currentInterval === getBillingInterval();
 
     const overLimit = !canSwitchTo(planKey);
-
-    if (isLockedSubscription) {
-      return {
-        isCurrent,
-        overLimit,
-        buttonLabel: overLimit
-          ? "Over limits"
-          : isCurrent
-          ? "Reactivate plan"
-          : "Subscribe",
-        disabled: overLimit,
-        disabledReason: overLimit
-          ? "You currently have more team members or storage than this plan allows for"
-          : "",
-      };
-    }
 
     if (isTrialing) {
       return {
@@ -186,6 +182,16 @@ export default function ChoosePlanModal({
       };
     }
 
+    if (isScheduledForCancellation) {
+      return {
+        isCurrent,
+        overLimit,
+        buttonLabel: "Unavailable",
+        disabled: true,
+        disabledReason: "Reactivate your current plan before changing plans.",
+      };
+    }
+
     if (isActiveSubscription && isCurrent && !isCurrentSelection) {
       return {
         isCurrent,
@@ -196,16 +202,6 @@ export default function ChoosePlanModal({
       };
     }
 
-    if (isActiveSubscription && !isCurrent && !isHigherPlan(planKey)) {
-      return {
-        isCurrent,
-        overLimit,
-        buttonLabel: "Unavailable",
-        disabled: true,
-        disabledReason: "Downgrades are not supported yet.",
-      };
-    }
-
     return {
       isCurrent,
       overLimit,
@@ -213,7 +209,9 @@ export default function ChoosePlanModal({
         ? "Over limits"
         : !trialUsed
         ? "Start free trial"
-        : isCurrent
+        : requiresPaidActivation
+        ? "Subscribe"
+        : isCurrent && !requiresPaidActivation
         ? "Continue with Current Plan"
         : "Switch Plan",
       disabled: overLimit,
@@ -253,6 +251,7 @@ export default function ChoosePlanModal({
       purpose,
       description,
       brandingColor,
+      checkoutConfig: subscriptionId ? SUBSCRIPTION_CHECKOUT_CONFIG : undefined,
       onSuccess: async () => {
         if (showPaymentSuccessModal) {
           setPendingSuccessPlan(planKey);
@@ -291,6 +290,19 @@ export default function ChoosePlanModal({
     });
   };
 
+  const showPlanSuccess = async (planKey, content = DEFAULT_SUCCESS_MODAL_CONTENT) => {
+    if (showPaymentSuccessModal) {
+      setPendingSuccessPlan(planKey);
+      setSuccessModalContent(content);
+      setIsPaymentSuccessOpen(true);
+      return;
+    }
+
+    await refreshWorkspacePlan(activeWorkspace._id);
+    await setChosenPlan?.(planKey);
+    onSuccess?.();
+  };
+
   const handleChoosePlan = async (planKey) => {
     if (!activeWorkspace?._id) return;
 
@@ -302,56 +314,17 @@ export default function ChoosePlanModal({
       return;
     }
 
-    if (isLockedSubscription) {
-      try {
-        setLoadingPlan(planKey);
-        const res = await reactivateSubscriptionApi(activeWorkspace._id);
-
-        if (res?.data?.requiresActivation) {
-          await activatePlanCheckout(planKey, "resubscribe");
-          return;
-        }
-
-        if (showPaymentSuccessModal) {
-          setPendingSuccessPlan(planKey);
-          setSuccessModalContent(REACTIVATION_SUCCESS_MODAL_CONTENT);
-          setIsPaymentSuccessOpen(true);
-          return;
-        }
-
-        await refreshWorkspacePlan(activeWorkspace._id);
-        await setChosenPlan?.(planKey);
-        onSuccess?.();
-        return;
-      } catch (err) {
-        console.error("Plan reactivation failed", err);
-        showErrorToast(getApiErrorMessage(err, "We couldn't reactivate your plan. Please try again."));
-        return;
-      } finally {
-        setLoadingPlan(null);
-      }
-    }
-
     if (isCurrent && isScheduledForCancellation) {
       try {
         setLoadingPlan(planKey);
         const res = await reactivateSubscriptionApi(activeWorkspace._id);
 
         if (res?.data?.requiresActivation) {
-          await activatePlanCheckout(planKey, "resubscribe");
+          await activatePlanCheckout(planKey, "subscribe");
           return;
         }
 
-        if (showPaymentSuccessModal) {
-          setPendingSuccessPlan(planKey);
-          setSuccessModalContent(REACTIVATION_SUCCESS_MODAL_CONTENT);
-          setIsPaymentSuccessOpen(true);
-          return;
-        }
-
-        await refreshWorkspacePlan(activeWorkspace._id);
-        await setChosenPlan?.(planKey);
-        onSuccess?.();
+        await showPlanSuccess(planKey, REACTIVATION_SUCCESS_MODAL_CONTENT);
         return;
       } catch (err) {
         console.error("Plan reactivation failed", err);
@@ -362,7 +335,7 @@ export default function ChoosePlanModal({
       }
     }
 
-    if (isCurrentSelection) {
+    if (isCurrentSelection && !requiresPaidActivation) {
       onClose?.();
       return;
     }
@@ -385,21 +358,24 @@ export default function ChoosePlanModal({
       }
 
       if (isActiveSubscription) {
-        if (!isHigherPlan(planKey)) {
-          showErrorToast("Downgrades are not supported yet.");
+        const res = await changePlanApi(activeWorkspace._id, {
+          activePlan: planKey,
+          additionalStorageMinutes,
+        });
+        const payment = res?.data?.razorpay;
+        const orderId = payment?.orderID || payment?.orderId;
+
+        if (!orderId) {
+          await showPlanSuccess(planKey);
           return;
         }
 
-        const res = await upgradePlanApi(activeWorkspace._id, {
-          activePlan: planKey,
-        });
-
         openPlanCheckout({
-          payment: res?.data?.razorpay,
+          payment,
           summary: res?.data?.summary,
           planKey,
-          purpose: "upgrade",
-          description: `Upgrade to ${planKey.replace("_", " ")}`,
+          purpose: "change_plan",
+          description: `Change plan to ${planKey.replace("_", " ")}`,
         });
         return;
       }
@@ -408,7 +384,6 @@ export default function ChoosePlanModal({
 
     } catch (err) {
       console.error("Plan selection failed", err);
-      onClose?.();
       showErrorToast(getApiErrorMessage(err, "We couldn't start your plan. Please try again."));
     } finally {
       setLoadingPlan(null);
@@ -580,6 +555,11 @@ export default function ChoosePlanModal({
         footerLinkText="reach out to us."
         maxWidthClassName="max-w-[720px]"
         zIndexClassName="z-[100001]"
+        topRightBadge={
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#F9EF38]">
+            <LockIcon />
+          </span>
+        }
       />
     </>
   );

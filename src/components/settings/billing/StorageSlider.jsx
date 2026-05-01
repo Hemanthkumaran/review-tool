@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Range } from "react-range";
-import { addStorageApi } from "../../../services/api";
+import { changePlanApi } from "../../../services/api";
 import { useRazorpay } from "../../../hooks/useRazorpay";
 import { useWorkspace } from "../../../context/WorkspaceContext";
 import AppLoader from "../../common/AppLoader";
@@ -21,8 +21,8 @@ export default function StorageSlider({ setActive }) {
   const [values, setValues] = useState([MIN]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [storageOrder, setStorageOrder] = useState(null);
-  const [storageOrderLoading, setStorageOrderLoading] = useState(false);
+  const [changePlanResponse, setChangePlanResponse] = useState(null);
+  const [changePlanLoading, setChangePlanLoading] = useState(false);
   
   const subscription = ownerWorkspacePlan?.subscription;
   const addons = subscription?.addons || [];
@@ -66,63 +66,72 @@ export default function StorageSlider({ setActive }) {
   }, [currentTotalStorage, subscription]);
 
   useEffect(() => {
-    setStorageOrder(null);
-  }, [increaseMinutes]);
+    setChangePlanResponse(null);
+  }, [safeSelectedAdditionalMinutes]);
 
-  const handleOpenConfirm = async () => {
-    if (!ownerWorkspace?._id || increaseMinutes <= 0 || storageOrderLoading) return;
-
-    try {
-      setStorageOrderLoading(true);
-      const res = await addStorageApi(ownerWorkspace._id, {
-        additionalMinutes: increaseMinutes,
-      });
-
-      setStorageOrder(res?.data);
-      setShowConfirm(true);
-    } catch (e) {
-      showErrorToast(getApiErrorMessage(e, "We couldn't prepare your storage upgrade. Please try again."));
-    } finally {
-      setStorageOrderLoading(false);
-    }
+  const handleOpenConfirm = () => {
+    if (isDisabled) return;
+    setShowConfirm(true);
   };
 
   const handleUpgrade = async () => {
-    const order = storageOrder?.razorpay;
-    const orderId = order?.orderID || order?.orderId;
+    if (!ownerWorkspace?._id || !subscription?.activePlan || changePlanLoading) return;
 
-    if (!orderId || !order?.amount || !order?.currency) {
-      showErrorToast("Payment details are missing. Please try again.");
-      return;
-    }
+    try {
+      setChangePlanLoading(true);
+      const res = await changePlanApi(ownerWorkspace._id, {
+        activePlan: subscription.activePlan,
+        additionalStorageMinutes: safeSelectedAdditionalMinutes,
+      });
 
-    setShowConfirm(false);
+      const order = res?.data?.razorpay;
+      const orderId = order?.orderID || order?.orderId;
 
-    openCheckout({
-      key: order?.key,
-      orderId,
-      amount: order.amount,
-      currency: order.currency,
-      name: ownerWorkspace.name,
-      workspaceId: ownerWorkspace._id,
-      purpose: "storage",
-      description: `${increaseMinutes} minutes storage top-up`,
-      brandingColor,
-      onSuccess: async () => {
+      setChangePlanResponse(res?.data);
+      setShowConfirm(false);
+
+      if (!orderId) {
         await refreshOwnerWorkspacePlan();
-        setStorageOrder(null);
+        setChangePlanResponse(null);
         setShowModal(true);
-      },
-      onFailure: () => {
-        showErrorToast("Payment failed. Please try again.");
-      },
-      onDismiss: () => {
-        showErrorToast("Payment was not completed.");
-      },
-    });
+        return;
+      }
+
+      openCheckout({
+        key: order?.key,
+        orderId,
+        amount: order.amount,
+        currency: order.currency,
+        name: ownerWorkspace.name,
+        workspaceId: ownerWorkspace._id,
+        purpose: "storage",
+        description: `${Math.abs(selectedStorage - currentTotalStorage)} minutes storage change`,
+        brandingColor,
+        onSuccess: async () => {
+          await refreshOwnerWorkspacePlan();
+          setChangePlanResponse(null);
+          setShowModal(true);
+        },
+        onFailure: () => {
+          showErrorToast("Payment failed. Please try again.");
+        },
+        onDismiss: () => {
+          showErrorToast("Payment was not completed.");
+        },
+      });
+    } catch (e) {
+      showErrorToast(getApiErrorMessage(e, "We couldn't update your storage. Please try again."));
+    } finally {
+      setChangePlanLoading(false);
+    }
   };
 
-  const isDisabled = subscription?.status == "trialing" || increaseMinutes <= 0 || storageOrderLoading;
+  const hasStorageChange = safeSelectedAdditionalMinutes !== additionalStorage;
+  const isDisabled =
+    subscription?.status == "trialing" ||
+    !ownerWorkspace?._id ||
+    !hasStorageChange ||
+    changePlanLoading;
 
   if (billingLoading) return <AppLoader />;
 
@@ -259,7 +268,7 @@ export default function StorageSlider({ setActive }) {
             className="change-btn"
             style={{ fontFamily:'Gilroy-SemiBold', opacity: isDisabled ? 0.5 : 1 }}
           >
-            {storageOrderLoading ? "Preparing..." : "Add storage"}
+            {changePlanLoading ? "Updating..." : "Update storage"}
           </button>
         </div>
       </div>
@@ -272,7 +281,7 @@ export default function StorageSlider({ setActive }) {
         currentStorage={currentTotalStorage}
         basePlanStorage={baseStorage}
         basePlanCost={basePlanCost}
-        newAdditionalStorage={increaseMinutes}
+        newAdditionalStorage={safeSelectedAdditionalMinutes}
         newAdditonalCost={extraCost}
         newMonthlyTotal={newMonthlyTotal}
         additionalStorage={additionalStorage}
@@ -281,8 +290,9 @@ export default function StorageSlider({ setActive }) {
         decreaseMinutes={decreaseMinutes}
         costPerMinute={costPerMinute}
         addons={addons}
-        payNowAmount={storageOrder?.summary?.proratedAmount ?? extraCost}
-        confirmLoading={storageOrderLoading}
+        payNowAmount={changePlanResponse?.summary?.proratedAmount ?? extraCost}
+        confirmLoading={changePlanLoading}
+        forceConfirmLabel={!changePlanResponse?.razorpay}
       />
       <FeatureLockedModal
         open={showModal}

@@ -21,7 +21,7 @@ function App() {
       pauseOnHover
       toastClassName={() => "!bg-transparent !shadow-none !p-0 !mb-3"}
       bodyClassName={() => "!m-0 !p-0"}
-      style={{ width: "auto" }}
+      style={{ width: "auto", zIndex: 200000 }}
     />
     </div>;
 }

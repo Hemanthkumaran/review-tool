@@ -313,8 +313,8 @@ export const activateSubscriptionApi = (workspaceID, payload) =>
 export const reactivateSubscriptionApi = (workspaceID) =>
   axiosClient.post(`/billing/reactivateSubscription?workspaceID=${workspaceID}`);
 
-export const upgradePlanApi = (workspaceID, payload) =>
-  axiosClient.post(`/billing/upgradePlan?workspaceID=${workspaceID}`, payload);
+export const changePlanApi = (workspaceID, payload) =>
+  axiosClient.post(`/billing/changePlan?workspaceID=${workspaceID}`, payload);
 
 export const createPaymentOrderApi = (workspaceID, payload) =>
   axiosClient.post(`/billing/createPaymentOrder?workspaceID=${workspaceID}`, payload);
@@ -346,12 +346,6 @@ export const updateWorkspaceApi = (workspaceID, payload) =>
 export const createAddonPaymentApi = async (workspaceId, payload) => 
   axiosClient.post(
     `/billing/createPaymentOrder?workspaceID=${workspaceId}`,
-    payload
-  );
-
-export const addStorageApi = async (workspaceId, payload) =>
-  axiosClient.post(
-    `/billing/addStorage?workspaceID=${workspaceId}`,
     payload
   );
 

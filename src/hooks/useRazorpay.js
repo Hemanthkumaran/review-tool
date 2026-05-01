@@ -15,7 +15,8 @@ export function useRazorpay() {
     onSuccess,
     onFailure,
     onDismiss,
-    brandingColor
+    brandingColor,
+    checkoutConfig,
   }) => {
     if (!window.Razorpay) {
       showErrorToast("Payment service is not ready. Please refresh and try again.");
@@ -57,6 +58,10 @@ export function useRazorpay() {
         },
       },
     };
+
+    if (checkoutConfig) {
+      options.config = checkoutConfig;
+    }
 
     if (orderId) {
       options.order_id = orderId;
