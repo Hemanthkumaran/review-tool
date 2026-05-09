@@ -20,6 +20,14 @@ import SettingsModal from '../../components/settings/SettingsModal';
 import * as Accordion from "@radix-ui/react-accordion";
 import { getApiErrorMessage, showErrorToast, showSuccessToast } from '../../helpers/showToast';
 
+const BLOCKED_SUBSCRIPTION_STATUSES = ["none", "inactive", "expired", "locked"];
+const BLOCKING_MODAL_STEPS = [
+  "trialEnded",
+  "activateWorkspace",
+  "inactiveWorkspace",
+  "accessUnavailable",
+];
+
 export default function WelcomeWorkspace({
   onCreateFolder = () => {},
 }) {
@@ -29,7 +37,17 @@ export default function WelcomeWorkspace({
   const [isSettingModalOpen, setIsSettingModalOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("allFolders");
-  const { activeWorkspace, brandingColor, loading: workspaceLoading, userAccess, billingLoading, setSubscriptionStatus, trialUsed, setTrialUsed } = useWorkspace();
+  const {
+    activeWorkspace,
+    brandingColor,
+    loading: workspaceLoading,
+    userAccess,
+    billingLoading,
+    subscriptionStatus,
+    setSubscriptionStatus,
+    trialUsed,
+    setTrialUsed,
+  } = useWorkspace();
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [chosenPlan, setChosenPlan] = useState(null);
@@ -41,7 +59,15 @@ export default function WelcomeWorkspace({
   });
   // const [modalStep, setModalStep] = useState(null);
   const navigate = useNavigate();
-  const { modalStep, setModalStep } = useOutletContext();
+  const {
+    modalStep,
+    setModalStep,
+    isTrialEndedForOwner = false,
+  } = useOutletContext();
+  const forcePaidActivation =
+    isTrialEndedForOwner ||
+    modalStep === "trialEnded" ||
+    (trialUsed && BLOCKED_SUBSCRIPTION_STATUSES.includes(subscriptionStatus));
 
   
   useEffect(() => {
@@ -105,8 +131,14 @@ export default function WelcomeWorkspace({
       }
 
       // ⭐ NORMAL WORKSPACE SWITCH / LOAD
-      if (status === "none" || status === "inactive" || status === "expired") {
-        setModalStep("noPlan");
+      if (BLOCKED_SUBSCRIPTION_STATUSES.includes(status)) {
+        setModalStep(
+          userAccess === constants.OWNER
+            ? res.data.trialUsed
+              ? "trialEnded"
+              : "activateWorkspace"
+            : "inactiveWorkspace"
+        );
       } else {
         setModalStep(null);
       }
@@ -180,7 +212,7 @@ export default function WelcomeWorkspace({
         </Accordion.Root>
     }
   }
-  const isLocked = modalStep === "noPlan";
+  const isLocked = BLOCKING_MODAL_STEPS.includes(modalStep);
   const isLoading = workspaceLoading || foldersLoading || billingLoading;
   
   // if (isLocked) {
@@ -288,6 +320,7 @@ export default function WelcomeWorkspace({
           getAllFolders(true);   // pass flag to detect post-payment
         }}
         trialUsed={trialUsed}
+        forcePaidActivation={forcePaidActivation}
       />
       {modalStep === "activate" && (
         <SubscriptionModal
@@ -299,15 +332,6 @@ export default function WelcomeWorkspace({
           ModalImg={<ResumeSubIcon/>}
         />
       )}
-      {/* {modalStep === "noPlan" && (
-        <SubscriptionModal
-          open={true}
-          title="You don't have an active plan"
-          subtitle="Choose a plan to continue using your workspace."
-          buttonTitle="Choose plan"
-          onBtnClick={() => setModalStep("choosePlan")}
-        />
-      )} */}
       {modalStep === "trialStarted" && (
         <SubscriptionModal
           open={true}

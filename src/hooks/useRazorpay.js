@@ -28,9 +28,16 @@ export function useRazorpay() {
       return;
     }
 
+    const razorpayKey = key || import.meta.env.VITE_RAZORPAY_KEY_ID;
+
+    if (!razorpayKey) {
+      showErrorToast("Payment key is missing. Please try again.");
+      return;
+    }
+
     const options = {
-      key: key || import.meta.env.VITE_RAZORPAY_KEY_ID,
-      name: "CutJamm",
+      key: razorpayKey,
+      name: "PostJamm",
       description,
 
       prefill: {

@@ -1,7 +1,9 @@
 import axios from "axios";
 
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL || "https://api.test.postjamm.com";
+
 const axiosClient = axios.create({
-  baseURL: "https://api.test.postjamm.com",
+  baseURL: apiBaseURL,
   headers: {
     "Content-Type": "application/json",
   },

@@ -74,6 +74,7 @@ export default function ChoosePlanModal({
   setChosenPlan,
   onSuccess,
   trialUsed,
+  forcePaidActivation = false,
   additionalStorageMinutes = 0,
   showClose = false,
   showPaymentSuccessModal = false,
@@ -113,9 +114,10 @@ export default function ChoosePlanModal({
   const isActiveSubscription = subscription?.status === "active";
   const isScheduledForCancellation = Boolean(subscription?.scheduledCancellation);
   const requiresPaidActivation =
-    trialUsed &&
+    forcePaidActivation ||
+    (trialUsed &&
     subscription?.status !== "active" &&
-    subscription?.status !== "trialing";
+    subscription?.status !== "trialing");
 
   const canSwitchTo = (planKey) => {
     const limit = PLAN_MEMBER_LIMITS[planKey];
@@ -153,6 +155,18 @@ export default function ChoosePlanModal({
     const isCurrentSelection = isCurrent && currentInterval === getBillingInterval();
 
     const overLimit = !canSwitchTo(planKey);
+
+    if (requiresPaidActivation) {
+      return {
+        isCurrent,
+        overLimit,
+        buttonLabel: overLimit ? "Over limits" : "Subscribe",
+        disabled: overLimit,
+        disabledReason: overLimit
+          ? "You currently have more team members or storage than this plan allows for"
+          : "",
+      };
+    }
 
     if (isTrialing) {
       return {
@@ -343,6 +357,11 @@ export default function ChoosePlanModal({
     try {
       setLoadingPlan(planKey);
 
+      if (requiresPaidActivation) {
+        await activatePlanCheckout(planKey, "subscribe");
+        return;
+      }
+
       if (!trialUsed || isTrialing) {
 
         await startTrialApi(activeWorkspace._id, {
@@ -435,10 +454,22 @@ export default function ChoosePlanModal({
         {/* Header */}
         <div className="text-center">
           <h1 style={{ fontFamily: "Gilroy-SemiBold", fontSize: 24 }}>
-            { trialUsed ? "Choose a plan that fits your workflow" : "Choose how you'd like to start" }
+            {
+              requiresPaidActivation
+                ? "Choose a plan to continue using your workspace"
+                : trialUsed
+                ? "Choose a plan that fits your workflow"
+                : "Choose how you'd like to start"
+            }
           </h1>
           <p style={{ fontSize: 12 }}>
-             { trialUsed ? null : "Try any plan for 7 days with no card required." }
+            {
+              requiresPaidActivation
+                ? "Your trial has ended. Subscribe to keep using this workspace."
+                : trialUsed
+                ? null
+                : "Try any plan for 7 days with no card required."
+            }
           </p>
         </div>
 
@@ -523,12 +554,18 @@ export default function ChoosePlanModal({
 
         {/* Footer note */}
         {
-          subscription?.status === "trialing" ? null :
+          subscription?.status === "trialing" && !requiresPaidActivation ? null :
           <div className="flex justify-center mt-6 text-xs">
-            <span style={{ fontFamily: "Gilroy-Bold", marginRight: 4 }}>
-              Note:
-            </span>
-            Billing details will be requested after 7 days.
+            {requiresPaidActivation ? (
+              "You will be redirected to checkout to activate your subscription."
+            ) : (
+              <>
+                <span style={{ fontFamily: "Gilroy-Bold", marginRight: 4 }}>
+                  Note:
+                </span>
+                Billing details will be requested after 7 days.
+              </>
+            )}
           </div>
         }
         

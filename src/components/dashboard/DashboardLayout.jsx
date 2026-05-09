@@ -6,7 +6,7 @@ import { useWorkspace } from "../../context/WorkspaceContext";
 import { useEffect, useState } from "react";
 import SubscriptionModal from "../modals/SubscriptionModal";
 import { constants } from "../../helpers/enum";
-import { ActivateIcon, Confetti, LockIcon, PaymentFailureIcon } from "../../assets/svgs/SvgComponents";
+import { ActivateIcon, FeatureLockIcon, LockIcon, PaymentFailureIcon, ResumeSubIcon } from "../../assets/svgs/SvgComponents";
 
 const BLOCKED_SUBSCRIPTION_STATUSES = ["none", "inactive", "expired", "locked"];
 const BLOCKED_MODAL_STEPS = ["trialStarted", "welcomeAboard", "choosePlan"];
@@ -23,9 +23,12 @@ export default function DashboardLayout() {
     userAccess,
     subscriptionStatus,
     workspacePlan,
-    trialUsed
+    trialUsed,
+    workspaceAccessDenied,
+    goToMyWorkspace,
   } = useWorkspace();
-
+  console.log(workspacePlan,'workspacePlan');
+  
   const [modalStep, setModalStep] = useState(null);
 
   // ✅ Stable ready state (prevents flicker)
@@ -34,10 +37,13 @@ export default function DashboardLayout() {
     subscriptionStatus !== undefined &&
     userAccess !== undefined;
 
-  const isTrialEndedForOwner =
-    userAccess === constants.OWNER &&
-    trialUsed &&
+  const isOwner = userAccess === constants.OWNER;
+  const isBlockedSubscription =
     BLOCKED_SUBSCRIPTION_STATUSES.includes(subscriptionStatus);
+  const isTrialEndedForOwner =
+    isOwner &&
+    trialUsed &&
+    isBlockedSubscription;
 
   useEffect(() => {
     if (!isWorkspaceReady) return;
@@ -45,15 +51,72 @@ export default function DashboardLayout() {
     // 🚫 DO NOT override success modals
     if (BLOCKED_MODAL_STEPS.includes(modalStep)) return;
 
-    if (
-      subscriptionStatus === "active" ||
-      subscriptionStatus === "trialing"
-    ) {
-      setModalStep(null);
-    } else if (BLOCKED_SUBSCRIPTION_STATUSES.includes(subscriptionStatus)) {
-      setModalStep("noPlan");
+    if (workspaceAccessDenied) {
+      setModalStep("accessUnavailable");
+      return;
     }
-  }, [isWorkspaceReady, subscriptionStatus, modalStep]);
+
+    if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
+      setModalStep(null);
+    } else if (isBlockedSubscription) {
+      setModalStep(
+        isOwner
+          ? trialUsed
+            ? "trialEnded"
+            : "activateWorkspace"
+          : "inactiveWorkspace"
+      );
+    }
+  }, [
+    isWorkspaceReady,
+    workspaceAccessDenied,
+    subscriptionStatus,
+    isBlockedSubscription,
+    isOwner,
+    trialUsed,
+    modalStep,
+  ]);
+
+  const blockingModalConfig = {
+    trialEnded: {
+      title: "Your 7-day free trial has ended",
+      subtitle: "Pick a plan to continue using your workspace.",
+      ModalImg: <PaymentFailureIcon />,
+      buttonTitle: "See options",
+      onBtnClick: () => setModalStep("choosePlan"),
+      maxWidthClassName: "max-w-[560px]",
+      topRightBadge: (
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#F9EF38]">
+          <LockIcon />
+        </span>
+      ),
+    },
+    activateWorkspace: {
+      title: "Activate your workspace!",
+      subtitle:
+        "Select a 7-day free trial plan so we can set up your workspace for use.",
+      ModalImg: <ActivateIcon />,
+      buttonTitle: "See options",
+      onBtnClick: () => setModalStep("choosePlan"),
+      maxWidthClassName: "max-w-md",
+    },
+    inactiveWorkspace: {
+      title: "This workspace is inactive",
+      subtitle: "Please contact the workspace owner to restore access.",
+      ModalImg: <ResumeSubIcon />,
+      buttonTitle: "Go to my workspace",
+      onBtnClick: goToMyWorkspace,
+      maxWidthClassName: "max-w-md",
+    },
+    accessUnavailable: {
+      title: "Oops! Access unavailable to this workspace",
+      subtitle: "Contact the admin if this seems incorrect.",
+      ModalImg: <FeatureLockIcon />,
+      buttonTitle: "Go to my workspace",
+      onBtnClick: goToMyWorkspace,
+      maxWidthClassName: "max-w-md",
+    },
+  }[modalStep];
 
   // ✅ Loader FIRST (prevents UI flicker)
   if (loading || profileLoading || !isWorkspaceReady) {
@@ -74,49 +137,21 @@ export default function DashboardLayout() {
       />
 
       {/* ✅ Modal (now stable, no flicker) */}
-      {modalStep === "noPlan" && (
+      {blockingModalConfig && (
         <SubscriptionModal
           open={true}
-          title={
-            isTrialEndedForOwner
-              ? "Your 7-day free trial has ended"
-              : userAccess === constants.OWNER
-              ? trialUsed
-                ? "You don't have an active plan"
-                : "Activate your workspace"
-              : "No active plan switch workspace"
-          }
-          subtitle={
-            isTrialEndedForOwner
-              ? "Pick a plan to continue using your workspace."
-              : userAccess === constants.OWNER
-              ? trialUsed
-                ? "Choose a plan to continue using this workspace."
-                : "Select a 7-day free trial plan so we can set up your workspace for use."
-              : ""
-          }
-          ModalImg={
-            isTrialEndedForOwner
-              ? <PaymentFailureIcon />
-              : userAccess === constants.OWNER
-              ? <ActivateIcon />
-              : <Confetti />
-          }
-          buttonTitle={isTrialEndedForOwner ? "See options" : "Choose plan"}
-          onBtnClick={() => setModalStep("choosePlan")}
-          showBtn={userAccess === constants.OWNER}
-          maxWidthClassName={isTrialEndedForOwner ? "max-w-[720px]" : "max-w-md"}
-          topRightBadge={
-            isTrialEndedForOwner ? (
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-[#F9EF38]">
-                <LockIcon />
-              </span>
-            ) : null
-          }
+          title={blockingModalConfig.title}
+          subtitle={blockingModalConfig.subtitle}
+          ModalImg={blockingModalConfig.ModalImg}
+          buttonTitle={blockingModalConfig.buttonTitle}
+          onBtnClick={blockingModalConfig.onBtnClick}
+          showBtn={true}
+          maxWidthClassName={blockingModalConfig.maxWidthClassName}
+          topRightBadge={blockingModalConfig.topRightBadge}
         />
       )}
 
-      <Outlet context={{ modalStep, setModalStep }} />
+      <Outlet context={{ modalStep, setModalStep, isTrialEndedForOwner }} />
     </div>
   );
 }

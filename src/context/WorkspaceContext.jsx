@@ -21,6 +21,7 @@ export const WorkspaceProvider = ({ children }) => {
 
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [trialUsed, setTrialUsed] = useState(false);
+  const [workspaceAccessDenied, setWorkspaceAccessDenied] = useState(false);
 
   const userAccess = activeWorkspace?.permissionType == undefined ? constants.REVIEWER : activeWorkspace?.permissionType;
   
@@ -66,8 +67,13 @@ export const WorkspaceProvider = ({ children }) => {
     if (!workspaceIdFromUrl) return;
 
     const found = workspaces.find(w => w._id === workspaceIdFromUrl);
-    if (found && found._id !== activeWorkspace?._id) {
-      setActiveWorkspace(found);
+    if (found) {
+      setWorkspaceAccessDenied(false);
+      if (found._id !== activeWorkspace?._id) {
+        setActiveWorkspace(found);
+      }
+    } else {
+      setWorkspaceAccessDenied(true);
     }
   }, [workspaceIdFromUrl, workspaces]);
 
@@ -114,7 +120,8 @@ export const WorkspaceProvider = ({ children }) => {
       const ownerWorkspaces = list.filter(
         (ws) => ws.permissionType === constants.OWNER
       );
-      setOwnerWorkspace(ownerWorkspaces[0]);
+      const primaryOwnerWorkspace = ownerWorkspaces[0];
+      setOwnerWorkspace(primaryOwnerWorkspace);
       setWorkspaces(list);
 
       // setActiveWorkspace(prev => prev || list[0] || null);
@@ -124,9 +131,17 @@ export const WorkspaceProvider = ({ children }) => {
       if (workspaceIdFromUrl) {
         next = list.find(w => w._id === workspaceIdFromUrl);
       }
+      const requestedWorkspaceInaccessible = Boolean(workspaceIdFromUrl && !next);
 
       // 2) Fallback to first workspace
-      if (!next) next = list[0] || null;
+      if (!next) {
+        if (requestedWorkspaceInaccessible) {
+          setWorkspaceAccessDenied(true);
+        }
+        next = primaryOwnerWorkspace || list[0] || null;
+      } else {
+        setWorkspaceAccessDenied(false);
+      }
 
       setActiveWorkspace(next);
         const colorFromUrl = searchParams.get("color");
@@ -146,8 +161,8 @@ export const WorkspaceProvider = ({ children }) => {
 if (next) {
   const params = new URLSearchParams(searchParams);
 
-  // ✅ ensure workspace is correct
-  if (next._id !== workspaceIdFromUrl) {
+  // ✅ ensure workspace is correct unless the requested workspace is inaccessible
+  if (!requestedWorkspaceInaccessible && next._id !== workspaceIdFromUrl) {
     params.set("ws", next._id);
   }
 
@@ -187,6 +202,29 @@ if (next) {
     }
   };
 
+  const goToMyWorkspace = () => {
+    const fallbackWorkspace =
+      ownerWorkspace ||
+      workspaces.find((ws) => ws.permissionType === constants.OWNER) ||
+      workspaces[0] ||
+      null;
+
+    if (!fallbackWorkspace) return;
+
+    setWorkspaceAccessDenied(false);
+    setActiveWorkspace(fallbackWorkspace);
+
+    const params = new URLSearchParams(searchParams);
+    params.set("ws", fallbackWorkspace._id);
+
+    if (fallbackWorkspace?.colourCode) {
+      params.set("color", fallbackWorkspace.colourCode);
+      setBrandingColor(fallbackWorkspace.colourCode);
+    }
+
+    setSearchParams(params, { replace: true });
+  };
+
 
   return (
     <WorkspaceContext.Provider
@@ -194,6 +232,7 @@ if (next) {
         workspaces,
         activeWorkspace,
         setActiveWorkspace: (ws) => {
+          setWorkspaceAccessDenied(false);
           setActiveWorkspace(ws);
           if (ws?._id) {
             const params = new URLSearchParams(searchParams);
@@ -213,6 +252,8 @@ if (next) {
         refreshOwnerWorkspacePlan: fetchOwnerWorkspacePlan,
         subscriptionStatus,
         setSubscriptionStatus,
+        workspaceAccessDenied,
+        goToMyWorkspace,
         trialUsed,
         setTrialUsed,
         ownerWorkspace,
