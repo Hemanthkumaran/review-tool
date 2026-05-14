@@ -11,6 +11,7 @@ import DeleteConfirmModal from '../modals/DeleteConfirmationModal';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { AssignIcon, PenIcon, ShareIcon, TrashIcon } from '../../assets/svgs/SvgComponents';
 import { getApiErrorMessage, showErrorToast, showSuccessToast } from '../../helpers/showToast';
+import { Tooltip } from 'react-tooltip';
 
 
 
@@ -25,6 +26,7 @@ function VideoHeader({ fetchProject, onDeleteVersion, handleUpdateProject, proje
   const [showDelete, setShowDelete] = useState(false);
   const menuRef = useRef(null);
   const { workspaceUsers } = useWorkspace();
+  const projectNameTooltipId = `video-title-${projectDetail._id}`;
 
 const closeMoreMenu = () => setOpen(false);
 
@@ -135,7 +137,8 @@ const closeMoreMenu = () => setOpen(false);
                 ) : (
                   <div
                     className="text-[18px] font-[Gilroy-SemiBold] truncate"
-                    title={projectDetail.name}
+                    data-tooltip-id={projectNameTooltipId}
+                    data-tooltip-content={projectDetail.name}
                   >
                     {projectDetail.name}
                   </div>
@@ -277,6 +280,19 @@ const closeMoreMenu = () => setOpen(false);
             } catch (err) {
               showErrorToast(getApiErrorMessage(err, "Failed to delete project"));
             }
+          }}
+        />
+        <Tooltip
+          id={projectNameTooltipId}
+          place="bottom"
+          style={{
+            backgroundColor: "#2a2a2a",
+            color: "#fff",
+            borderRadius: "8px",
+            maxWidth: "360px",
+            fontSize: "12px",
+            padding: "8px 12px",
+            zIndex: 1000,
           }}
         />
     </div>

@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation, useSearchParams } from "react-router-dom";
 import AppLoader from "../../components/common/AppLoader";
 import DashboardHeader from "../../components/DashboardHeader";
 import { useUser } from "../../context/UserContext";
@@ -7,12 +7,15 @@ import { useEffect, useState } from "react";
 import SubscriptionModal from "../modals/SubscriptionModal";
 import { constants } from "../../helpers/enum";
 import { ActivateIcon, FeatureLockIcon, LockIcon, PaymentFailureIcon, ResumeSubIcon } from "../../assets/svgs/SvgComponents";
+import { usePageTitle } from "../../hooks/usePageTitle";
 
 const BLOCKED_SUBSCRIPTION_STATUSES = ["none", "inactive", "expired", "locked"];
 const BLOCKED_MODAL_STEPS = ["trialStarted", "welcomeAboard", "choosePlan"];
 
 export default function DashboardLayout() {
   const { user, profileLoading } = useUser();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const {
     workspaces,
@@ -27,9 +30,14 @@ export default function DashboardLayout() {
     workspaceAccessDenied,
     goToMyWorkspace,
   } = useWorkspace();
-  console.log(workspacePlan,'workspacePlan');
   
   const [modalStep, setModalStep] = useState(null);
+  const folderName = searchParams.get("folderName");
+  const pageTitle =
+    location.pathname === "/dashboard/add-project"
+      ? folderName || "Projects"
+      : activeWorkspace?.name || "Dashboard";
+  usePageTitle(pageTitle);
 
   // ✅ Stable ready state (prevents flicker)
   const isWorkspaceReady =
@@ -79,7 +87,7 @@ export default function DashboardLayout() {
 
   const blockingModalConfig = {
     trialEnded: {
-      title: "Your 7-day free trial has ended",
+      title: "Your 14-day free trial has ended",
       subtitle: "Pick a plan to continue using your workspace.",
       ModalImg: <PaymentFailureIcon />,
       buttonTitle: "See options",
@@ -94,7 +102,7 @@ export default function DashboardLayout() {
     activateWorkspace: {
       title: "Activate your workspace!",
       subtitle:
-        "Select a 7-day free trial plan so we can set up your workspace for use.",
+        "Select a 14-day free trial plan so we can set up your workspace for use.",
       ModalImg: <ActivateIcon />,
       buttonTitle: "See options",
       onBtnClick: () => setModalStep("choosePlan"),

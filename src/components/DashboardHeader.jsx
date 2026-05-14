@@ -9,7 +9,7 @@ import { constants } from "../helpers/enum";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PATHS } from "../routes/paths";
 import { useWorkspace } from "../context/WorkspaceContext";
-import { getInitials } from "../helpers/common";
+import { formatMinutesUsed, formatMinutesWithSeconds, getInitials } from "../helpers/common";
 
 function Plus({ className = "" }) {
   return (
@@ -37,19 +37,23 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
   const [createLoading] = useState(false);
   const profileBtnRef = useRef(null);
   const minutesCap =
-  workspacePlan?.subscription?.baseStorageMinutes +
-  workspacePlan?.subscription?.additionalStorageMinutes;
+  (workspacePlan?.subscription?.baseStorageMinutes ?? 0) +
+  (workspacePlan?.subscription?.additionalStorageMinutes ?? 0);
 
   const rawMinutesUsed = workspacePlan?.subscription?.storageMinutesUsed ?? 0;
-  const minutesUsed = Number(rawMinutesUsed);
-  const formattedMinutesUsed = minutesUsed.toFixed(2);
+  const minutesUsed = Number.isFinite(Number(rawMinutesUsed))
+    ? Number(rawMinutesUsed)
+    : 0;
+  const minutesRemaining = Math.max((minutesCap || 0) - minutesUsed, 0);
+  const formattedMinutesUsed = formatMinutesUsed(minutesUsed);
+  const formattedMinutesRemaining = formatMinutesWithSeconds(minutesRemaining);
   // const minutesUsed = workspacePlan?.subscription?.storageMinutesUsed.toFixed(2);
 
   const usagePercent = minutesCap
     ? Math.min(100, (minutesUsed / minutesCap) * 100)
   : 0;
   const showUsage =
-  userAccess === constants.OWNER && trialUsed;
+  userAccess === constants.OWNER && trialUsed && minutesCap > 0;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -124,8 +128,11 @@ function DashboardHeader({ userAccess, activeWorkspace, workspaces, user, setAct
       <div className="flex items-center gap-3 md:gap-4">
 
         <div className="hidden sm:flex items-center gap-3 rounded-full bg-[#070707] border border-[#101213] px-3 py-2">
-          {showUsage ? <div className="text-xs text-[#BFBFBF] min-w-[84px]">
-            {formattedMinutesUsed} / {minutesCap} mins
+          {showUsage ? <div className="text-xs text-[#BFBFBF] min-w-[138px]">
+            <div>{formattedMinutesRemaining}</div>
+            <div className="mt-0.5 text-[#8E8E8E]">
+              {formattedMinutesUsed}/{Math.round(minutesCap)} minutes used
+            </div>
             <div className="h-1 w-28 mt-1 rounded-full bg-[#1E1F22] overflow-hidden">
               <div
                 className="h-full rounded-full"

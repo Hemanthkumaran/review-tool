@@ -10,11 +10,22 @@ import BuildWorkspace from '../../components/onboarding/BuildWorkspace';
 import ResetPassword from '../../components/onboarding/ResetPassword';
 import SetNewPassword from '../../components/onboarding/SetNewPassword';
 import PasswordChanged from '../../components/onboarding/PasswordChanged';
+import { usePageTitle } from '../../hooks/usePageTitle';
 
+const ONBOARDING_TITLES = {
+  signIn: "Login",
+  signUp: "Signup",
+  verifyAccount: "Verify Account",
+  resetPassword: "Reset Password",
+  setNewPassword: "Set New Password",
+  buildWorkspace: "Workspace",
+  passwordChanged: "Password Changed",
+};
 
 export default function Onboarding() {
 
   const [currentScreen, setCurrentScreen] = useState("signIn");
+  usePageTitle(ONBOARDING_TITLES[currentScreen] || "Login");
 
   return (
     <div className="fixed inset-0 grid grid-cols-1 md:grid-cols-[45%_55%]">

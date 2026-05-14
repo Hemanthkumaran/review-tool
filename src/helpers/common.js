@@ -32,6 +32,27 @@ export function formatMinutesOnly(duration) {
   return `${minutes} ${minutes === 1 ? "min" : "mins"}`;
 }
 
+export function formatMinutesWithSeconds(minutesValue = 0) {
+  const safeMinutes = Number.isFinite(Number(minutesValue))
+    ? Math.max(Number(minutesValue), 0)
+    : 0;
+  const totalSeconds = Math.floor(safeMinutes * 60);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes} ${minutes === 1 ? "min" : "mins"} ${seconds} ${
+    seconds === 1 ? "sec" : "secs"
+  }`;
+}
+
+export function formatMinutesUsed(minutesValue = 0) {
+  const safeMinutes = Number.isFinite(Number(minutesValue))
+    ? Math.max(Number(minutesValue), 0)
+    : 0;
+
+  return safeMinutes.toFixed(1);
+}
+
 
 export const DateFormat = (value) => {
   if (!value) return null;

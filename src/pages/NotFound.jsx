@@ -2,10 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import notFound from '../assets/svgs/404.svg';
 import PrimaryButton from '../components/buttons/PrimaryButton';
 import { PATHS } from '../routes/paths';
+import { usePageTitle } from '../hooks/usePageTitle';
 
 
 export default function NotFound() {
 const navigate = useNavigate();
+usePageTitle("Page Not Found");
 
   return (
     <div className="fixed inset-0 grid grid-cols-1 md:grid-cols-[45%_55%]">

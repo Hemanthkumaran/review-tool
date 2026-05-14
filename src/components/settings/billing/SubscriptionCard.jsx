@@ -2,7 +2,7 @@ import { useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import "./SubscriptionCard.css";
-import { DateFormat } from "../../../helpers/common";
+import { DateFormat, formatMinutesUsed, formatMinutesWithSeconds } from "../../../helpers/common";
 import { cancelAddonApi, cancelSubscriptionApi } from "../../../services/api";
 import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../../helpers/showToast";
 import RemoveAccessModal from "../../modals/RemoveAccessModal";
@@ -33,9 +33,11 @@ export default function SubscriptionCard({
   const [isCancelSuccessOpen, setIsCancelSuccessOpen] = useState(false);
   const [addonLoading, setAddonLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
-  const totalMinutes = baseStorageMinutes + additionalStorageMinutes;
+  const totalMinutes = (baseStorageMinutes ?? 0) + (additionalStorageMinutes ?? 0);
+  const isTrialing = subscription.status === "trialing";
+  const canCancelSubscription = !scheduledCancellation && !isTrialing;
 
-  const usedMinutes = storageMinutesUsed;
+  const usedMinutes = Number(storageMinutesUsed) || 0;
 
   const remainingMinutes = Math.max(totalMinutes - usedMinutes, 0);
 
@@ -58,7 +60,7 @@ export default function SubscriptionCard({
   };
 
   const handleCancelSubscription = async () => {
-    if (cancelLoading || !ownerWorkspace?._id) return;
+    if (cancelLoading || !ownerWorkspace?._id || isTrialing) return;
 
     try {
       setCancelLoading(true);
@@ -137,10 +139,10 @@ export default function SubscriptionCard({
           </div>
           <div className="sub-minutes-text">
             <p className="sub-minutes-remaining">
-              {(remainingMinutes).toFixed(2)} minutes remaining
+              {formatMinutesWithSeconds(remainingMinutes)} remaining
             </p>
             <p className="sub-minutes-used">
-              {usedMinutes.toFixed(2)}/{Math.round(totalMinutes)} minutes used
+              {formatMinutesUsed(usedMinutes)}/{Math.round(totalMinutes)} minutes used
             </p>
           </div>
         </div>
@@ -152,7 +154,7 @@ export default function SubscriptionCard({
           <p className="sub-price-caption">
             Billed {interval}
           </p>
-          {!scheduledCancellation && (
+          {canCancelSubscription && (
             <>
               <button
                 type="button"
@@ -202,9 +204,14 @@ export default function SubscriptionCard({
 
       <div className="sub-faq-row">
         <span>Questions? Check out&nbsp;</span>
-        <button className="sub-faq-link">
+        <a
+          className="sub-faq-link"
+          href="https://postjamm.zohodesk.com/portal/en/kb/articles/billing-faqs"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Billing FAQ
-        </button>
+        </a>
       </div>
       <RemoveAccessModal
         open={isAddonModalOpen}

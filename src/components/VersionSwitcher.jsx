@@ -7,6 +7,7 @@ import { constants } from "../helpers/enum";
 import { getMuxGif, getMuxThumbnail } from "../helpers/muxHelpers";
 import DeleteConfirmModal from "./modals/DeleteConfirmationModal";
 import { formatDuration, truncateText } from "../helpers/common";
+import { Tooltip } from "react-tooltip";
 
 
 export default function VersionSwitcher({
@@ -143,7 +144,12 @@ export default function VersionSwitcher({
                       )}
                     </div>
                     <div className="flex-1">
-                      <div style={{ fontFamily:'Gilroy-Regular' }} className="truncate text-[13px] truncate">
+                      <div
+                        style={{ fontFamily:'Gilroy-Regular' }}
+                        className="truncate text-[13px]"
+                        data-tooltip-id="version-file-name-tooltip"
+                        data-tooltip-content={v._raw.fileName || ""}
+                      >
                         {truncateText(v._raw.fileName, 25)}
                       </div>
                       {meta && (
@@ -210,6 +216,19 @@ export default function VersionSwitcher({
           userAccess={userAccess}
         />
       )}
+      <Tooltip
+        id="version-file-name-tooltip"
+        place="top"
+        style={{
+          backgroundColor: "#2a2a2a",
+          color: "#fff",
+          borderRadius: "8px",
+          maxWidth: "360px",
+          fontSize: "12px",
+          padding: "8px 12px",
+          zIndex: 1000,
+        }}
+      />
     </>
   );
 }
@@ -295,7 +314,11 @@ function ManageVersionsModal({
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="text-[14px] font-[Gilroy-Medium]">
+                    <div
+                      className="text-[14px] font-[Gilroy-Medium] truncate"
+                      data-tooltip-id="version-file-name-tooltip"
+                      data-tooltip-content={v._raw.fileName || ""}
+                    >
                       {truncateText(v._raw.fileName, 25)}
                     </div>
                     {meta && (

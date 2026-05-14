@@ -25,6 +25,7 @@ import { PATHS } from "../../routes/paths.jsx";
 import { getApiErrorMessage, showErrorToast, showSuccessToast } from "../../helpers/showToast";
 import { useProjectUpload } from "../../context/UploadContext.jsx";
 import { frameToTime, getFrameSeekTime, normalizeVideoFps, snapTimeToFrame, timeToFrame } from "../../helpers/videoFrames.js";
+import { usePageTitle } from "../../hooks/usePageTitle.js";
 
 const REVIEWER_EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -90,6 +91,7 @@ export default function VideoReview() {
   const [isCommentsOpen, setIsCommentsOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [projectDetail, setProjectDetail] = useState(null);
+  usePageTitle(projectDetail?.name || "Video Review");
 
   const [videoSrc, setVideoSrc] = useState(null);
 

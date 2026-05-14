@@ -151,6 +151,7 @@ const Billing = () => {
           setIsOpen(false);
         }}
         trialUsed={trialUsed}
+        forcePaidActivation={trialUsed}
         buttonLabel={!trialUsed ? "Start free trial" : "Subscribe"}
         showClose={true}
         showPaymentSuccessModal={true}

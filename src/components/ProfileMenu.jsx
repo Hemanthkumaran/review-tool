@@ -7,6 +7,12 @@ import settingsIcon from '../assets/svgs/settings.svg';
 import ticketIcon from '../assets/svgs/ticket.svg';
 import { logout } from "../helpers/common";
 
+const PROFILE_LINKS = {
+  featureRequest: "https://tally.so/r/NpM6kB",
+  talkToFounders: "https://calendly.com/cutjamm/meet-cutjamm-team",
+  raiseTicket: "https://postjamm.zohodesk.com/portal/en/newticket",
+};
+
 export default function ProfileMenu({ onClose, onOpenSettings, triggerRef }) {
   const menuRef = useRef(null);
 
@@ -39,6 +45,11 @@ export default function ProfileMenu({ onClose, onOpenSettings, triggerRef }) {
     </button>
   );
 
+  const openExternalLink = (url) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+    onClose();
+  };
+
   return (
     <div
       ref={menuRef}
@@ -61,9 +72,21 @@ export default function ProfileMenu({ onClose, onOpenSettings, triggerRef }) {
           }}
         />
         <div style={{ background:"#2B2B2B", height:1 }} />
-        <Item label="Raise a ticket" icon={<img src={ticketIcon}/>} />
-        <Item label="Submit feature request" icon={<img src={requestIcon}/>} />
-        <Item label="Talk to founders" icon={<img src={headsetIcon}/>} />
+        <Item
+          label="Raise a ticket"
+          icon={<img src={ticketIcon}/>}
+          onClick={() => openExternalLink(PROFILE_LINKS.raiseTicket)}
+        />
+        <Item
+          label="Submit feature request"
+          icon={<img src={requestIcon}/>}
+          onClick={() => openExternalLink(PROFILE_LINKS.featureRequest)}
+        />
+        <Item
+          label="Talk to founders"
+          icon={<img src={headsetIcon}/>}
+          onClick={() => openExternalLink(PROFILE_LINKS.talkToFounders)}
+        />
         <div style={{ background:"#2B2B2B", height:1 }} />
         <Item onClick={logout} label="Log out" icon={<img src={logoutIcon}/>} />
       </div>

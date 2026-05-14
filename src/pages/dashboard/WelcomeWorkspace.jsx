@@ -326,7 +326,7 @@ export default function WelcomeWorkspace({
         <SubscriptionModal
           open={true}
           title="Activate your workspace!"
-          subtitle="Select a 7-day free trial plan so we can set up your workspace for use."
+          subtitle="Select a 14-day free trial plan so we can set up your workspace for use."
           buttonTitle="See options"
           onBtnClick={() => setModalStep("choosePlan")}
           ModalImg={<ResumeSubIcon/>}

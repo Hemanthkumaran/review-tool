@@ -4,10 +4,18 @@ import coverImg from '../assets/svgs/onboarding-cover.svg';
 import ResetPassword from '../components/onboarding/ResetPassword';
 import SetNewPassword from '../components/onboarding/SetNewPassword';
 import PasswordChanged from '../components/onboarding/PasswordChanged';
+import { usePageTitle } from '../hooks/usePageTitle';
+
+const CHANGE_PASSWORD_TITLES = {
+  resetPassword: "Change Password",
+  setNewPassword: "Set New Password",
+  passwordChanged: "Password Changed",
+};
 
 export default function ChangePassword() {
 
   const [currentScreen, setCurrentScreen] = useState("resetPassword");
+  usePageTitle(CHANGE_PASSWORD_TITLES[currentScreen] || "Change Password");
 
   return (
     <div className="fixed inset-0 grid grid-cols-1 md:grid-cols-[45%_55%]">

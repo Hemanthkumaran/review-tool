@@ -176,7 +176,7 @@ export default function ChoosePlanModal({
           ? "Over limits"
           : isCurrentSelection
           ? "Continue with Current Plan"
-          : "Switch Trial Plan",
+          : "Subscribe",
         disabled: overLimit,
         disabledReason: overLimit
           ? "You currently have more team members or storage than this plan allows for"
@@ -362,7 +362,12 @@ export default function ChoosePlanModal({
         return;
       }
 
-      if (!trialUsed || isTrialing) {
+      if (isTrialing && !isCurrentSelection) {
+        await activatePlanCheckout(planKey, "subscribe");
+        return;
+      }
+
+      if (!trialUsed) {
 
         await startTrialApi(activeWorkspace._id, {
           activePlan: planKey,
@@ -468,7 +473,7 @@ export default function ChoosePlanModal({
                 ? "Your trial has ended. Subscribe to keep using this workspace."
                 : trialUsed
                 ? null
-                : "Try any plan for 7 days with no card required."
+                : "Try any plan for 14 days with no card required."
             }
           </p>
         </div>
@@ -554,16 +559,17 @@ export default function ChoosePlanModal({
 
         {/* Footer note */}
         {
-          subscription?.status === "trialing" && !requiresPaidActivation ? null :
           <div className="flex justify-center mt-6 text-xs">
-            {requiresPaidActivation ? (
+            {isTrialing && !requiresPaidActivation ? (
+              "Your free trial is already active. Choosing another plan will take you to checkout."
+            ) : requiresPaidActivation ? (
               "You will be redirected to checkout to activate your subscription."
             ) : (
               <>
                 <span style={{ fontFamily: "Gilroy-Bold", marginRight: 4 }}>
                   Note:
                 </span>
-                Billing details will be requested after 7 days.
+                Billing details will be requested after 14 days.
               </>
             )}
           </div>
