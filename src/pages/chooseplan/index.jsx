@@ -332,7 +332,8 @@ export default function ChoosePlanModal({
       try {
         setLoadingPlan(planKey);
         const res = await reactivateSubscriptionApi(activeWorkspace._id);
-
+        console.log(res, 'res');
+        
         if (res?.data?.requiresActivation) {
           await activatePlanCheckout(planKey, "subscribe");
           return;
